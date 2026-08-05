@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Table Annotator — tables_extended</title>
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+    <header id="topbar">
+        <div class="brand">Table Annotator <span class="muted">tables_extended</span></div>
+        <div id="meta" class="muted"></div>
+    </header>
+
+    <main id="layout">
+        <aside id="sidebar">
+            <div class="sidebar-head">
+                <input id="filter" type="search" placeholder="Filter documents…" />
+                <div id="progress" class="muted"></div>
+            </div>
+            <ul id="doc-list"></ul>
+        </aside>
+
+        <section id="viewer">
+            <div id="screenshot-pane">
+                <div id="screenshots"></div>
+            </div>
+
+            <div id="annotation-pane">
+                <div class="pane-head">
+                    <h2 id="doc-title">Select a document</h2>
+                    <div class="head-actions">
+                        <button id="reset-seed" class="ghost" title="Reset to the LlamaParse seed transcription">Reset to seed</button>
+                        <button id="save" class="primary" disabled>Save .test.json</button>
+                    </div>
+                </div>
+
+                <div class="editor-block">
+                    <div class="block-label">
+                        Tables — preview &amp; edit (one card per table; saved together as expected_markdown)
+                        <button id="add-table" class="ghost small floatr">+ Add table</button>
+                    </div>
+                    <div id="tables-editor"></div>
+                </div>
+
+                <div class="flags">
+                    <label>difficulty
+                        <select id="flag-difficulty">
+                            <option value="">—</option>
+                            <option value="easy">easy</option>
+                            <option value="medium">medium</option>
+                            <option value="hard">hard</option>
+                        </select>
+                    </label>
+                    <label>max_top_title_rows
+                        <input id="flag-titlerows" type="number" min="0" step="1" placeholder="—" />
+                    </label>
+                    <label class="check"><input id="flag-trm" type="checkbox" /> trm_unsupported</label>
+                    <label class="check"><input id="flag-split" type="checkbox" /> allow_splitting_ambiguous_merged_tables</label>
+                </div>
+
+                <div class="chat-block">
+                    <div class="pane-head">
+                        <h3>Improve with chat</h3>
+                        <button id="model-toggle" class="ghost">Models ▾</button>
+                    </div>
+                    <div id="model-picker" class="model-picker hidden"></div>
+                    <div class="chat-target-row">
+                        <label>Apply to <select id="chat-target"></select></label>
+                    </div>
+                    <div id="chat-log"></div>
+                    <div class="chat-input">
+                        <textarea id="chat-message" rows="2" placeholder="e.g. 'The header row should span 3 columns' or 'Fix the merged cell in column 2'"></textarea>
+                        <button id="chat-send" class="primary" disabled>Send</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/app.js"></script>
+</body>
+</html>

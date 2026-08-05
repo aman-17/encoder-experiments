@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_bayer-annual-report-2024",
+  "source": "bayer-annual-report-2024.pdf",
+  "sourceFonts": [
+    "AAAAAC+Calibri",
+    "AAAAAD+HelveticaNeueLTPro-Roman",
+    "AAAAAE+HelveticaNeueLTPro-Md",
+    "AAAAAF+HelveticaNeueLTPro-Lt",
+    "AAAAAI+HelveticaNeueLTPro-Lt",
+    "AAAAAG+HelveticaNeueLTPro-ThIt",
+    "AAAAAH+HelveticaNeueLTPro-Bd"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 15,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 13,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

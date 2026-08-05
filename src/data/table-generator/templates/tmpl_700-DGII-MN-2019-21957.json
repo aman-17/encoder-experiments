@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_700-DGII-MN-2019-21957",
+  "source": "700-DGII-MN-2019-21957.pdf",
+  "sourceFonts": [
+    "Times",
+    "ABCDEE+Calibri",
+    "Times",
+    "ABCDEE+Calibri,Bold",
+    "Arial,Bold",
+    "Arial",
+    "Symbol",
+    "ABCDEE+Calibri"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.64,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#0056b3",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/700-DGII-MN-2019-21957.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Times\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#0056b3"
+    },
+    "h2": {
+      "fontSizePx": 18,
+      "weight": 700,
+      "color": "#0056b3"
+    },
+    "h3": {
+      "fontSizePx": 15,
+      "weight": 600,
+      "color": "#0056b3"
+    }
+  },
+  "table": {
+    "fontStack": "\"Times\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#d9edf7",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f9f9f9",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

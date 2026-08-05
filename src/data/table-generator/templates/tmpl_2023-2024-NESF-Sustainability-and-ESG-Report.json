@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2023-2024-NESF-Sustainability-and-ESG-Report",
+  "source": "2023-2024-NESF-Sustainability-and-ESG-Report.pdf",
+  "sourceFonts": [
+    "BHLHWA+Raleway-SemiBold",
+    "BHLHWA+Raleway-ExtraBold",
+    "BHLHWA+OpenSans",
+    "BHLHWA+Raleway-Bold",
+    "FNZFAS+OpenSans",
+    "BHLHWA+OpenSans-Bold",
+    "BHLHWA+OpenSans-Italic",
+    "BHLHWA+OpenSans-Semibold"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "#4a8a75",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Raleway",
+    "fontStack": "\"Raleway\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#ffffff"
+    }
+  },
+  "table": {
+    "fontFamily": "Raleway",
+    "fontStack": "\"Raleway\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

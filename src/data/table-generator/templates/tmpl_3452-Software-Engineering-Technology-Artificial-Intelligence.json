@@ -1,0 +1,76 @@
+{
+  "name": "tmpl_3452-Software-Engineering-Technology-Artificial-Intelligence",
+  "source": "3452-Software-Engineering-Technology-Artificial-Intelligence-Co-op-Fast-Track-Online-22F-23X.pdf",
+  "sourceFonts": [
+    "AMIAAE+Calibri-Bold",
+    "AMIABE+Calibri-Bold",
+    "AMIABF+Calibri",
+    "AMIACG+Calibri",
+    "AMIADH+Wingdings2",
+    "AMIAFI+Tahoma",
+    "AMIAIJ+SegoeUI"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.3,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 15,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 13,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#c0c0c0",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

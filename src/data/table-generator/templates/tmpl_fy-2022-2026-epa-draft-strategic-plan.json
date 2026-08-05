@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_fy-2022-2026-epa-draft-strategic-plan",
+  "source": "fy-2022-2026-epa-draft-strategic-plan.pdf",
+  "sourceFonts": [
+    "GHBTVC+Calibri",
+    "UXAZJA+TimesNewRomanPSMT",
+    "DVOWFI+TimesNewRomanPS-BoldMT",
+    "XMMMZU+Calibri-Bold",
+    "XUKMZU+Calibri-Light",
+    "DQKRFI+Calibri-Italic",
+    "PYKGRK+SymbolMT",
+    "MWWOBQ+ArialMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.11,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 30,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 26,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

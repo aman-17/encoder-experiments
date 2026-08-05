@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_1001226-u-s-intragenerational-economic-mobility-from-to-",
+  "source": "1001226-u-s-intragenerational-economic-mobility-from-to-.pdf",
+  "sourceFonts": [
+    "QEDWMP+Copperplate",
+    "EQVNHD+Copperplate-Bold",
+    "SGBHEU+BauerBodoni-Roman",
+    "IOIPWF+BauerBodoni-Bold",
+    "AMFDRT+BauerBodoni-Italic",
+    "VJJEIA+BauerBodoni-BoldItalic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#8c6239",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 45,
+      "weight": 700,
+      "color": "#8c6239"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#4d4d4d"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#4d4d4d"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#452040",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

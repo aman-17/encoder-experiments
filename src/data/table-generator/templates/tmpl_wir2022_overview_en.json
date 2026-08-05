@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_wir2022_overview_en",
+  "source": "wir2022_overview_en.pdf",
+  "sourceFonts": [
+    "IQETOW+HelveticaNeueLTStd-MdEx",
+    "IQETOW+EurostileLTStd-Bold",
+    "IQETOW+EurostileLTStd-BoldCn",
+    "IQETOW+HelveticaNeueLTStd-Bd",
+    "IQETOW+HelveticaNeueLTStd-LtCn",
+    "IQETOW+HelveticaNeueLTStd-MdEx",
+    "IQETOW+EurostileLTStd-Bold",
+    "IQETOW+EurostileLTStd-BoldCn"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.05,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/wir2022_overview_en.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 130,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 55,
+      "weight": 700,
+      "color": "#f39200"
+    },
+    "h3": {
+      "fontSizePx": 36,
+      "weight": 600,
+      "color": "#f39200"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

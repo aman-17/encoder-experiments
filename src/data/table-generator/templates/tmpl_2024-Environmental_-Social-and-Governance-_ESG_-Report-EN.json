@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2024-Environmental_-Social-and-Governance-_ESG_-Report-EN",
+  "source": "2024-Environmental,-Social-and-Governance-(ESG)-Report-EN.pdf",
+  "sourceFonts": [
+    "WBUCJV+SourceHanSansCN-Medium",
+    "SCJRFD+SourceHanSansCN-Normal",
+    "QGXNDH+SourceHanSansCN-Bold",
+    "VSCEQX+D-DIN-PRO-Bold",
+    "UTNYCZ+BebasNeue",
+    "UKCWEE+SourceHanSansCN-Normal",
+    "TPYSOB+NotoSans-Bold",
+    "RMZGMF+NotoSans"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.75,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#0078d7",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "color": "#333333"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#0078d7"
+    },
+    "h2": {
+      "fontSizePx": 18,
+      "weight": 700,
+      "color": "#00a86b"
+    },
+    "h3": {
+      "fontSizePx": 15,
+      "weight": 600,
+      "color": "#555555"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f9f9f9",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

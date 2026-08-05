@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_251106_tanshin_jp",
+  "source": "251106_tanshin_jp.pdf",
+  "sourceFonts": [
+    "JOZKUW+MS-Mincho",
+    "ZXGMBF+MS-Gothic",
+    "RHGVFF+MS-Mincho",
+    "LNSUBM+MS-Mincho",
+    "NBHNXF+MS-Mincho",
+    "AJXNSE+MS-Mincho",
+    "ZIBCMH+MS-Mincho",
+    "DJCKCZ+MS-Mincho"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/251106_tanshin_jp.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 16,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 14,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#ffffff",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f0f0f0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_LyonCountyHMP2024",
+  "source": "LyonCountyHMP2024.pdf",
+  "sourceFonts": [
+    "AAAAAA+FranklinGothicLTPro-Dm",
+    "BAAAAA+FranklinGothicLTPro-Bk",
+    "HCSZJF+FranklinGothic-Medium",
+    "REQHTL+FranklinGothic-Book",
+    "CFDQRP+FranklinGothic-BookItalic",
+    "QNEWFN+Arial-BoldMT",
+    "EQACTL+ArialMT",
+    "CNBQRP+SymbolMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.78,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "#00335b",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/LyonCountyHMP2024.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 53,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#ffffff"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

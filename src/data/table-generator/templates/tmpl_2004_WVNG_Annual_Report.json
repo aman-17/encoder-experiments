@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2004_WVNG_Annual_Report",
+  "source": "2004_WVNG_Annual_Report.pdf",
+  "sourceFonts": [
+    "KBMLFP+TT158CO00",
+    "KBMLHB+TT1590O00",
+    "Times-Roman",
+    "Times-Bold",
+    "Helvetica",
+    "Times-BoldItalic",
+    "Helvetica-Bold",
+    "Helvetica-BoldOblique"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffcc00",
+    "tint": "#000080",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 15,
+      "weight": 700,
+      "color": "#ffcc00"
+    },
+    "h2": {
+      "fontSizePx": 14,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 12,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 9,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

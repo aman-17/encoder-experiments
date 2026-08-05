@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_1630480997-IUCN_RED_LIST_QUADRENNIAL_REPORT_2017-2020",
+  "source": "1630480997-IUCN_RED_LIST_QUADRENNIAL_REPORT_2017-2020.pdf",
+  "sourceFonts": [
+    "HGNOQD+HelveticaNeueLTStd-Md",
+    "HGNOQD+HelveticaNeueLTStd-Lt",
+    "HGNOQD+HelveticaNeueLTStd-Bd",
+    "HGNOQD+HelveticaNeueLTStd-LtIt",
+    "HGNOQD+Helvetica-Bold",
+    "HGNOQD+ArialMT",
+    "HGNOQD+HelveticaNeueLTStd-Lt",
+    "HGNOQD+HelveticaNeueLTStd-Hv"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.32,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#e32619",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 60,
+      "weight": 700,
+      "color": "#e32619"
+    },
+    "h2": {
+      "fontSizePx": 18,
+      "weight": 700,
+      "color": "#e32619"
+    },
+    "h3": {
+      "fontSizePx": 11,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

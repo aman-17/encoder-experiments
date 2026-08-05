@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_180606_The_Red_Cross_in5min-V1_ENGL",
+  "source": "180606_The_Red_Cross_in5min-V1_ENGL.pdf",
+  "sourceFonts": [
+    "WPOEIA+Dunant-Bold",
+    "HYZSGE+Dunant-Light",
+    "EMHVQK+Wingdings-Regular",
+    "MQKRYU+Dunant-Regular",
+    "BFTYAQ+Dunant-Medium"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.16,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#c8102e",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/180606_The_Red_Cross_in5min-V1_ENGL.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#c8102e"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

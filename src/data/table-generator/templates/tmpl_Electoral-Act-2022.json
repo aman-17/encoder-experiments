@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_Electoral-Act-2022",
+  "source": "Electoral-Act-2022.pdf",
+  "sourceFonts": [
+    "ZRYWBO+Avenir-Book",
+    "NZICPM+BigCaslon-Medium",
+    "ZRYWBO+Avenir-Book",
+    "NZICPM+MinionPro-BoldIt",
+    "NZICPM+MinionPro-Regular",
+    "NZICPM+TimesNewRomanPSMT",
+    "NZICPM+Avenir-Book",
+    "NZICPM+Avenir-Heavy"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.5,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1a3c5e",
+    "tint": "#f7e8c6",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/Electoral-Act-2022.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Avenir Book\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 142,
+      "weight": 700,
+      "color": "#1a3c5e"
+    },
+    "h2": {
+      "fontSizePx": 99,
+      "weight": 700,
+      "color": "#1a3c5e"
+    },
+    "h3": {
+      "fontSizePx": 74,
+      "weight": 600,
+      "color": "#1a3c5e"
+    }
+  },
+  "table": {
+    "fontStack": "\"Avenir Book\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

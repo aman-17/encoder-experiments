@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_La_momie_S_ramon_examin_e_par_un_scanner_unique_au_monde_Lyo",
+  "source": "La momie Séramon examinée par un scanner unique au monde à Lyon.pdf",
+  "sourceFonts": [
+    "BCDEEE+Calibri",
+    "BCDFEE+Cambria",
+    "BCDGEE+Calibri-Bold",
+    "BCDHEE+Calibri-Bold",
+    "BCDIEE+Calibri",
+    "BCDJEE+Calibri-Italic",
+    "BCDKEE+Calibri-Italic"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#e02121",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/La_momie_S_ramon_examin_e_par_un_scanner_unique_au_monde_Lyo.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 19,
+      "weight": 700,
+      "color": "#e02121"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

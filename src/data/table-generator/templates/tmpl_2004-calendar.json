@@ -1,0 +1,73 @@
+{
+  "name": "tmpl_2004-calendar",
+  "source": "2004-calendar.pdf",
+  "sourceFonts": [
+    "ArialMT",
+    "Helvetica-Bold",
+    "Helvetica",
+    "Helvetica-Oblique"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.37,
+    "columns": 1,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 44,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 14,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "none",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#005a9c",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

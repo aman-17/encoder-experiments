@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2026-2027_catalog",
+  "source": "2026-2027_catalog.pdf",
+  "sourceFonts": [
+    "GRCPOL+UDShinGoPro-Bold",
+    "GRCPOL+UDShinGoPro-Bold",
+    "GRCPOL+KozGoPro-Medium",
+    "GRCPOL+KozGoPro-Medium",
+    "GRCPOL+KozGoPro-Bold",
+    "Helvetica-Bold",
+    "GRCPOL+ShinGoPro-Medium",
+    "GRCPOL+ShinGoPro-Bold"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.64,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2026-2027_catalog.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 87,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 61,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 52,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#a6a6a6",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

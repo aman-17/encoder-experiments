@@ -1,0 +1,73 @@
+{
+  "name": "tmpl_2024-29-Revised-Indicative-NUOS-Price-Schedule",
+  "source": "2024-29-Revised-Indicative-NUOS-Price-Schedule.pdf",
+  "sourceFonts": [
+    "CIDFont+F1",
+    "CIDFont+F2",
+    "CIDFont+F3",
+    "CIDFont+F4"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 12,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 13,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 10,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#006666",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#e0e0e0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

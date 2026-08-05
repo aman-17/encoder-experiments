@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_31518-NIQ-ESG-Report-2025-d11",
+  "source": "31518-NIQ-ESG-Report-2025-d11.pdf",
+  "sourceFonts": [
+    "YBBBYC+UtopiaStd-Semibold",
+    "ILUEBI+AktivGrotesk-Regular",
+    "ILUEBI+AktivGrotesk-Regular",
+    "YBBBYC+UtopiaStd-Italic",
+    "MJCHMA+AktivGrotesk-Bold",
+    "ILUEBI+AktivGrotesk-Regular",
+    "HZPDUK+AktivGrotesk-Light",
+    "HZPDUK+AktivGrotesk-Light"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.71,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 77,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 28,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

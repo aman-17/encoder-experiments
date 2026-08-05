@@ -1,0 +1,76 @@
+{
+  "name": "tmpl_bilan",
+  "source": "bilan.pdf",
+  "sourceFonts": [
+    "AAAAAC+Calibri",
+    "AAAAAD+Calibri",
+    "AAAAAF+Georgia-Bold",
+    "AAAAAH+Calibri-Bold",
+    "AAAAAJ+Calibri-Italic",
+    "AAAAAK+Aptos-Narrow-Bold-Italic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.39,
+    "columns": 1,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#002b2b",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 36,
+      "weight": 700,
+      "color": "#002b2b"
+    },
+    "h2": {
+      "fontSizePx": 16,
+      "weight": 700,
+      "color": "#002b2b"
+    },
+    "h3": {
+      "fontSizePx": 14,
+      "weight": 600,
+      "color": "#002b2b"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#73c6d0",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

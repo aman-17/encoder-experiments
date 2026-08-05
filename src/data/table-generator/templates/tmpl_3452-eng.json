@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_3452-eng",
+  "source": "3452-eng.pdf",
+  "sourceFonts": [
+    "GAIIAA+ArialNarrow",
+    "GAIIFM+ArialNarrow,Italic",
+    "GAIIIF+ErasDemiITC",
+    "GAIIKE+ArialNarrow,Bold",
+    "GAIIMD+ArialNarrow,BoldItalic",
+    "GAIJAA+Garamond",
+    "GAIJDN+Garamond,Bold",
+    "T1"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.86,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 116,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 92,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 43,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

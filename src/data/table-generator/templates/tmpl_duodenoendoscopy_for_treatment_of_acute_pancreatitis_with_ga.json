@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_duodenoendoscopy_for_treatment_of_acute_pancreatitis_with_ga",
+  "source": "duodenoendoscopy_for_treatment_of_acute_pancreatitis_with_gallstones.pdf",
+  "sourceFonts": [
+    "Times-Bold",
+    "Times-Roman",
+    "Times-BoldItalic",
+    "Times-Italic",
+    "AAAFKE+NotoSans"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.39,
+    "columns": 2,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "\"Times Bold\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 14,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Times Bold\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "tmpl_2025-2026MasterCalendarFINALBoardapproved032024",
+  "source": "2025-2026MasterCalendarFINALBoardapproved032024.pdf",
+  "sourceFonts": [
+    "ArialMT",
+    "Arial-BoldMT",
+    "BCDEEE+BookmanOldStyle-Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.02,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#002060",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 42,
+      "weight": 700,
+      "color": "#002060"
+    },
+    "h2": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#002060"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#404040",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

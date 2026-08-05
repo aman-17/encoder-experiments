@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_20091201_gl_referentiel_espaces_publics_materiaux_pierres_be",
+  "source": "20091201_gl_referentiel_espaces_publics_materiaux_pierres_betons_poses.pdf",
+  "sourceFonts": [
+    "VTOCOG+DIN-Regular",
+    "VTOCOG+DIN-Bold",
+    "VTOCOG+DIN-Light",
+    "OJBLAD+EuphemiaUCAS-Bold",
+    "ArialMT",
+    "OJBLCI+EuphemiaUCAS",
+    "OJBOEK+EuphemiaUCAS-Italic",
+    "OJCNAD+Times-Roman"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/20091201_gl_referentiel_espaces_publics_materiaux_pierres_be.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"DIN Regular\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 93,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 86,
+      "weight": 700,
+      "color": "#e30613"
+    },
+    "h3": {
+      "fontSizePx": 74,
+      "weight": 600,
+      "color": "#e30613"
+    }
+  },
+  "table": {
+    "fontStack": "\"DIN Regular\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

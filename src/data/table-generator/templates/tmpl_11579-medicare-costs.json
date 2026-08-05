@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_11579-medicare-costs",
+  "source": "11579-medicare-costs.pdf",
+  "sourceFonts": [
+    "JGOHNF+Montserrat-Bold",
+    "JGOHNF+Gotham-Book",
+    "JGOHNF+Gotham-Medium",
+    "JGOHNF+Gotham-Bold",
+    "JGOHNF+Montserrat-Regular",
+    "JGOHNF+MinionPro-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.01,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#002d72",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#002d72"
+    },
+    "h2": {
+      "fontSizePx": 29,
+      "weight": 700,
+      "color": "#002d72"
+    },
+    "h3": {
+      "fontSizePx": 25,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

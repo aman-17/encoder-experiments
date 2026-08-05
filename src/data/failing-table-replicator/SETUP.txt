@@ -1,0 +1,3 @@
+npm install  (PUPPETEER_SKIP_DOWNLOAD=1 if Chrome for Testing is already in ~/.cache/puppeteer), then:
+  node render.mjs templates/<family>.mjs <seed> <outdir>
+Emits <id>.pdf + <id>.test.json + <id>.cells.json (per-cell bboxes, normalized [0,1] y-down — see render.mjs header).

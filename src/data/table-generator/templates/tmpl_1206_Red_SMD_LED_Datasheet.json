@@ -1,0 +1,82 @@
+{
+  "name": "tmpl_1206_Red_SMD_LED_Datasheet",
+  "source": "1206 Red SMD LED Datasheet.pdf",
+  "sourceFonts": [
+    "RBCFWA+TimesNewRomanPS-BoldMT",
+    "JNSOED+Calibri",
+    "BZATXP+TimesNewRomanPSMT",
+    "IBTSSB+SimSun",
+    "TimesNewRoman,Italic",
+    "MESVVT+Courier",
+    "FVFLLV+Wingdings-Regular",
+    "JNSOED+Wingdings-Regular"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.14,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "Lighthouse LEDS",
+    "color": "#d3d3d3",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 99,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 85,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 71,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

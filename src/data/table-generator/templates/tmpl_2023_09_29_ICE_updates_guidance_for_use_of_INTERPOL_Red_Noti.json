@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_2023_09_29_ICE_updates_guidance_for_use_of_INTERPOL_Red_Noti",
+  "source": "2023.09.29_ICE_updates_guidance_for_use_of_INTERPOL_Red_Notices_during_law_enf_YyHBMfN.pdf",
+  "sourceFonts": [
+    "AAAAAA+SourceSansPro-Regular",
+    "BAAAAA+SourceSansPro-Bold",
+    "CAAAAA+FontAwesome5Free-Solid",
+    "DAAAAA+SourceSansPro-Regular",
+    "EAAAAA+Merriweather-Regular",
+    "FAAAAA+Times-Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.45,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2023_09_29_ICE_updates_guidance_for_use_of_INTERPOL_Red_Noti.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 20,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

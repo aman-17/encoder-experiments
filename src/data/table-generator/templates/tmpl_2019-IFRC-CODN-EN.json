@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2019-IFRC-CODN-EN",
+  "source": "2019-IFRC-CODN-EN.pdf",
+  "sourceFonts": [
+    "JGNZRJ+Montserrat-Bold",
+    "JGNZRJ+Montserrat-Light",
+    "JGNZRJ+Montserrat-Regular",
+    "JGNZRJ+Montserrat-Regular",
+    "JGNZRJ+Montserrat-Italic",
+    "JGNZRJ+Montserrat-Black",
+    "JGNZRJ+Montserrat-Light",
+    "JGNZRJ+Montserrat-Regular"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "#ff8073",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 86,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

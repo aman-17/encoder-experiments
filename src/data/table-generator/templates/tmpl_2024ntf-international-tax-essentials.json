@@ -1,0 +1,73 @@
+{
+  "name": "tmpl_2024ntf-international-tax-essentials",
+  "source": "2024ntf-international-tax-essentials.pdf",
+  "sourceFonts": [
+    "ARQKAY+TimesNewRomanPSMT",
+    "CCNWCU+ArialMT",
+    "ZAZZMA+TimesNewRomanPS-BoldMT",
+    "ROYDEQ+Wingdings-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.98,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#fce862",
+    "tint": "#2b4685",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 72,
+      "weight": 700,
+      "color": "#fce862"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#ffffff"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

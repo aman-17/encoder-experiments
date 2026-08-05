@@ -1,0 +1,86 @@
+{
+  "name": "tmpl_2025-hometown-heroes-limits-rev-8-18-2025",
+  "source": "2025-hometown-heroes-limits-rev-8-18-2025.pdf",
+  "sourceFonts": [
+    "FMGAAM+ArialMT",
+    "PYXCNE+Arial",
+    "QSAQWH+Arial,Bold",
+    "YRHBOX+Arial,Bold",
+    "JOZLKF+Arial,Bold",
+    "LOYNUS+Arial,Bold",
+    "MSPNWV+Arial",
+    "ITOJQY+Arial,Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.32,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#c8102e",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2025-hometown-heroes-limits-rev-8-18-2025.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 145,
+      "weight": 700,
+      "color": "#c8102e"
+    },
+    "h2": {
+      "fontSizePx": 141,
+      "weight": 700,
+      "color": "#003366"
+    },
+    "h3": {
+      "fontSizePx": 103,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#003366",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#f2dcdb",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_2004-Expectations_and_the_Monetary_Policy_Transmission_Mecha",
+  "source": "2004-Expectations and the Monetary Policy Transmission Mechanism.pdf",
+  "sourceFonts": [
+    "AGaramond-Regular",
+    "AGaramond-Italic",
+    "AGaramond-SemiboldItalic",
+    "AGaramond-Bold",
+    "AGaramond-Semibold",
+    "EIANLH+Symbol"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.08,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 72,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 33,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

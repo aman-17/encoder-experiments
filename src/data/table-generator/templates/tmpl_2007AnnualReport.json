@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2007AnnualReport",
+  "source": "2007AnnualReport.pdf",
+  "sourceFonts": [
+    "GLFBMD+AkzidenzGroteskBE-Md",
+    "GLFBLA+Courier",
+    "GLFBLC+AkzidenzGroteskBE-Bold",
+    "GLFBNG+AkzidenzGroteskBE-Regular",
+    "GLFBLA+Courier",
+    "GLFBNG+AkzidenzGroteskBE-Regular",
+    "GLFBLC+AkzidenzGroteskBE-Bold",
+    "GLFBLA+Courier"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#a5a575",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 42,
+      "weight": 700,
+      "color": "#a5a575"
+    },
+    "h2": {
+      "fontSizePx": 13,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 10,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#ed1c24",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "name": "tmpl_201911261500_BEACON_MANUAL_1_",
+  "source": "201911261500_BEACON_MANUAL (1).PDF",
+  "sourceFonts": [
+    "LOXJNF+ArialMT",
+    "LOXJNF+Arial-BoldMT",
+    "KMNDZH+FuturaPT-Heavy",
+    "KMNDZH+FuturaPT-Heavy",
+    "LOXJNF+ArialMT",
+    "LOXJNF+Arial-BoldMT",
+    "LOXJNF+Helvetica-Bold",
+    "LOXJNF+Futura-Medium"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#666666",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/201911261500_BEACON_MANUAL_1_.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 34,
+      "weight": 700,
+      "color": "#666666"
+    },
+    "h2": {
+      "fontSizePx": 15,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 13,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

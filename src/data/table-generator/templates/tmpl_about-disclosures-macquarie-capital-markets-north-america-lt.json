@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_about-disclosures-macquarie-capital-markets-north-america-lt",
+  "source": "about-disclosures-macquarie-capital-markets-north-america-ltd-2005q2.pdf",
+  "sourceFonts": [
+    "ANDCPK+Arial,Bold",
+    "ANDDBL+Arial",
+    "YMPPMB+Arial",
+    "DHKZCR+Arial,Bold",
+    "WKQKSZ+Arial,Bold",
+    "YMPPMB+Arial",
+    "YMPPMB+Arial",
+    "ANDELG+Garamond,Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.65,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/about-disclosures-macquarie-capital-markets-north-america-lt.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 18,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 14,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#000080",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

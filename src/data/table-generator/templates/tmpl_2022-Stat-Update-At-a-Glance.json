@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_2022-Stat-Update-At-a-Glance",
+  "source": "2022-Stat-Update-At-a-Glance.pdf",
+  "sourceFonts": [
+    "UGCCJE+SymbolMT",
+    "UDDHJE+Calibri",
+    "FEQVHI+LubDubCondensed",
+    "AHBMPS+LubDubMedium",
+    "KEEUZY+Calibri-Bold",
+    "UGCCJE+ArialMT",
+    "UGCCJE+CourierNewPSMT",
+    "PGOYRO+LubDubMedium"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.87,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2022-Stat-Update-At-a-Glance.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 34,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 29,
+      "weight": 700,
+      "color": "#e31d2b"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#e31d2b"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

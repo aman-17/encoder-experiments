@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Wrapper to build a page-centric shareable dataset from scanbatch output.
+# Usage:
+#   ./scanfinal --scan-dataset <scanbatch-output-dir> --out <final-dataset-dir>
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec node --max-old-space-size=4096 "$DIR/buildFinalScanDataset.mjs" "$@"

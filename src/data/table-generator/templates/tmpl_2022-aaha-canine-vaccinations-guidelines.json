@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_2022-aaha-canine-vaccinations-guidelines",
+  "source": "2022-aaha-canine-vaccinations-guidelines.pdf",
+  "sourceFonts": [
+    "GPFEGO+AdvOT3b0932b6",
+    "GPFEGP+AdvOT6e5d2ec0",
+    "GPFEHA+AdvOT6e5d2ec0+20",
+    "GPFEIB+AdvOT34fe1490.B",
+    "GPFEIC+AdvOTf94803d4",
+    "GPFEID+AdvOTf94803d4+20",
+    "GPFEIE+AdvOTf94803d4+fb",
+    "GPFEIF+AdvOT1deab444.I"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.53,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 31,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 14,
+      "weight": 700,
+      "color": "#d5a052"
+    },
+    "h3": {
+      "fontSizePx": 12,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

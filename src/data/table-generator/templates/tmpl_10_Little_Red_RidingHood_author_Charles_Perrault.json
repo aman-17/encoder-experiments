@@ -1,0 +1,74 @@
+{
+  "name": "tmpl_10_Little_Red_RidingHood_author_Charles_Perrault",
+  "source": "10. Little Red RidingHood author Charles Perrault.pdf",
+  "sourceFonts": [
+    "BookAntiqua,Bold",
+    "BookAntiqua"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.32,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/10_Little_Red_RidingHood_author_Charles_Perrault.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 88,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 76,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 55,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

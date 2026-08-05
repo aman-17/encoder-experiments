@@ -1,0 +1,76 @@
+{
+  "name": "tmpl_12132-save-money-on-your-medicare-costs",
+  "source": "12132-save-money-on-your-medicare-costs.pdf",
+  "sourceFonts": [
+    "GNUIJL+Montserrat-Bold",
+    "GNUIJL+Gotham-Book",
+    "GNUIJL+Gotham-Medium",
+    "GNUIJL+Montserrat-SemiBold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.46,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#00205b",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#00205b"
+    },
+    "h2": {
+      "fontSizePx": 40,
+      "weight": 700,
+      "color": "#00205b"
+    },
+    "h3": {
+      "fontSizePx": 29,
+      "weight": 600,
+      "color": "#00205b"
+    }
+  },
+  "table": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#00205b",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#00205b",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

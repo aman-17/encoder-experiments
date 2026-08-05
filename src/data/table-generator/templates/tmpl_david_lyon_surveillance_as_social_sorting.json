@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_david_lyon_surveillance_as_social_sorting",
+  "source": "david_lyon_surveillance_as_social_sorting.pdf",
+  "sourceFonts": [
+    "DPICHE+TimesNewRomanPS-Bold",
+    "DPICHF+TimesNewRomanPS",
+    "DPICIG+TimesNewRomanPS-Italic",
+    "DPICHF+TimesNewRomanPS",
+    "DPICIG+TimesNewRomanPS-Italic",
+    "TimesNewRomanPSMT",
+    "DPIKLF+TimesNewRomanPS-BoldItalic",
+    "DPKGFM+HelveticaNeue-Roman"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.75,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 18,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 15,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_worldhealthstatistics_2022",
+  "source": "worldhealthstatistics_2022.pdf",
+  "sourceFonts": [
+    "OMPPZK+UtopiaStd-BlackHeadline",
+    "OMPPZK+Urbani-Light",
+    "OMPPZK+Urbani-Black",
+    "OMPPZK+Urbani-Bold",
+    "OMPPZK+Urbani-Book",
+    "OMPPZK+Urbani-BookItalic",
+    "OMPPZK+Urbani-Bold",
+    "OMPPZK+Urbani-Book"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1e3778",
+    "tint": "#d1e5e3",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 69,
+      "weight": 700,
+      "color": "#1e3778"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#e06c75"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#73a59c"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

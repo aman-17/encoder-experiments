@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_06202023_sustainability-esgreport2022_final",
+  "source": "06202023_sustainability-esgreport2022_final.pdf",
+  "sourceFonts": [
+    "QSMTXB+McKinseySans-Light",
+    "QSMTXB+McKinseySans-Medium",
+    "QSMTXB+Bower-Bold",
+    "QSMTXB+McKinseySans-MediumItalic",
+    "QSMTXB+Bower-Bold",
+    "QSMTXB+McKinseySans-Light",
+    "QSMTXB+McKinseySans-Medium",
+    "QSMTXB+McKinseySans-LightItalic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.41,
+    "columns": 1,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "#002d9c",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 80,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 28,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#ffffff"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

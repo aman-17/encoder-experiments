@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_2025_Lyon_Co_FB_-_Final_for_Print",
+  "source": "2025 Lyon Co FB - Final for Print.pdf",
+  "sourceFonts": [
+    "VTJLBH+KohinoorBangla-Bold",
+    "VTJLBH+ModestoText-Light",
+    "VTJLBH+MinionPro-Regular",
+    "VTJLBH+Calibri",
+    "VTJLBH+Calibri-Bold",
+    "VTJLBH+TimesNewRomanPSMT",
+    "VTJLBH+PerpetuaTitlingMT-Bold",
+    "VTJLBH+BradleyHandITC"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#e41e26",
+    "tint": "#808080",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#2b3d66"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#e41e26"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#2b3d66"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#2b3d66"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

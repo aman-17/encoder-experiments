@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2023_ESG_Report_FINAL",
+  "source": "2023_ESG_Report_FINAL.pdf",
+  "sourceFonts": [
+    "YWOEHL+AkzidenzGroteskStd-Bold",
+    "YWOEHL+AkzidenzGroteskStd-Light",
+    "YWOEHL+NorthwellAlt",
+    "YWOEHL+AkzidenzGroteskStd-Md",
+    "YWOEHL+AkzidenzGroteskStd-Light",
+    "YWOEHL+AkzidenzGroteskStd-Regular",
+    "YWOEHL+AkzidenzGroteskStd-Md",
+    "YWOEHL+AkzidenzGroteskStd-Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1e3a5a",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 78,
+      "weight": 700,
+      "color": "#1e3a5a"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#1e3a5a"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#1e3a5a"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#1e3a5a",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

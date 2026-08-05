@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_SB_987_-_Factsheet_FINAL",
+  "source": "SB 987 - Factsheet_FINAL.pdf",
+  "sourceFonts": [
+    "TimesNewRomanPSMT",
+    "ArialMT",
+    "TimesNewRomanPSMT",
+    "TimesNewRomanPS-BoldMT",
+    "ABCDEE+Calibri",
+    "Arial-BoldMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.75,
+    "columns": 2,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "California Capitol Building",
+    "color": "#cccccc",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 19,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 20,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#cccccc",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

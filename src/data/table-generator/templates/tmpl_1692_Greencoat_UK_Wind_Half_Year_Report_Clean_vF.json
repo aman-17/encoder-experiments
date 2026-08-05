@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_1692_Greencoat_UK_Wind_Half_Year_Report_Clean_vF",
+  "source": "1692_Greencoat_UK_Wind_Half_Year_Report_Clean_vF.pdf",
+  "sourceFonts": [
+    "NTZWIA+AvenirLTStd-Roman",
+    "CQLWKE+Avenir-Medium",
+    "GBBVNN+Avenir-Heavy",
+    "URRONI+Avenir-Medium",
+    "BLVYPT+AvenirLTStd-Black",
+    "YEKDGN+AvenirLTStd-Oblique",
+    "JSRQJM+Avenir-Black",
+    "VBNMUQ+Avenir-Book"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#58595b",
+    "tint": "#b5c92c",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#58595b"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#58595b"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#58595b"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#58595b"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#58595b",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

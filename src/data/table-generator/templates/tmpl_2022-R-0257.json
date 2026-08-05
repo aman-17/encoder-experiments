@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_2022-R-0257",
+  "source": "2022-R-0257.pdf",
+  "sourceFonts": [
+    "BCDEEE+FranklinGothic-Book",
+    "BCDFEE+FranklinGothic-BookItalic",
+    "BCDGEE+CenturySchoolbook-Italic",
+    "BCDHEE+CenturySchoolbook-Bold",
+    "BCDIEE+FranklinGothic-Book",
+    "BCDJEE+CenturySchoolbook-Bold",
+    "BCDKEE+CenturySchoolbook",
+    "BCDLEE+CenturySchoolbook"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.69,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#004a99",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2022-R-0257.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 53,
+      "weight": 700,
+      "color": "#004a99"
+    },
+    "h2": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#004a99"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#004a99"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

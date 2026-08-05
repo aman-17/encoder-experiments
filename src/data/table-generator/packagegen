@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Wrapper to build print/scan packages from generated synthetic pages.
+# Usage: ./packagegen --out <dir> [--package-count N] [--lengths 5,10,20]
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec node --max-old-space-size=4096 "$DIR/generatePackages.mjs" "$@"

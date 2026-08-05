@@ -1,0 +1,79 @@
+{
+  "name": "tmpl_11575-Getting-Started-Medicare-Supplement-Insurance",
+  "source": "11575-Getting-Started-Medicare-Supplement-Insurance.pdf",
+  "sourceFonts": [
+    "UGJLCJ+Montserrat-Bold",
+    "UGJLCJ+Montserrat-Regular",
+    "UGJLCJ+Gotham-Book",
+    "UGJLCJ+Gotham-Medium",
+    "UGJLCJ+Gotham-Bold",
+    "UGJLCJ+Montserrat-SemiBold",
+    "UGJLCJ+MinionPro-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#002664",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#002664"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 66,
+      "weight": 700,
+      "color": "#002664"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#002664"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#002664"
+    }
+  },
+  "table": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#002664",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

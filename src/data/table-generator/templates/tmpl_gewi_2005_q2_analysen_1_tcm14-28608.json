@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_gewi_2005_q2_analysen_1_tcm14-28608",
+  "source": "gewi_2005_q2_analysen_1_tcm14-28608.pdf",
+  "sourceFonts": [
+    "AAAAAB+AdvGILLAOL",
+    "AAAAAC+AdvGILLAOB",
+    "AAAAAD+AdvGILLAOLI",
+    "AAAAAF+AdvP4C4E74",
+    "AAAAAG+AdvGILLAOEB",
+    "AAAAAH+AdvPERP",
+    "AAAAAI+AdvPSCNB",
+    "AAAAAJ+AdvPSCNB"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.5,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#005696",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 19,
+      "weight": 700,
+      "color": "#005696"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#c00000"
+    },
+    "h3": {
+      "fontSizePx": 15,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#a0c0e0",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#005696",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#e0eaf5",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

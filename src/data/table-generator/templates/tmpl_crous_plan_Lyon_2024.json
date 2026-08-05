@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_crous_plan_Lyon_2024",
+  "source": "crous_plan_Lyon_2024.pdf",
+  "sourceFonts": [
+    "OXJHBS+Arial-BoldMT",
+    "ULYITT+ArialMT",
+    "JNYFDJ+Marianne-Regular",
+    "MQGQER+MontserratAlternates-Regular",
+    "WWXRBO+Marianne-Bold",
+    "UXEMBN+MyriadPro-Regular",
+    "VDETHW+MontserratAlternates-Bold",
+    "ZANWGJ+EurostileLTStd-Demi"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.3,
+    "columns": 2,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/crous_plan_Lyon_2024.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Arial BoldMT\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 39,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 36,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 35,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Arial BoldMT\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.15,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

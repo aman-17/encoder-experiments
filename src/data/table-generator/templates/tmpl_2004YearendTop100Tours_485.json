@@ -1,0 +1,79 @@
+{
+  "name": "tmpl_2004YearendTop100Tours_485",
+  "source": "2004YearendTop100Tours_485.pdf",
+  "sourceFonts": [
+    "[none]",
+    "TMPAYQ+TTE208D8E0T00",
+    "SRJGUI+TTE20CDBE8T00",
+    "ISBCVP+MinionMM-SC",
+    "GBBQRM+TTE2099EC0T00",
+    "OTIICM+TTE18C3A50T00",
+    "UQFZLY+TTE2085110T00"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.3,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#d32f2f",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#d32f2f"
+    },
+    "h2": {
+      "fontSizePx": 25,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 21,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#d32f2f",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#4a90e2",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

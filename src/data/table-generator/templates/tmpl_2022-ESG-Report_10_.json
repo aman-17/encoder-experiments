@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2022-ESG-Report_10_",
+  "source": "2022-ESG-Report (10).pdf",
+  "sourceFonts": [
+    "YAMJKB+IBMPlexSans-Bold",
+    "NHCVMX+IBMPlexSans",
+    "CONCOT+Calibri",
+    "NPAQMX+Arial-BoldMT",
+    "UCMGGJ+ArialMT",
+    "FDZUEN+SymbolMT",
+    "DAAICR+TimesNewRomanPS-BoldMT",
+    "ATMQMX+TimesNewRomanPSMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2022-ESG-Report_10_.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "IBM Plex Sans",
+    "fontStack": "\"IBM Plex Sans\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "IBM Plex Sans",
+    "fontStack": "\"IBM Plex Sans\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

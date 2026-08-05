@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_3452-acceptabilite-vaccination-enfants-6-mois-4-ans",
+  "source": "3452-acceptabilite-vaccination-enfants-6-mois-4-ans.pdf",
+  "sourceFonts": [
+    "IWAVUC+Raleway-ExtraBold",
+    "ZIQYYU+SegoeUI-Semibold",
+    "KJDMWY+SegoeUI",
+    "YZCNKW+ArialMT",
+    "YZCNKW+SegoeUI-Bold",
+    "VVNQUC+SegoeUI-Italic",
+    "KJDMWY+SegoeUI",
+    "CQXBOO+HelveticaNeueLTStd-Roman"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.92,
+    "columns": 2,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/3452-acceptabilite-vaccination-enfants-6-mois-4-ans.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Raleway",
+    "fontStack": "\"Raleway\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 34,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#3e5d75"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#3e5d75"
+    }
+  },
+  "table": {
+    "fontFamily": "Raleway",
+    "fontStack": "\"Raleway\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

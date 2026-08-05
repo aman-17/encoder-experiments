@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_2023-msc-industrial-supply-esg-report",
+  "source": "2023-msc-industrial-supply-esg-report.pdf",
+  "sourceFonts": [
+    "LRQVIL+Arial-BoldMT",
+    "BOUNYF+ArialMT",
+    "LRQVIL+Helvetica",
+    "LRQVIL+AllumiStdExtended-ExtraBold",
+    "LRQVIL+Helvetica",
+    "LRQVIL+Helvetica-Bold",
+    "BOUNYF+ArialMT",
+    "LRQVIL+AllumiStdExtended-ExtraBold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#0053a4",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2023-msc-industrial-supply-esg-report.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#0053a4"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 48,
+      "weight": 700,
+      "color": "#0053a4"
+    },
+    "h2": {
+      "fontSizePx": 20,
+      "weight": 700,
+      "color": "#0053a4"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#0053a4"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

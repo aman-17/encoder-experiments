@@ -1,0 +1,4 @@
+node_modules/
+
+# logo assets are tracked via git-lfs (root .gitignore excludes *.png)
+!templates/assets/*.png

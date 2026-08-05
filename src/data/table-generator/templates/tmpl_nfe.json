@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_nfe",
+  "source": "nfe.pdf",
+  "sourceFonts": [
+    "AAAAAC+HuaweiSans",
+    "AAAAAE+FZLTXIHK--GBK1-0",
+    "AAAAAG+HuaweiSans-Bold",
+    "AAAAAI+HuaweiSans",
+    "AAAAAK+HuaweiSansLight",
+    "AAAAAL+HuaweiSansLight",
+    "AAAAAM+HuaweiSans-Bold",
+    "AAAAAN+HuaweiSans"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.71,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#333333",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "color": "#4d4d4d"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 34,
+      "weight": 700,
+      "color": "#333333"
+    },
+    "h2": {
+      "fontSizePx": 19,
+      "weight": 700,
+      "color": "#333333"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#333333"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "horizontal",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#8c8c8c",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

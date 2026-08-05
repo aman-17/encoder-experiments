@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2025-2026-early-childhood-family-eligibility-income-limits",
+  "source": "2025-2026-early-childhood-family-eligibility-income-limits.pdf",
+  "sourceFonts": [
+    "AAAAAA+PublicSans-Regular",
+    "BAAAAA+PublicSans-Bold",
+    "AAAAAA+PublicSans-Regular",
+    "AAAAAA+PublicSans-Regular",
+    "BAAAAA+PublicSans-Bold",
+    "CAAAAA+Arial-BoldMT",
+    "AAAAAA+PublicSans-Regular",
+    "DAAAAA+PublicSans-Italic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.77,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#d9d9d9",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

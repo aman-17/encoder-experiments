@@ -1,0 +1,74 @@
+{
+  "name": "tmpl_2025-26_Migratory_Bird_Season_Dates",
+  "source": "2025-26 Migratory Bird Season Dates.pdf",
+  "sourceFonts": [
+    "DQKDQI+Whitney-Bold",
+    "NNILAO+MercuryDisplay-Roman",
+    "WLWIWW+MercuryDisplay-Italic",
+    "HMJWUA+MercuryDisplay-Bold",
+    "AZSGAO+Whitney-Black"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.66,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 38,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#8c4d12",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#d9d9d9",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

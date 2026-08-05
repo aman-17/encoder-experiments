@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_central_america_hazard",
+  "source": "central_america_hazard.pdf",
+  "sourceFonts": [
+    "TimesNewRomanPS-BoldMT",
+    "TimesNewRomanPSMT",
+    "Arial-BoldMT",
+    "Arial-BoldMT",
+    "ArialMT",
+    "ArialMT",
+    "BCDEEE+Calibri"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.62,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#8b4513",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/central_america_hazard.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#8b4513"
+    },
+    "h2": {
+      "fontSizePx": 17,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 15,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

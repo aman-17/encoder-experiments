@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_Enclosure_5b_21-22_SLHS_Course_Catalog_",
+  "source": "Enclosure 5b (21-22 SLHS Course Catalog).pdf",
+  "sourceFonts": [
+    "TimesNewRomanPSMT",
+    "BCDEEE+BaskOldFace",
+    "TimesNewRomanPSMT",
+    "ArialMT",
+    "BCDFEE+BodoniMT-Bold",
+    "BCDGEE+BodoniMT",
+    "BCDHEE+BodoniMT",
+    "BCDIEE+BodoniMT-BoldItalic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.99,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 71,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 43,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

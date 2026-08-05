@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2021-ESG-Highlights-Report-Final",
+  "source": "2021-ESG-Highlights-Report-Final.pdf",
+  "sourceFonts": [
+    "QPKHVG+LoewTwoZero-Regular",
+    "QPKHVG+LoewTwoZero-Black",
+    "QPKHVG+LoewTwoZero-Medium",
+    "QPKHVG+LoewTwoZero-Heavy",
+    "QPKHVG+LoewTwoZero-Heavy",
+    "QPKHVG+LoewTwoZero-Bold",
+    "QPKHVG+LoewTwoZero-Regular",
+    "QPKHVG+LoewTwoZero-ExtraBold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.44,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2021-ESG-Highlights-Report-Final.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 92,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 35,
+      "weight": 700,
+      "color": "#003e64"
+    },
+    "h3": {
+      "fontSizePx": 25,
+      "weight": 600,
+      "color": "#003e64"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#003e64",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#003e64",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#f0f0f0",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

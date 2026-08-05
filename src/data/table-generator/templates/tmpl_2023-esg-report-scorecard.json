@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_2023-esg-report-scorecard",
+  "source": "2023-esg-report-scorecard.pdf",
+  "sourceFonts": [
+    "CMQMBD+HelveticaNeueLTStd-Hv",
+    "FKUERX+HelveticaNeueLTStd-Bd",
+    "FKUERX+HelveticaNeueLTStd-Roman",
+    "CMQMBD+FontAwesome5FreeSolid",
+    "FKUERX+HelveticaNeueLTStd-Bd",
+    "FKUERX+HelveticaNeueLTStd-Roman",
+    "FKUERX+HelveticaNeueLTStd-Bd",
+    "FKUERX+HelveticaNeueLTStd-Roman"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.42,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#c04824",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2023-esg-report-scorecard.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 45,
+      "weight": 700,
+      "color": "#c04824"
+    },
+    "h2": {
+      "fontSizePx": 24,
+      "weight": 700,
+      "color": "#3d9d7e"
+    },
+    "h3": {
+      "fontSizePx": 19,
+      "weight": 600,
+      "color": "#3d9d7e"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#2a86a1",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

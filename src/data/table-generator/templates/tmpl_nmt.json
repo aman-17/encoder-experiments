@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_nmt",
+  "source": "nmt.pdf",
+  "sourceFonts": [
+    "AAAAAB+TimesNewRomanPSMT",
+    "AAAAAC+TimesNewRomanPS-BoldMT",
+    "AAAAAE+TimesNewRomanPS-BoldMT",
+    "AAAAAD+TimesNewRomanPS-BoldItalicMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.58,
+    "columns": 1,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#f39200",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/nmt.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 35,
+      "weight": 700,
+      "color": "#f39200"
+    },
+    "h2": {
+      "fontSizePx": 24,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 21,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 2,
+    "headerStyle": "band",
+    "headerBg": "#f39200",
+    "headerColor": "#ffffff",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

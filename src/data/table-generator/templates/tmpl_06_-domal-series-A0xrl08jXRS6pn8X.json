@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_06_-domal-series-A0xrl08jXRS6pn8X",
+  "source": "06.-domal-series-A0xrl08jXRS6pn8X.pdf",
+  "sourceFonts": [
+    "CIDFont+F1",
+    "CIDFont+F2",
+    "CIDFont+F3",
+    "CIDFont+F4",
+    "CIDFont+F5",
+    "CIDFont+F1",
+    "CIDFont+F2",
+    "CIDFont+F3"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.47,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 68,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 28,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 24,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#87ceeb",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "#ffffff",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

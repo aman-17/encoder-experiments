@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_13PlusScienceSamplePaper",
+  "source": "13PlusScienceSamplePaper.pdf",
+  "sourceFonts": [
+    "Times",
+    "ABCDEE+Gill",
+    "ABCDEE+Gill",
+    "Symbol",
+    "Arial",
+    "ABCDEE+Gill",
+    "ABCDEE+Gill",
+    "ABCDEE+Gill"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.09,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1a3c5e",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "John Lyon Logo",
+    "color": "#e8e0d5",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": {
+    "src": "assets/13PlusScienceSamplePaper.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Times\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 77,
+      "weight": 700,
+      "color": "#1a3c5e"
+    },
+    "h2": {
+      "fontSizePx": 28,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Times\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

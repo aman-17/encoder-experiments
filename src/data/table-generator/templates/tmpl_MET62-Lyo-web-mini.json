@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_MET62-Lyo-web-mini",
+  "source": "MET62-Lyo-web-mini.pdf",
+  "sourceFonts": [
+    "BQGEHV+Choplin-SemiBold",
+    "PTLKVT+Outfit-SemiBold",
+    "BQGEHV+Choplin-SemiBold",
+    "BQGEHV+Outfit-Light",
+    "BQGEHV+Outfit-Black",
+    "BQGEHV+Outfit-ExtraBold",
+    "BQGEHV+GothamPro",
+    "BQGEHV+Outfit-Light"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#c84a4a",
+    "tint": "#f2dcd9",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/MET62-Lyo-web-mini.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 31,
+      "weight": 700,
+      "color": "#c84a4a"
+    },
+    "h2": {
+      "fontSizePx": 26,
+      "weight": 700,
+      "color": "#c84a4a"
+    },
+    "h3": {
+      "fontSizePx": 23,
+      "weight": 600,
+      "color": "#c84a4a"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#c84a4a",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

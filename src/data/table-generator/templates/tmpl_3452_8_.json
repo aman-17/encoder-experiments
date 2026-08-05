@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_3452_8_",
+  "source": "3452 (8).pdf",
+  "sourceFonts": [
+    "Helvetica",
+    "AAAAAA+Helvetica-Bold",
+    "AAAAAA+STXihei",
+    "AAAAAB+STXihei",
+    "AAAAAA+SimHei",
+    "AAAAAA+Helvetica"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.44,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#d32f2f",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#d32f2f"
+    },
+    "h2": {
+      "fontSizePx": 16,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 12,
+      "weight": 600,
+      "color": "#d32f2f"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 8,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#d32f2f",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#d32f2f",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

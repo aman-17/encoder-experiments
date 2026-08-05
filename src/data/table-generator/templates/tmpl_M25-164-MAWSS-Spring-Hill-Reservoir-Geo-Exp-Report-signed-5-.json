@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_M25-164-MAWSS-Spring-Hill-Reservoir-Geo-Exp-Report-signed-5-",
+  "source": "M25-164-MAWSS-Spring-Hill-Reservoir-Geo-Exp-Report-signed-5-30-25.pdf",
+  "sourceFonts": [
+    "DLMPDM+Calibri-Bold",
+    "DLMPGL+Calibri-Bold",
+    "DLMPGM+Calibri",
+    "DLMPGN+Calibri",
+    "DLNBBK+ArialMT",
+    "DLMPNM+Arial-BoldMT",
+    "DLMPOM+Arial-BoldMT",
+    "DLMPPN+Calibri-Italic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 29,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#808080"
+    },
+    "h3": {
+      "fontSizePx": 24,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 2,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

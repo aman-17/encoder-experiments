@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_FY23_Q1_Consolidated_Financial_Statements",
+  "source": "FY23_Q1_Consolidated_Financial_Statements.pdf",
+  "sourceFonts": [
+    "AAAAAC+TimesNewRomanPSMT",
+    "AAAAAD+SFHello-Bold",
+    "AAAAAE+SFHello-Regular",
+    "AAAAAF+SFHello-Bold",
+    "AAAAAG+SFHello-Regular",
+    "AAAAAI+SFHello-Regular",
+    "AAAAAJ+SFHello-Regular",
+    "AAAAAK+Helvetica"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.64,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": true,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "name": "tmpl_venezia",
+  "source": "venezia.pdf",
+  "sourceFonts": [
+    "AAAAAC+PalatinoLinotype-Bold",
+    "AAAAAD+PalatinoLinotype-Bold",
+    "AAAAAF+PalatinoLinotype-Roman"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.13,
+    "columns": 1,
+    "orientation": "landscape"
+  },
+  "decor": {
+    "accent": "#000080",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 9,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 14,
+      "weight": 700,
+      "color": "#000080"
+    },
+    "h2": {
+      "fontSizePx": 13,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 10,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 9,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#e0f2f1",
+    "headerColor": "#000000",
+    "zebra": true,
+    "zebraColor": "#e0f2f1",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_LMR-Color-Chart-2025",
+  "source": "LMR-Color-Chart-2025.pdf",
+  "sourceFonts": [
+    "YCUYRH+Copperplate-Bold",
+    "UXMFGE+TimesNewRomanPSMT",
+    "CIXWVZ+HelveticaNeueLTStd-LtCn",
+    "AFTKTD+HelveticaNeueLTStd-MdCn",
+    "ZGJEFF+Heavitas",
+    "XDKSDJ+Impact",
+    "UWWVNP+Times-Roman",
+    "STXJLT+ArialNarrow"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.3,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#990000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/LMR-Color-Chart-2025.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Copperplate Bold\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 47,
+      "weight": 700,
+      "color": "#990000"
+    },
+    "h2": {
+      "fontSizePx": 25,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 23,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Copperplate Bold\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

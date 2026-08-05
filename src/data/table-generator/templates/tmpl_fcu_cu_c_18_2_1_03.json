@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_fcu_cu_c_18_2_1_03",
+  "source": "fcu_cu_c_18_2_1_03.pdf",
+  "sourceFonts": [
+    "TICIQH+Arial,Bold",
+    "Times-Roman",
+    "ArialMT",
+    "CXVKOJ+Calibri",
+    "Arial-ItalicMT",
+    "Arial-BoldItalicMT",
+    "THKISB+Wingdings-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.56,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#003399",
+    "tint": "#dce6c9",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/fcu_cu_c_18_2_1_03.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#003399"
+    },
+    "h2": {
+      "fontSizePx": 26,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#c6d9a4",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

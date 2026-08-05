@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_andata",
+  "source": "andata.pdf",
+  "sourceFonts": [
+    "AAAAAC+Calibri-Bold",
+    "AAAAAE+Calibri",
+    "AAAAAF+Calibri",
+    "AAAAAH+Arial-BoldMT",
+    "AAAAAI+Calibri-Bold",
+    "AAAAAK+Calibri-BoldItalic",
+    "AAAAAL+Calibri-Bold",
+    "AAAAAM+Calibri-BoldItalic"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.18,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/andata.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 54,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 48,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 34,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#00b5e2",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#f0f0f0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_900-world-fact-sheet",
+  "source": "900-world-fact-sheet.pdf",
+  "sourceFonts": [
+    "AAAAAA+PPObjectSans-Bold",
+    "BAAAAA+Arial-BoldMT",
+    "CAAAAA+Arial-BoldMT",
+    "DAAAAA+ArialMT",
+    "EAAAAA+ObjectSans-Regular",
+    "FAAAAA+Arial-BoldMT",
+    "GAAAAA+ArialMT"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.46,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/900-world-fact-sheet.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 120,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 62,
+      "weight": 700,
+      "color": "#a0522d"
+    },
+    "h3": {
+      "fontSizePx": 34,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": true,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

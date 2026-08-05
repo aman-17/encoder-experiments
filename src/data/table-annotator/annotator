@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Wrapper to run the table annotator (annotateTables.mjs).
+# Usage: ./annotator --dataset <folder> [--port 5599] [--reparse]
+#                    [--worker-root <built worker checkout>]
+# Needs `npm install` in this folder. Parses PDFs via the LlamaParse worker's
+# cli2, so a BUILT worker checkout is required: pass --worker-root (or set
+# $WORKER_ROOT); it must contain dist/worker/cli2.js (run `pnpm compile` there)
+# and a .env with provider keys + S3/layout config.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+export LOCAL_DEV=true
+exec node --max-old-space-size=12500 "$DIR/annotateTables.mjs" "$@"

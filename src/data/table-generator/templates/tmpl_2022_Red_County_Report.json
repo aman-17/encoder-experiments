@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2022_Red_County_Report",
+  "source": "2022_Red_County_Report.pdf",
+  "sourceFonts": [
+    "AYAQAS+CIDFont+F1",
+    "AOEDYW+CIDFont+F2",
+    "ASZJYX+CIDFont+F3",
+    "AAAAAJ+CIDFont+F4",
+    "BFPCBB+CIDFont+F5",
+    "ASJHEV+CIDFont+F6",
+    "ARXHMD+CIDFont+F7",
+    "ASJHEV+CIDFont+F8"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.02,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#d90000",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 71,
+      "weight": 700,
+      "color": "#d90000"
+    },
+    "h2": {
+      "fontSizePx": 62,
+      "weight": 700,
+      "color": "#d90000"
+    },
+    "h3": {
+      "fontSizePx": 45,
+      "weight": 600,
+      "color": "#00c300"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

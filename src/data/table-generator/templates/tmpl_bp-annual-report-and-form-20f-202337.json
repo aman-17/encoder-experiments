@@ -1,0 +1,82 @@
+{
+  "name": "tmpl_bp-annual-report-and-form-20f-202337",
+  "source": "bp-annual-report-and-form-20f-202337.pdf",
+  "sourceFonts": [
+    "AAAAAC+Roboto-Light",
+    "AAAAAE+Roboto-Light",
+    "AAAAAG+Roboto-Bold",
+    "AAAAAI+Roboto-Bold",
+    "AAAAAJ+Roboto-Bold",
+    "AAAAAK+Roboto-Light"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.83,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#00853e",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/bp-annual-report-and-form-20f-202337.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "color": "#4d4d4d"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 36,
+      "weight": 700,
+      "color": "#00853e"
+    },
+    "h2": {
+      "fontSizePx": 30,
+      "weight": 700,
+      "color": "#00853e"
+    },
+    "h3": {
+      "fontSizePx": 23,
+      "weight": 600,
+      "color": "#00853e"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#00853e",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#00853e",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

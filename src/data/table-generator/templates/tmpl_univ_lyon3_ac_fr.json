@@ -1,0 +1,89 @@
+{
+  "name": "tmpl_univ_lyon3_ac_fr",
+  "source": "univ_lyon3_ac_fr.pdf",
+  "sourceFonts": [
+    "KYAGMC+Roboto-Bold",
+    "KYAGMC+ZapfDingbats",
+    "KYAGMC+Roboto-Light",
+    "KYAGMC+Roboto-Black",
+    "KYAGMC+Roboto-Bold",
+    "KYAGMC+Roboto-Medium",
+    "KYAGMC+Roboto-Regular",
+    "KYAGMC+Roboto-BoldCondensed"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.76,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "BIENVENUE EN FRANCE",
+    "color": "#e0eaf2",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": {
+    "src": "assets/univ_lyon3_ac_fr.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 64,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 23,
+      "weight": 700,
+      "color": "#a51c30"
+    },
+    "h3": {
+      "fontSizePx": 21,
+      "weight": 600,
+      "color": "#a51c30"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "none",
+    "borderColor": "#a51c30",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#a51c30",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

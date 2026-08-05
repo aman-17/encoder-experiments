@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+features/
+/data/
+.env
+*.safetensors
+errors.jsonl
+
+# re-include the synth-data toolkits (root .gitignore line ~49 ignores all data/ dirs)
+!src/data/

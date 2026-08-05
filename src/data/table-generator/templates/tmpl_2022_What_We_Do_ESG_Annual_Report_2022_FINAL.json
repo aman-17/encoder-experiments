@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2022_What_We_Do_ESG_Annual_Report_2022_FINAL",
+  "source": "2022_What We Do_ESG Annual Report 2022_FINAL.pdf",
+  "sourceFonts": [
+    "IDKTDX+Knockout-49Liteweight",
+    "ULKIPZ+AGaramondPro-SemiboldItalic",
+    "OCIYJL+Knockout-HTF29-JuniorLiteweight",
+    "ITLODX+Knockout-30JuniorWelterwt",
+    "UGGDPZ+Knockout-48Featherweight",
+    "HKSDPZ+AGaramondPro-Regular",
+    "UGGDPZ+Knockout-48Featherweight",
+    "MHPRSU+Knockout-HTF28-JuniorFeatherwt"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#ffffff"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 151,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 47,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#ffffff"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

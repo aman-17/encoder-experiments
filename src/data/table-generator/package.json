@@ -1,0 +1,19 @@
+{
+  "name": "table-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic table-dataset generator + style-template extractor for the table-extraction benchmark. Builds single-page PDFs with perfect ground truth (expected_markdown) from Gemini-generated, credibly-varied content rendered through real-PDF-derived style templates.",
+  "bin": {
+    "tablegen": "./generateTables.mjs",
+    "extracttemplates": "./extractTemplates.mjs",
+    "scanbatch": "./buildDatasetFromScanBatch.mjs",
+    "scanfinal": "./buildFinalScanDataset.mjs"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.4.0",
+    "@google/genai": "^1.42.0",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^24.31.0"
+  }
+}

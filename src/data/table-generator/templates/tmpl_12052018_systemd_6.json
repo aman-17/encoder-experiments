@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_12052018_systemd_6",
+  "source": "12052018_systemd_6.pdf",
+  "sourceFonts": [
+    "OQMBZZ+LiberationMono-Bold",
+    "OQMBZZ+Overpass-ExtraBold",
+    "OQMBZZ+Overpass-Regular",
+    "OQMBZZ+Overpass-SemiBold",
+    "OQMBZZ+LiberationMono-Bold",
+    "OQMBZZ+LiberationMono-Italic"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.62,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#cc0000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "IBM Plex Mono",
+    "fontStack": "\"IBM Plex Mono\", 'Courier New', monospace",
+    "fontSizePx": 15,
+    "color": "#333333"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 50,
+      "weight": 700,
+      "color": "#cc0000"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#cc0000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#cc0000"
+    }
+  },
+  "table": {
+    "fontFamily": "IBM Plex Mono",
+    "fontStack": "\"IBM Plex Mono\", 'Courier New', monospace",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": true,
+    "zebraColor": "#e0e0e0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

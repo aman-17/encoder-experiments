@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_AL092022_Ian",
+  "source": "AL092022_Ian.pdf",
+  "sourceFonts": [
+    "ArialMT",
+    "Arial-BoldMT",
+    "BCDEEE+Calibri-Bold",
+    "BCDFEE+Calibri",
+    "ArialMT",
+    "Arial-BoldMT",
+    "BCDGEE+TwCenMT-Regular",
+    "Arial-ItalicMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.07,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000080",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/AL092022_Ian.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#000080"
+    },
+    "h2": {
+      "fontSizePx": 25,
+      "weight": 700,
+      "color": "#000080"
+    },
+    "h3": {
+      "fontSizePx": 22,
+      "weight": 600,
+      "color": "#000080"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

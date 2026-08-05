@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Wrapper to rebuild benchmark datasets from a directory of scanned package PDFs.
+# Usage:
+#   ./scanbatch --scans-dir <dir> --packages-dir <pkg-root> [--packages-dir <pkg-root2>] --out <dataset-dir>
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec node --max-old-space-size=4096 "$DIR/buildDatasetFromScanBatch.mjs" "$@"

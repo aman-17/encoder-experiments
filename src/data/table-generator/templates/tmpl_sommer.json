@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_sommer",
+  "source": "sommer.pdf",
+  "sourceFonts": [
+    "AAAAAB+DINPro-Bold",
+    "AAAAAC+DINPro-Bold",
+    "AAAAAD+SBBPictoKubus",
+    "AAAAAE+DINPro",
+    "AAAAAF+DINPro-Medium",
+    "AAAAAG+DINPro-Medium",
+    "AAAAAI+CourierNewPSMT"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.3,
+    "columns": 2,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#003366",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.18,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/sommer.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 38,
+      "weight": 700,
+      "color": "#003366"
+    },
+    "h2": {
+      "fontSizePx": 30,
+      "weight": 700,
+      "color": "#003366"
+    },
+    "h3": {
+      "fontSizePx": 29,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#e6e6e6",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

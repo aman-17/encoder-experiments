@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_1_Update_CampusHousing-1-1_1_",
+  "source": "1.Update_CampusHousing-1-1 (1).pdf",
+  "sourceFonts": [
+    "BAAAAA+Alegreya-Regular",
+    "CAAAAA+Lora-Italic",
+    "DAAAAA+Lora-BoldItalic",
+    "AAAAAA+Alegreya-Bold",
+    "JBKBXU+MinionPro-Regular",
+    "RCMXFE+MinionPro-Regular",
+    "EANSFE+MinionPro-Regular",
+    "BUIFPK+MinionPro-Regular"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.47,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000f55",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/1_Update_CampusHousing-1-1_1_.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 48,
+      "weight": 700,
+      "color": "#000f55"
+    },
+    "h2": {
+      "fontSizePx": 31,
+      "weight": 700,
+      "color": "#000f55"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000f55"
+    }
+  },
+  "table": {
+    "fontFamily": "Lora",
+    "fontStack": "\"Lora\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

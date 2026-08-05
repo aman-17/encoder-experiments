@@ -1,0 +1,74 @@
+{
+  "name": "tmpl_appm",
+  "source": "appm.pdf",
+  "sourceFonts": [
+    "AAAAAB+ArialMT",
+    "AAAAAC+Arial-BoldMT",
+    "AAAAAD+Arial-BoldMT",
+    "AAAAAE+CambriaMath"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.39,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#222222",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#222222"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#0066cc"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 11,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#0066cc",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#e6f2ff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

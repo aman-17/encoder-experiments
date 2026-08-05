@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Wrapper to run the synthetic table dataset generator (generateTables.mjs).
+# Usage: ./tablegen --out <dir> [--count 50] [--seed N] [--templates <dir>]
+#                   [--llm-concurrency 50] [--render-concurrency 6] [--no-llm] [--no-html] [--clean]
+#                   [--multipage]   (allow multi-page "huge" tables; default off = single-page docs)
+# Needs `npm install` in this folder, Chrome/Chromium installed, and
+# GOOGLE_GEMINI_API_KEY in the environment for credible content.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec node --max-old-space-size=4096 "$DIR/generateTables.mjs" "$@"

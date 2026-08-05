@@ -1,0 +1,16 @@
+{
+  "name": "math-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Synthetic math-heavy document generator for the parse benchmark. Builds single-page PDFs of procedurally generated technical prose + KaTeX-rendered formulas with exact gold markdown (headings, prose, and formulas as the original LaTeX source in $...$/$$...$$).",
+  "bin": {
+    "mathgen": "./generateMath.mjs"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^9.4.0",
+    "katex": "^0.16.11",
+    "pdf-lib": "^1.17.1",
+    "puppeteer": "^24.31.0"
+  }
+}

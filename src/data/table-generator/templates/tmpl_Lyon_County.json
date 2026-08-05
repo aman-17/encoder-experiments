@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_Lyon_County",
+  "source": "Lyon_County.pdf",
+  "sourceFonts": [
+    "BCDGEE+Tahoma-Bold",
+    "BCDEEE+Tahoma",
+    "BCDFEE+Tunga,Bold",
+    "BCDHEE+Calibri-Bold",
+    "BCDIEE+Calibri"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.47,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ffffff",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/Lyon_County.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Tahoma Bold\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 36,
+      "weight": 700,
+      "color": "#ffffff"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Tahoma Bold\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#005a9c",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#005a9c",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#f2f2f2",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "name": "tmpl_Ghost-Origin-Blend-THCa-Disposable-2g-Juiceman-Hybrid-Lab-Re",
+  "source": "Ghost-Origin-Blend-THCa-Disposable-2g-Juiceman-Hybrid-Lab-Report-2026-01-14.pdf",
+  "sourceFonts": [
+    "*Times",
+    "*Geneva-7412-Identity-H",
+    "*Times",
+    "*Times",
+    "*Times",
+    "*Times",
+    "*Times",
+    "*Verdana-7419-Identity-H"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.5,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "EXCELBIS LABS",
+    "color": "#d3d3d3",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": {
+    "src": "assets/Ghost-Origin-Blend-THCa-Disposable-2g-Juiceman-Hybrid-Lab-Re.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 126,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 108,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 90,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

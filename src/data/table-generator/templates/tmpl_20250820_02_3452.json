@@ -1,0 +1,83 @@
+{
+  "name": "tmpl_20250820_02_3452",
+  "source": "20250820_02_3452.pdf",
+  "sourceFonts": [
+    "BCDEEE+Meiryo",
+    "BCDFEE+メイリオ,Bold",
+    "BCDGEE+メイリオ,Bold",
+    "BCDHEE+MeiryoUI",
+    "BCDIEE+MeiryoUI",
+    "BCDJEE+Meiryo",
+    "CIUIII+Arial",
+    "BCDKEE+Wingdings-Regular"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.44,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#e60012",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/20250820_02_3452.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#e60012"
+    },
+    "h2": {
+      "fontSizePx": 25,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#f39800",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#f8e3c7",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

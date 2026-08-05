@@ -1,0 +1,81 @@
+{
+  "name": "tmpl_2024-impact-report-esg-scorecard",
+  "source": "2024-impact-report-esg-scorecard.pdf",
+  "sourceFonts": [
+    "YDDMDG+HelveticaNowText-Bold",
+    "YDDMDG+HelveticaNowText-Regular",
+    "YDDMDG+BigCaslonFB",
+    "YDDMDG+HelveticaNowText-Bold",
+    "YDDMDG+HelveticaNowText-ExtraBold",
+    "YDDMDG+HelveticaNowText-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.44,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#006633",
+    "tint": "#f7f9f2",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 64,
+      "weight": 700,
+      "color": "#006633"
+    },
+    "h2": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "horizontal",
+    "borderColor": "#006633",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#006633",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

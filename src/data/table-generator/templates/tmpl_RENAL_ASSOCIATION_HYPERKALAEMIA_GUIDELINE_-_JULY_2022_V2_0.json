@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_RENAL_ASSOCIATION_HYPERKALAEMIA_GUIDELINE_-_JULY_2022_V2_0",
+  "source": "RENAL ASSOCIATION HYPERKALAEMIA GUIDELINE - JULY 2022 V2_0.pdf",
+  "sourceFonts": [
+    "BCDEEE+Calibri-Bold",
+    "BCDFEE+Calibri",
+    "BCDGEE+Calibri",
+    "SymbolMT",
+    "ArialMT",
+    "BCDHEE+Calibri-BoldItalic",
+    "BCDIEE+Calibri-Italic",
+    "BCDJEE+Calibri-Bold"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#44546a",
+    "tint": "none",
+    "bodyAlign": "center",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/RENAL_ASSOCIATION_HYPERKALAEMIA_GUIDELINE_-_JULY_2022_V2_0.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 24,
+      "weight": 700,
+      "color": "#44546a"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#44546a"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "grid",
+    "borderColor": "#d9d9d9",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "auto",
+    "numericAlign": "left"
+  }
+}

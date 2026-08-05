@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_Wine_Institute_2022_Harvest_Report",
+  "source": "Wine_Institute_2022_Harvest_Report.pdf",
+  "sourceFonts": [
+    "TOBIZA+Rift-Demi",
+    "TOBIZA+Begum-Regular",
+    "TOBIZA+Begum-Semibold",
+    "TOBIZA+Rift-Demi",
+    "YKHFOW+Begum-Regular",
+    "BFLNEQ+Begum-Regular",
+    "OTBNEQ+Begum-Regular",
+    "GMEWWG+Begum-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 2,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1a3c5e",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#333333"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 75,
+      "weight": 700,
+      "color": "#1a3c5e"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#1a3c5e"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#1a3c5e"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f9f9f9",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

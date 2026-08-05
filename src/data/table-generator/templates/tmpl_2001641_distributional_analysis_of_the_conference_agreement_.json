@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2001641_distributional_analysis_of_the_conference_agreement_",
+  "source": "2001641_distributional_analysis_of_the_conference_agreement_for_the_tax_cuts_and_jobs_act_0.pdf",
+  "sourceFonts": [
+    "BCDEEE+AvenirLTPro-Medium",
+    "BCDFEE+Lato-Black",
+    "BCDGEE+Lato-Light",
+    "TimesNewRomanPSMT",
+    "BCDHEE+AvenirLTPro-Roman",
+    "BCDIEE+AvenirLTPro-Roman",
+    "SymbolMT",
+    "ArialMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.39,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#004a8d",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#333333"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 71,
+      "weight": 700,
+      "color": "#004a8d"
+    },
+    "h2": {
+      "fontSizePx": 20,
+      "weight": 700,
+      "color": "#004a8d"
+    },
+    "h3": {
+      "fontSizePx": 16,
+      "weight": 600,
+      "color": "#333333"
+    }
+  },
+  "table": {
+    "fontFamily": "Lato",
+    "fontStack": "\"Lato\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#f9f9f9",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

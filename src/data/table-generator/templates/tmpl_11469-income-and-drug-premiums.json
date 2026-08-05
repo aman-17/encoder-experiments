@@ -1,0 +1,74 @@
+{
+  "name": "tmpl_11469-income-and-drug-premiums",
+  "source": "11469-income-and-drug-premiums.pdf",
+  "sourceFonts": [
+    "ZFZTEE+Montserrat-Bold",
+    "ZFZTEE+Gotham-Book",
+    "ZFZTEE+Gotham-Bold",
+    "ZFZTEE+Gotham-Medium",
+    "ZFZTEE+MyriadPro-Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#00338d",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 41,
+      "weight": 700,
+      "color": "#00338d"
+    },
+    "h2": {
+      "fontSizePx": 29,
+      "weight": 700,
+      "color": "#00338d"
+    },
+    "h3": {
+      "fontSizePx": 25,
+      "weight": 600,
+      "color": "#00338d"
+    }
+  },
+  "table": {
+    "fontFamily": "Montserrat",
+    "fontStack": "\"Montserrat\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

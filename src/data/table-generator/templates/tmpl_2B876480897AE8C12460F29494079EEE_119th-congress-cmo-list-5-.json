@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2B876480897AE8C12460F29494079EEE_119th-congress-cmo-list-5-",
+  "source": "2B876480897AE8C12460F29494079EEE.119th-congress-cmo-list-5-.pdf",
+  "sourceFonts": [
+    "Arial-BoldMT",
+    "Arial-BoldMT",
+    "ArialMT",
+    "ArialMT",
+    "SymbolMT",
+    "BCDEEE+Calibri",
+    "BCDFEE+ArialNova-Bold",
+    "BCDGEE+ArialNova"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.05,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#1f4e79",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 14,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 33,
+      "weight": 700,
+      "color": "#1f4e79"
+    },
+    "h2": {
+      "fontSizePx": 22,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 18,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

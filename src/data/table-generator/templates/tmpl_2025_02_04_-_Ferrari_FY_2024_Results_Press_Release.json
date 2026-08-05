@@ -1,0 +1,82 @@
+{
+  "name": "tmpl_2025_02_04_-_Ferrari_FY_2024_Results_Press_Release",
+  "source": "2025_02_04 - Ferrari FY 2024 Results Press Release.pdf",
+  "sourceFonts": [
+    "BCDEEE+Ferrari-SansLight",
+    "BCDFEE+Ferrari-SansLight",
+    "SymbolMT",
+    "ArialMT",
+    "TimesNewRomanPS-BoldMT",
+    "BCDGEE+Ferrari-SansRegular",
+    "TimesNewRomanPSMT"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.86,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2025_02_04_-_Ferrari_FY_2024_Results_Press_Release.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 57,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 52,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 19,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#e60000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": true,
+    "zebraColor": "#e0e0e0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "name": "tmpl_Summary_WorldInequalityReport2022_English",
+  "source": "Summary_WorldInequalityReport2022_English.pdf",
+  "sourceFonts": [
+    "KYOYNX+Marianne-ExtraBold",
+    "KYOYNX+Marianne-Thin",
+    "KYOYNX+Marianne-Light",
+    "EBQVNJ+Marianne-Light",
+    "KYOYNX+Marianne-Medium",
+    "KYOYNX+Marianne-Bold",
+    "KYOYNX+Lato-BoldItalic",
+    "KYOYNX+Lato-LightItalic"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.54,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#e30613",
+    "tint": "#f2f2f2",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 106,
+      "weight": 700,
+      "color": "#e30613"
+    },
+    "h2": {
+      "fontSizePx": 97,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 81,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

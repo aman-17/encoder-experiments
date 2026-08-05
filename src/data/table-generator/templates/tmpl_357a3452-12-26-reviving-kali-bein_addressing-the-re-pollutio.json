@@ -1,0 +1,86 @@
+{
+  "name": "tmpl_357a3452-12-26-reviving-kali-bein_addressing-the-re-pollutio",
+  "source": "357a3452-12-26-reviving-kali-bein_addressing-the-re-pollution-sources-and-exploring-solutions_ed.pdf",
+  "sourceFonts": [
+    "TimesNewRomanPSMT",
+    "TimesNewRomanPS-ItalicMT",
+    "BCDEEE+Georgia",
+    "BCDFEE+Georgia",
+    "BCDGEE+Calibri-Light",
+    "BCDHEE+Georgia-Bold",
+    "BCDIEE+Impact",
+    "BCDJEE+Garamond"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.74,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "justify",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "left",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/357a3452-12-26-reviving-kali-bein_addressing-the-re-pollutio.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 13,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 24,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 18,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Serif 4",
+    "fontStack": "\"Source Serif 4\", Georgia, 'Times New Roman', serif",
+    "fontSizePx": 12,
+    "lineHeight": 1.3,
+    "border": "box",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

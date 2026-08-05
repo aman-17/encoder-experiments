@@ -1,0 +1,80 @@
+{
+  "name": "tmpl_2024-Voyant-Beauty-ESG-Report",
+  "source": "2024-Voyant-Beauty-ESG-Report.pdf",
+  "sourceFonts": [
+    "RUARPP+RecifeDisplayTrial-Regular",
+    "RUARPP+Graphik-Light",
+    "RUARPP+RecifeDisplayTrial-Medium",
+    "RUARPP+RecifeDisplayTrial-Book",
+    "RUARPP+RecifeDisplayTrial-SemiBold",
+    "RUARPP+Graphik-Bold",
+    "QWQLBR+Graphik-Regular",
+    "QWQLBR+Graphik-Regular"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.2,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#2d2942",
+    "tint": "#f4e8ef",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/2024-Voyant-Beauty-ESG-Report.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#2d2942"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 27,
+      "weight": 700,
+      "color": "#2d2942"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#2d2942"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#2d2942"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#ffffff",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#2d2942",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "left"
+  }
+}

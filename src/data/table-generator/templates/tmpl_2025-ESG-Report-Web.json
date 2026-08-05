@@ -1,0 +1,77 @@
+{
+  "name": "tmpl_2025-ESG-Report-Web",
+  "source": "2025-ESG-Report-Web.pdf",
+  "sourceFonts": [
+    "AAAAAD+ProximaNova-Medium",
+    "BKSLIU+ProximaNova-Regular",
+    "BKSOII+ProximaNova-Medium",
+    "AAOXUL+Aptos-Bold",
+    "BKSOJG+Grad",
+    "AAAABF+Quivira",
+    "AAAAAD+ArialMT",
+    "BKOVKY+ProximaNova-Bold"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 1.02,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#324354",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": false
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": null,
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#333333"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 121,
+      "weight": 700,
+      "color": "#324354"
+    },
+    "h2": {
+      "fontSizePx": 21,
+      "weight": 700,
+      "color": "#324354"
+    },
+    "h3": {
+      "fontSizePx": 17,
+      "weight": 600,
+      "color": "#324354"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.3,
+    "border": "none",
+    "borderColor": "#cccccc",
+    "borderWidthPx": 1,
+    "headerStyle": "plain-bold",
+    "headerBg": "transparent",
+    "headerColor": "#333333",
+    "zebra": false,
+    "zebraColor": "#f9f9f9",
+    "cellPadXPx": 8,
+    "cellPadYPx": 4,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

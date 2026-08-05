@@ -1,0 +1,78 @@
+{
+  "name": "tmpl_puma",
+  "source": "puma.pdf",
+  "sourceFonts": [
+    "AAAAAB+Tahoma",
+    "AAAAAC+Arial-BoldMT",
+    "AAAAAD+Arial-BoldMT",
+    "AAAAAE+ArialMT",
+    "AAAAAF+Arial-ItalicMT"
+  ],
+  "page": {
+    "size": "Letter",
+    "marginIn": 0.77,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#ff0000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": null,
+  "logo": {
+    "src": "assets/puma.png",
+    "align": "left"
+  },
+  "body": {
+    "fontStack": "\"Tahoma\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 10,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 16,
+      "weight": 700,
+      "color": "#ff0000"
+    },
+    "h2": {
+      "fontSizePx": 13,
+      "weight": 700,
+      "color": "#ff0000"
+    },
+    "h3": {
+      "fontSizePx": 12,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontStack": "\"Tahoma\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 9,
+    "lineHeight": 1.15,
+    "border": "horizontal",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#ff0000",
+    "headerColor": "#ffffff",
+    "zebra": true,
+    "zebraColor": "#e0e0e0",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

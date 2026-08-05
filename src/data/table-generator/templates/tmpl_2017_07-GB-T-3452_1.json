@@ -1,0 +1,88 @@
+{
+  "name": "tmpl_2017_07-GB-T-3452_1",
+  "source": "2017.07-GB-T-3452.1.pdf",
+  "sourceFonts": [
+    "IXRBOD+ArialMT",
+    "RZYQJL+CenturyGothic",
+    "WIYABB+Arial-BoldMT",
+    "WIYABB+Arial-BoldMT",
+    "RZYQJL+CenturyGothic"
+  ],
+  "page": {
+    "size": "A4",
+    "marginIn": 0.5,
+    "columns": 1,
+    "orientation": "portrait"
+  },
+  "decor": {
+    "accent": "#000000",
+    "tint": "none",
+    "bodyAlign": "left",
+    "lineHeight": 1.35,
+    "letterSpacingPx": 0,
+    "header": {
+      "show": true,
+      "rule": true,
+      "align": "center",
+      "upper": false
+    },
+    "footer": {
+      "show": true,
+      "rule": true,
+      "align": "right",
+      "pageNo": true
+    },
+    "captured": true
+  },
+  "watermark": {
+    "text": "O-RING MEDIDAS ESTANDAR (GB/T 34",
+    "color": "#f39c12",
+    "opacity": 0.1,
+    "angle": -30
+  },
+  "logo": {
+    "src": "assets/2017_07-GB-T-3452_1.png",
+    "align": "left"
+  },
+  "body": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 15,
+    "color": "#000000"
+  },
+  "headings": {
+    "h1": {
+      "fontSizePx": 117,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h2": {
+      "fontSizePx": 98,
+      "weight": 700,
+      "color": "#000000"
+    },
+    "h3": {
+      "fontSizePx": 77,
+      "weight": 600,
+      "color": "#000000"
+    }
+  },
+  "table": {
+    "fontFamily": "Source Sans 3",
+    "fontStack": "\"Source Sans 3\", Arial, Helvetica, sans-serif",
+    "fontSizePx": 13,
+    "lineHeight": 1.15,
+    "border": "grid",
+    "borderColor": "#000000",
+    "borderWidthPx": 1,
+    "headerStyle": "band",
+    "headerBg": "#f39c12",
+    "headerColor": "#000000",
+    "zebra": false,
+    "zebraColor": "#ffffff",
+    "cellPadXPx": 4,
+    "cellPadYPx": 2,
+    "width": "100%",
+    "numericAlign": "right"
+  }
+}

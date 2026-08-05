@@ -1,0 +1,27 @@
+[project]
+name = "encoder-experiments"
+version = "0.1.0"
+description = "Exp 1: frozen-encoder feature extraction + probe-site readout for the encoder-anatomy paper"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.4",
+    "torchvision>=0.19",  # transformers 5.x image processors require it
+    "transformers>=4.57",
+    "pillow>=10.0",
+    "safetensors>=0.4",
+    "numpy>=1.26",
+    "tqdm>=4.66",
+    "pymupdf>=1.28.0",
+    "augraphy>=8.2.6",
+    "opencv-python-headless>=5.0.0.93",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/encoder_experiments"]

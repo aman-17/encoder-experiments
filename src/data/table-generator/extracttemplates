@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Wrapper to run the style-template extractor (extractTemplates.mjs).
+# Usage: ./extracttemplates --pdfs <dir> --out <templates-dir> [--limit N] [--concurrency 50] [--no-llm]
+# Needs `npm install` in this folder, poppler (pdffonts/pdfinfo/pdftotext/pdftoppm),
+# and GOOGLE_GEMINI_API_KEY in the environment for style assignment.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+exec node --max-old-space-size=4096 "$DIR/extractTemplates.mjs" "$@"
