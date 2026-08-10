@@ -22,6 +22,7 @@ import { makeRng } from "./rng.mjs";
 import { documentHtml, docGroundTruth } from "./render.mjs";
 import { textTest, layoutTest, pageMarkdown, measureElements, measureChartSvgs } from "./groundTruth.mjs";
 import { chartDataPoints, chartGoldMarkdown, chartPixelsSidecar } from "./figure.mjs";
+import { measureLayoutItems, buildLayoutSidecar } from "./layoutSidecar.mjs";
 import { pickLocale } from "./locales.mjs";
 import { pickDocStyle, pickSlideTheme } from "./docstyle.mjs";
 const CHARTS_ONLY = process.env.CG_CHARTS_ONLY === "1" || process.env.CG_CHARTS_ONLY === "true";
@@ -253,7 +254,7 @@ async function main() {
     const srcDir = path.join(outDir, "src");
     if (args.clean && fssync.existsSync(outDir)) {
         for (const f of fssync.readdirSync(outDir)) {
-            if (f.endsWith(".pdf") || f.endsWith(".test.json")) { fssync.rmSync(path.join(outDir, f)); }
+            if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".layout.json")) { fssync.rmSync(path.join(outDir, f)); }
         }
         if (!args.noHtml) {
             fssync.rmSync(srcDir, { recursive: true, force: true });
@@ -276,7 +277,7 @@ async function main() {
         if (!on) { continue; }
         if (args.clean && fssync.existsSync(dir)) {
             for (const f of fssync.readdirSync(dir)) {
-                if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md")) { fssync.rmSync(path.join(dir, f)); }
+                if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md") || f.endsWith(".layout.json")) { fssync.rmSync(path.join(dir, f)); }
             }
         }
         await fs.mkdir(dir, { recursive: true });
@@ -372,6 +373,7 @@ async function main() {
         let finalScale = 1;
         let measured = null;
         let chartRects = null;
+        let layoutItems = null;
         const { w: printW, h: printH } = pagePx(landscape);
         try {
             // Measure at the true A4 page size so the fit matches the print layout.
@@ -438,19 +440,27 @@ async function main() {
             if (wantLayout && pageCount === 1) {
                 measured = await page.evaluate(measureElements);
             }
-            // Pixel-space chart geometry needs each on-page <svg>'s rect. Single
-            // page only, and never after a --multipage re-render (doc.pageInfo):
-            // the open DOM is the ORIGINAL render, not the emitted page.
+            // Pixel-space chart geometry and the Canonical17 layout sidecar both
+            // need PRINT-layout rects. Single page only, and never after a
+            // --multipage re-render (doc.pageInfo): the open DOM is the ORIGINAL
+            // render, not the emitted page.
             // Chrome's pdf `scale` lays the printed page out at printW/scale CSS
             // px and THEN scales, so rects measured at the printW viewport are
             // wrong whenever scale != 1 — re-measure at the true print layout
             // size (the PDF is already written; the relayout is harmless, and
             // layout GT above keeps its original measurement).
-            if (wantChart && figures.length && pageCount === 1 && !doc.pageInfo) {
+            if (pageCount === 1 && !doc.pageInfo) {
                 if (finalScale !== 1) {
                     await page.setViewport({ width: Math.round(printW / finalScale), height: Math.round(printH / finalScale), deviceScaleFactor: 1 });
                 }
-                chartRects = await page.evaluate(measureChartSvgs);
+                // huge docs print with real page margins the mapping ignores —
+                // no sidecar for them (they are multi-page in practice anyway).
+                if (!doc.huge) {
+                    layoutItems = await page.evaluate(measureLayoutItems);
+                }
+                if (wantChart && figures.length) {
+                    chartRects = await page.evaluate(measureChartSvgs);
+                }
             }
             // Copy the PDF into the sibling datasets.
             if (wantText) { await fs.writeFile(path.join(textDir, `${id}.pdf`), pdf); }
@@ -475,6 +485,17 @@ async function main() {
                 rule.source_pages = doc.pageInfo.of;
             }
             await fs.writeFile(path.join(outDir, `${id}.test.json`), `${JSON.stringify(rule, null, 2)}\n`);
+        }
+
+        // Canonical17 layout sidecar (<id>.layout.json) — measured at the print
+        // layout above; single-page docs only. Written next to every copy of
+        // the rendered PDF (main dir + sibling datasets).
+        if (layoutItems) {
+            const payload = `${JSON.stringify(buildLayoutSidecar(layoutItems, finalScale, printW, printH), null, 2)}\n`;
+            await fs.writeFile(path.join(outDir, `${id}.layout.json`), payload);
+            if (wantText) { await fs.writeFile(path.join(textDir, `${id}.layout.json`), payload); }
+            if (wantLayout) { await fs.writeFile(path.join(layoutDir, `${id}.layout.json`), payload); }
+            if (wantChart && figures.length) { await fs.writeFile(path.join(chartDir, `${id}.layout.json`), payload); }
         }
 
         // Text test (text_extended format).

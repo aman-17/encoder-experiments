@@ -57,6 +57,23 @@ small-caps envs), **lecture** (wide annotation margin, informal headers),
 **exam** (numbered problems with points, instructions box),
 **handbook** (dense 2-3-column labelled formula reference).
 
+**Old scanned math book family** (`MG_OLD_BOOK=1`, or name a substyle in
+`MG_STYLE`): three period substyles picked per-doc by the seeded rng, modelled
+on real scanned pages (typography/layout only — paper aging is the degrade
+stage's job). **treatise18** (EB Garamond/Cardo, long-ſ medial-s substitution
+in body text — recorded verbatim in the gold — italic running head + page
+number, `§. N.` section marks, bracket fractions/factorials, series ending in
+`&c.`, catchword bottom-right, wide margins), **letterpress1900** (PT
+Serif/Noto Serif, `Art. N ]` + letterspaced caps chapter title + page running
+head, loose uneven per-paragraph word spacing, big-paren integer matrices and
+subscripted quadratic forms, small-caps `Example N :` lead-ins),
+**midcentury** (Libre Baskerville/Crimson Text/Lora, italic running head +
+page, justified em-indent paragraphs, italic `Theorem m.n.` lead-ins,
+bracketed matrices, right-aligned `\tag` equation numbers). All old-book docs
+are single-column, era serif faces only, and their formula mix is biased per
+substyle (treatise: series/binomials/fractions; the other two: matrices and
+subscripted systems). Flag-off runs are unaffected (same-seed byte-identical).
+
 1/2/3-column bodies use the engine's CSS column flow. Wide formulas (long
 aligned derivations, big matrices) in 2-column docs are set **full-width by
 segmenting the column flow** (not CSS `column-span:all`, which fragments
@@ -84,7 +101,8 @@ network.
 
 | flag | default | effect |
 |---|---|---|
-| `MG_STYLE` | `mix` | force archetype(s): `textbook,paper,lecture,exam,handbook` (csv) |
+| `MG_STYLE` | `mix` | force archetype(s): `textbook,paper,lecture,exam,handbook` + old-book `treatise18,letterpress1900,midcentury` (csv) |
 | `MG_TIER` | `mix` | force a single difficulty tier for all docs |
+| `MG_OLD_BOOK` | off | `1` = old-scanned-book family: seeded per-doc pick among the three period substyles |
 
 Both default to no behavior change (batch mix as described above).

@@ -18,6 +18,9 @@
 //
 // Env: MG_STYLE=mix|textbook|paper|lecture|exam|handbook (csv ok; default mix)
 //      MG_TIER=mix|easy|medium|hard (default mix)
+//      MG_OLD_BOOK=1  "old scanned math book" family: per-doc seeded pick among
+//                     treatise18 / letterpress1900 / midcentury substyles
+//                     (MG_STYLE=treatise18|letterpress1900|midcentury also works)
 
 import fs from "node:fs/promises";
 import fssync from "node:fs";
@@ -27,6 +30,7 @@ import puppeteer from "puppeteer";
 import { PDFDocument } from "pdf-lib";
 import { makeRng } from "./rng.mjs";
 import { randomTemplate } from "./template.mjs";
+import { pickStyle, oldBookTemplate, OLD_BOOK_KEYS } from "./mathStyles.mjs";
 import { buildMathDoc, katexRejectCount } from "./mathContent.mjs";
 import { documentHtml, docMarkdown } from "./mathRender.mjs";
 
@@ -96,6 +100,144 @@ async function fitScale(page, printH, printW) {
     return Math.max(0.1, z * 0.95);
 }
 
+// ---- layout ground truth (Canonical17 sidecar) ------------------------------
+//
+// Browser-side sweep (passed to page.evaluate). Must run at the PRINT layout,
+// never the screen viewport: page.pdf({scale}) lays the page out at
+// printW/scale CSS px wide (print media), so when scale != 1 a screen-viewport
+// measurement drifts — text re-wraps at the wrong width (this is the
+// print_scale bug the table-generator's measureAtPrintLayout comment
+// documents; the failing-table-replicator shipped misaligned GT because of
+// it). Measuring after re-laying the DOM out at the printed geometry makes
+// bbox = measured * scale exact.
+//
+// Every visible element maps to exactly one item: runhead cells + old-book
+// chrome (.obl/.obc/.obr, .catchword), title-block divs, headings, paragraphs
+// (leadp §-marks live inside their <p>), .hblabel handbook labels, and .disp
+// display-math blocks. Containers (.env/.problem/.hbitem/.colflow/.fullwidth)
+// are covered via their children.
+function measureMathElements() {
+    const sel = "h1, h2, p, .disp, .kicker, .byline, .meta, .abstract, .instructions, .catchword, .hblabel, .obhead .obl, .obhead .obc, .obhead .obr";
+    // Rendered text only: skip the visually-clipped KaTeX MathML mirror so
+    // formula characters are not duplicated (innerText would include it —
+    // clip: rect(1px,...) does not hide from innerText).
+    const visibleText = (el) => {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+            acceptNode(n) {
+                for (let a = n.parentElement; a && a !== el.parentElement; a = a.parentElement) {
+                    if (a.classList && a.classList.contains("katex-mathml")) { return NodeFilter.FILTER_REJECT; }
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            },
+        });
+        let s = "";
+        while (walker.nextNode()) { s += walker.currentNode.nodeValue; }
+        return s.replace(/\s+/g, " ").trim();
+    };
+    const sx = window.scrollX || 0;
+    const sy = window.scrollY || 0;
+    // Chrome cells (runhead thirds, catchword) are wide flex/block boxes with
+    // the text pushed to one edge — box the TEXT, not the empty cell.
+    const TIGHT = ["obl", "obc", "obr", "catchword"];
+    return [...document.querySelectorAll(sel)].map((el) => {
+        let r = el.getBoundingClientRect();
+        if (TIGHT.some((k) => el.classList.contains(k))) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const tr = range.getBoundingClientRect();
+            if (tr.width > 0 && tr.height > 0) { r = tr; }
+        }
+        // KaTeX keeps the exact source in the MathML annotation.
+        const ann = el.classList.contains("disp") ? el.querySelector('annotation[encoding="application/x-tex"]') : null;
+        return {
+            tag: el.tagName.toLowerCase(),
+            cls: String(el.className || ""),
+            x: r.x + sx, y: r.y + sy, w: r.width, h: r.height,
+            text: visibleText(el),
+            latex: ann ? ann.textContent : null,
+        };
+    });
+}
+
+// Corrected print-layout measurement path (same idiom as the table-generator
+// fix): print media + viewport at the geometry page.pdf({scale}) prints.
+async function measureAtPrintLayout(page, printW, printH, scale) {
+    await page.emulateMediaType("print");
+    await page.setViewport({
+        width: Math.max(1, Math.round(printW / scale)),
+        height: Math.max(1, Math.round(printH / scale)),
+        deviceScaleFactor: 1,
+    });
+    return page.evaluate(measureMathElements);
+}
+
+// Map a measured element to a Canonical17 class + attrs. Lead-in paragraphs
+// (§-marks, "Theorem 2.1.", "Example 1 :", "Art." heads) are inline spans of
+// their <p>, so they classify as Text; only real headings become
+// Section-header / Title.
+function classifyMathElement(el) {
+    const has = (k) => el.cls.split(/\s+/).includes(k);
+    const attrs = {};
+    let cls;
+    if (has("obl") || has("obc") || has("obr")) {
+        cls = "Page-header";
+        if (/^[0-9]+$/.test(el.text)) { attrs.role = "page-number"; }
+        else { attrs.role = "running-head"; }
+    } else if (has("catchword")) {
+        cls = "Page-footer";
+        attrs.role = "catchword";
+    } else if (el.tag === "h1") {
+        cls = "Title";
+        attrs.level = 1;
+    } else if (el.tag === "h2") {
+        cls = "Section-header";
+        attrs.level = 2;
+    } else if (has("disp")) {
+        cls = "Formula";
+        if (el.latex) { attrs.latex = el.latex; }
+    } else {
+        cls = "Text";
+        for (const role of ["kicker", "byline", "meta", "abstract", "instructions", "hblabel"]) {
+            if (has(role)) { attrs.role = role; }
+        }
+    }
+    return { cls, attrs };
+}
+
+// Build the <id>.layout.json sidecar (contract: normalized [0,1] COCO-style
+// [x,y,w,h], top-left origin, Canonical17 enum strings, items in reading
+// order = DOM order, which IS the logical order even in 2-column flows).
+function layoutSidecar(measured, scale, printW, printH) {
+    const items = [];
+    for (const el of measured) {
+        if (el.w <= 0 || el.h <= 0) { continue; }
+        if (!el.text && !el.latex) { continue; } // empty runhead cells etc.
+        const { cls, attrs } = classifyMathElement(el);
+        const bbox = [
+            (el.x * scale) / printW,
+            (el.y * scale) / printH,
+            (el.w * scale) / printW,
+            (el.h * scale) / printH,
+        ].map((v) => Math.max(0, Math.min(1, Math.round(v * 1e5) / 1e5)));
+        items.push({
+            id: items.length,
+            class: cls,
+            bbox,
+            reading_order: items.length,
+            text: el.text || null,
+            ...(Object.keys(attrs).length ? { attrs } : {}),
+        });
+    }
+    return {
+        version: 1,
+        coords: "normalized [0,1] over the page, x rightward, y downward (top-left origin); bbox=[x,y,w,h] COCO-style",
+        ontology: "canonical17",
+        page_w_px: printW,
+        page_h_px: printH,
+        items,
+    };
+}
+
 async function mapPool(items, concurrency, fn, onProgress) {
     const results = new Array(items.length);
     let next = 0;
@@ -119,7 +261,7 @@ async function main() {
     const srcDir = path.join(outDir, "src");
     if (args.clean && fssync.existsSync(outDir)) {
         for (const f of fssync.readdirSync(outDir)) {
-            if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md")) { fssync.rmSync(path.join(outDir, f)); }
+            if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md") || f.endsWith(".layout.json")) { fssync.rmSync(path.join(outDir, f)); }
         }
         fssync.rmSync(srcDir, { recursive: true, force: true });
     }
@@ -129,12 +271,28 @@ async function main() {
     const tierEnv = (process.env.MG_TIER || "mix").trim();
     const forcedTier = ["easy", "medium", "hard"].includes(tierEnv) ? tierEnv : null;
 
+    // Old-book family: on when MG_OLD_BOOK=1 or MG_STYLE names a substyle. The
+    // flag-off path below is untouched (same rng draw order -> same-seed runs
+    // stay byte-identical).
+    const styleEnvKeys = (process.env.MG_STYLE || "").split(",").map((s) => s.trim());
+    const oldBookMode = process.env.MG_OLD_BOOK === "1" || styleEnvKeys.some((k) => OLD_BOOK_KEYS.includes(k));
+
     // Phase 1: content (procedural, KaTeX-validated at build time).
     console.error(`Phase 1: content for ${args.count} docs (procedural, seed=${args.seed})`);
     const prepared = [];
     for (let i = 0; i < args.count; i++) {
         const rng = makeRng(deriveSeed(args.seed, i));
-        const template = randomTemplate(rng);
+        let template;
+        let forcedStyle = null;
+        if (oldBookMode) {
+            // Pick the (sub)style first so the template can carry era faces and
+            // period margins; a modern archetype in a mixed MG_STYLE csv still
+            // gets a randomTemplate.
+            forcedStyle = pickStyle(rng);
+            template = forcedStyle.oldBook ? oldBookTemplate(rng, forcedStyle) : randomTemplate(rng);
+        } else {
+            template = randomTemplate(rng);
+        }
         // Math docs are portrait single-pagers; watermarks/logos are chrome the
         // gold markdown can't carry, so strip them. Also strip text-transform
         // decor (headingUpper): the gold is EXACT text, and a CSS uppercase
@@ -146,7 +304,7 @@ async function main() {
             template.decor.tint = "none";
             template.decor.headingUpper = false;
         }
-        const doc = buildMathDoc(rng, forcedTier ? { tier: forcedTier } : {});
+        const doc = buildMathDoc(rng, { ...(forcedTier && { tier: forcedTier }), ...(forcedStyle && { style: forcedStyle }) });
         prepared.push({ i, rng, template, doc });
     }
     console.error(`  katex rejects (regenerated): ${katexRejectCount()}`);
@@ -164,6 +322,7 @@ async function main() {
         const page = await browser.newPage();
         let finalScale = 1;
         let pageCount = 1;
+        let layout = null;
         try {
             await page.setViewport({ width: printW, height: printH, deviceScaleFactor: 1 });
             await page.setContent(html, { waitUntil: "networkidle0" });
@@ -182,8 +341,20 @@ async function main() {
             }
             pageCount = (await PDFDocument.load(pdf)).getPageCount();
             await fs.writeFile(path.join(outDir, `${id}.pdf`), pdf);
+            // Layout GT: read-only re-measure at the print layout (after the
+            // PDF is final, before the page closes). Single-page docs only —
+            // page-2 elements would have no page to normalize against.
+            if (pageCount === 1) {
+                const measured = await measureAtPrintLayout(page, printW, printH, finalScale);
+                layout = layoutSidecar(measured, finalScale, printW, printH);
+            }
         } finally {
             await page.close();
+        }
+        if (layout) {
+            await fs.writeFile(path.join(outDir, `${id}.layout.json`), `${JSON.stringify(layout, null, 2)}\n`);
+        } else {
+            console.error(`  WARN ${id}: ${pageCount} pages after shrink retries — no layout sidecar`);
         }
 
         // Gold: derived from the logical model only (never the rendered DOM).

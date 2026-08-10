@@ -48,6 +48,13 @@ image, x rightward, y downward. Patch centers are `((j+0.5)/W, (i+0.5)/H)` —
 token (pinned by tests). For padded/letterboxed towers (SAM pads to square),
 emit square renders so normalized coords survive preprocessing.
 
+**Layout sidecar:** each page may also ship `<id>.layout.json` — the page's
+layout ground truth as a list of items with Canonical17 `class` labels and
+normalized `bbox = [x, y, w, h]` (same coordinate convention as above). It is
+not part of the manifest row; the probe harness joins it on `image_id`, like
+everything else. `src/data/degrade.py` passes it through with bboxes
+transformed by `scan_geom_matrix` and classes/text untouched.
+
 ## Usage
 
 ```bash

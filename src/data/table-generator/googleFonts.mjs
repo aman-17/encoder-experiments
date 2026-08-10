@@ -12,7 +12,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FONTS_DIR = path.join(HERE, "fonts");
 
 // family -> generic fallback class
-export const GFONTS = {
+const FULL_GFONTS = {
     serif: [
         "Merriweather", "Lora", "Playfair Display", "PT Serif", "Source Serif 4",
         "Libre Baskerville", "EB Garamond", "Bitter", "Crimson Text", "Spectral",
@@ -35,15 +35,34 @@ export const GFONTS = {
 // FFDetr fillgen handwriting set). Fetched into fonts/ and base64-inlined too.
 export const HANDWRITING_FAMILIES = ["Caveat", "Homemade Apple", "Shadows Into Light"];
 
-export const ALL_FAMILIES = [...GFONTS.serif, ...GFONTS.sans, ...GFONTS.mono, ...HANDWRITING_FAMILIES];
+// Scan-era palette (CG_SCAN_ERA=1): scan-destined docs must not be set in 2020s
+// geometric faces (aged photocopy in Poppins = instant anachronism). Handwriting
+// families stay available in era mode — pen fills are era-neutral.
+const SCAN_ERA_GFONTS = {
+    serif: [
+        "PT Serif", "Noto Serif", "Merriweather", "Lora", "Bitter",
+        "Libre Baskerville", "EB Garamond", "Crimson Text", "Cardo", "Vollkorn",
+    ],
+    sans: ["Open Sans", "Lato", "Source Sans 3", "Noto Sans", "Fira Sans", "Roboto"],
+    mono: ["Inconsolata", "Source Code Pro", "IBM Plex Mono"],
+};
+
+export const SCAN_ERA_ACTIVE = process.env.CG_SCAN_ERA === "1";
+// Every rng.pick draws from GFONTS, so swapping the export constrains all font
+// decisions; classification (classOf/ALL_FAMILIES) stays on the FULL pool.
+export const GFONTS = SCAN_ERA_ACTIVE ? SCAN_ERA_GFONTS : FULL_GFONTS;
+
+export const ALL_FAMILIES = [...FULL_GFONTS.serif, ...FULL_GFONTS.sans, ...FULL_GFONTS.mono, ...HANDWRITING_FAMILIES];
 
 const GENERIC = { serif: "Georgia, 'Times New Roman', serif", sans: "Arial, Helvetica, sans-serif", mono: "'Courier New', monospace" };
 
 export function classOf(family) {
-    if (GFONTS.mono.includes(family)) {
+    // FULL pool on purpose: under CG_SCAN_ERA a template naming a modern face
+    // must still classify correctly so the era re-pick lands in-class.
+    if (FULL_GFONTS.mono.includes(family)) {
         return "mono";
     }
-    if (GFONTS.sans.includes(family)) {
+    if (FULL_GFONTS.sans.includes(family)) {
         return "sans";
     }
     return "serif";
@@ -67,6 +86,11 @@ export function mapToGoogle(pdfName, rng) {
     const lower = clean.toLowerCase();
     for (const fam of ALL_FAMILIES) {
         if (fam.toLowerCase().replace(/\s+/g, "").startsWith(lower.replace(/\s+/g, "")) && lower.length >= 4) {
+            // Era mode: a name-matched modern face still leaks the 2020s look.
+            if (SCAN_ERA_ACTIVE && !HANDWRITING_FAMILIES.includes(fam) && !GFONTS[classOf(fam)].includes(fam)) {
+                const eraCls = classOf(fam);
+                return rng ? rng.pick(GFONTS[eraCls]) : GFONTS[eraCls][0];
+            }
             return fam;
         }
     }

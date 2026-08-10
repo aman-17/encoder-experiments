@@ -31,6 +31,11 @@ const displayMd = (latex) => `$$${latex}$$`;
 
 function blockMd(b) {
     if (b.type === "p") { return runsMd(b.runs); }
+    if (b.type === "leadp") {
+        // Old-book lead paragraph: "§. 10." section marks / "Example 1 :" heads.
+        const lead = b.strong ? `**${b.lead}**` : b.lead;
+        return `${lead} ${runsMd(b.runs)}`;
+    }
     if (b.type === "display") { return displayMd(b.latex); }
     if (b.type === "env") {
         const head = b.kind === "Proof" ? "*Proof.*" : `**${b.kind}${b.label ? ` ${b.label}` : ""}.**`;
@@ -51,8 +56,11 @@ function blockMd(b) {
 
 export function docMarkdown(doc) {
     const parts = [];
+    // Old-book running head: rendered text is ground truth, reading order
+    // left -> center -> right (e.g. "Art. 3 ] EQUIVALENCE OF MATRICES 125").
+    if (doc.runhead) { parts.push([doc.runhead.left, doc.runhead.center, doc.runhead.right].filter(Boolean).join(" ")); }
     if (doc.kicker) { parts.push(doc.kicker); }
-    parts.push(`# ${doc.title}`);
+    if (doc.title != null) { parts.push(`# ${doc.title}`); }
     if (doc.byline) { parts.push(doc.byline); }
     if (doc.meta) { parts.push(doc.meta); }
     if (doc.abstract) { parts.push(`**Abstract.** ${runsMd(doc.abstract)}`); }
@@ -61,6 +69,7 @@ export function docMarkdown(doc) {
         if (sec.heading) { parts.push(`## ${sec.heading}`); }
         for (const b of sec.blocks) { parts.push(blockMd(b)); }
     }
+    if (doc.catchword) { parts.push(doc.catchword); }
     return `${parts.join("\n\n")}\n`;
 }
 
@@ -77,6 +86,10 @@ const displayHtml = (b) => `<div class="disp">${kat(b.latex, true)}</div>`;
 // also how real two-column papers set wide equations.
 function blockHtml(b, ncols) {
     if (b.type === "p") { return { html: `<p>${runsHtml(b.runs)}</p>`, span: false }; }
+    if (b.type === "leadp") {
+        const lead = `<span class="plead">${esc(b.lead)}</span>`;
+        return { html: `<p>${b.strong ? `<strong>${lead}</strong>` : lead} ${runsHtml(b.runs)}</p>`, span: false };
+    }
     if (b.type === "display") { return { html: displayHtml(b), span: b.wide && ncols === 2 }; }
     if (b.type === "env") {
         const head = b.kind === "Proof"
@@ -105,8 +118,11 @@ export function documentHtml(doc, template, rng) {
 
     // Full-width header zone (title/byline/abstract), then the column flow.
     const headBlocks = [];
+    if (doc.runhead) {
+        headBlocks.push(`<div class="obhead"><span class="obl">${esc(doc.runhead.left || "")}</span><span class="obc">${esc(doc.runhead.center || "")}</span><span class="obr">${esc(doc.runhead.right || "")}</span></div>`);
+    }
     if (doc.kicker) { headBlocks.push(`<div class="kicker">${esc(doc.kicker)}</div>`); }
-    headBlocks.push(`<h1>${esc(doc.title)}</h1>`);
+    if (doc.title != null) { headBlocks.push(`<h1>${esc(doc.title)}</h1>`); }
     if (doc.byline) { headBlocks.push(`<div class="byline">${esc(doc.byline)}</div>`); }
     if (doc.meta) { headBlocks.push(`<div class="meta">${esc(doc.meta)}</div>`); }
     if (doc.abstract) { headBlocks.push(`<div class="abstract"><b>Abstract.</b> ${runsHtml(doc.abstract)}</div>`); }
@@ -168,14 +184,14 @@ export function documentHtml(doc, template, rng) {
 ${faceCss}
 ${katexCss()}
 ${templateToCss(template)}
-${style.css(accent, tint)}
+${style.css(accent, tint, rng)}
 ${layoutCss}
 </style>
 </head>
 <body class="ds-${doc.style}">
 <div class="content">
 ${headBlocks.join("\n")}
-${wrapped}
+${wrapped}${doc.catchword ? `\n<div class="catchword">${esc(doc.catchword)}</div>` : ""}
 </div>
 </body>
 </html>`;

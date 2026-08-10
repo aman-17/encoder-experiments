@@ -25,6 +25,7 @@ import { makeRng } from "./rng.mjs";
 import { documentHtml, docGroundTruth } from "./render.mjs";
 import { textTest, layoutTest, pageMarkdown, measureElements, tableCellsGt } from "./groundTruth.mjs";
 import { chartDataPoints } from "./figure.mjs";
+import { measureLayoutItems, buildLayoutSidecar } from "./layoutSidecar.mjs";
 import { randomTemplate, loadTemplates, varyTemplate, forceHardTableStyle, tableVisualDifficulty } from "./template.mjs";
 import { generateLlmDoc, generateProceduralDoc, injectHardSections, injectDeltaSections } from "./llmContent.mjs";
 import { getGeminiUsage, hasGeminiKey, mapPool, resetGeminiUsage } from "./gemini.mjs";
@@ -447,7 +448,7 @@ async function main() {
     const srcDir = path.join(outDir, "src");
     if (args.clean && fssync.existsSync(outDir)) {
         for (const f of fssync.readdirSync(outDir)) {
-            if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".cells.json")) { fssync.rmSync(path.join(outDir, f)); }
+            if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".cells.json") || f.endsWith(".layout.json")) { fssync.rmSync(path.join(outDir, f)); }
         }
         if (!args.noHtml) {
             fssync.rmSync(srcDir, { recursive: true, force: true });
@@ -472,7 +473,7 @@ async function main() {
         if (!on) { continue; }
         if (args.clean && fssync.existsSync(dir)) {
             for (const f of fssync.readdirSync(dir)) {
-                if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md")) { fssync.rmSync(path.join(dir, f)); }
+                if (f.endsWith(".pdf") || f.endsWith(".test.json") || f.endsWith(".md") || f.endsWith(".layout.json")) { fssync.rmSync(path.join(dir, f)); }
             }
         }
         await fs.mkdir(dir, { recursive: true });
@@ -610,6 +611,7 @@ async function main() {
         let finalScale = 1;
         let measured = null;
         let layoutGt = null;
+        let layoutItems = null;
         const { w: printW, h: printH } = pagePx(landscape);
         try {
             // Measure at the true A4 page size so the fit matches the print layout.
@@ -687,6 +689,19 @@ async function main() {
                     layoutGt = await validateLayoutRules(page, layoutTest(doc, measured, finalScale, printW, printH));
                 }
             }
+            // Canonical17 layout sidecar (<id>.layout.json): same corrected
+            // print-layout measurement path (never the legacy screen-viewport
+            // one), richer element set. Single-page docs only; huge docs print
+            // with real page margins the mapping ignores, so they are skipped.
+            if (pageCount === 1 && !doc.huge) {
+                await page.emulateMediaType("print");
+                await page.setViewport({
+                    width: Math.max(1, Math.round(printW / finalScale)),
+                    height: Math.max(1, Math.round(printH / finalScale)),
+                    deviceScaleFactor: 1,
+                });
+                layoutItems = await page.evaluate(measureLayoutItems);
+            }
             // Copy the PDF into the sibling datasets (layout only when its GT
             // survived pixel validation).
             if (wantText) { await fs.writeFile(path.join(textDir, `${id}.pdf`), pdf); }
@@ -728,6 +743,17 @@ async function main() {
                 await fs.writeFile(path.join(outDir, `${id}.cells.json`),
                     `${JSON.stringify({ id, page: 1, page_px: { w: printW, h: printH }, ...cellGt }, null, 2)}\n`);
             }
+        }
+
+        // Canonical17 layout sidecar (<id>.layout.json) — measured at the print
+        // layout above; single-page docs only. Written next to every copy of
+        // the rendered PDF (main dir + sibling datasets).
+        if (layoutItems) {
+            const payload = `${JSON.stringify(buildLayoutSidecar(layoutItems, finalScale, printW, printH), null, 2)}\n`;
+            await fs.writeFile(path.join(outDir, `${id}.layout.json`), payload);
+            if (wantText) { await fs.writeFile(path.join(textDir, `${id}.layout.json`), payload); }
+            if (wantLayout && layoutGt && layoutGt.valid) { await fs.writeFile(path.join(layoutDir, `${id}.layout.json`), payload); }
+            if (wantChart && figures.length) { await fs.writeFile(path.join(chartDir, `${id}.layout.json`), payload); }
         }
 
         // Text test (text_extended format).

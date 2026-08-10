@@ -7,7 +7,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { GFONTS, familyStack, mapToGoogle, classOf } from "./googleFonts.mjs";
+import { GFONTS, SCAN_ERA_ACTIVE, familyStack, mapToGoogle, classOf } from "./googleFonts.mjs";
 
 // Broad font pools (commonly installed on macOS/Office systems) so generated
 // documents don't all share one or two typefaces. Each entry ends in a generic
@@ -265,8 +265,14 @@ export function varyTemplate(t, rng) {
         // extractor maps the many unmatched source-font names onto a single
         // default per class, so without this one family would dominate ~1/3 of
         // the dataset.
-        const reBody = rng.bool(0.75) ? rng.pick(GFONTS[classOf(v.body.fontFamily)]) : v.body.fontFamily;
-        const reTable = rng.bool(0.75) ? rng.pick(GFONTS[classOf(v.table.fontFamily)]) : v.table.fontFamily;
+        // CG_SCAN_ERA: the 25% keep-branch would leak the template's captured
+        // modern face into scan-destined docs — force the re-pick to 100%.
+        // Draw order matches the pre-flag code exactly (bool, pick?, bool, pick?)
+        // so flag-off datasets reproduce byte-identically.
+        const repickBody = rng.bool(0.75);
+        const reBody = (repickBody || SCAN_ERA_ACTIVE) ? rng.pick(GFONTS[classOf(v.body.fontFamily)]) : v.body.fontFamily;
+        const repickTable = rng.bool(0.75);
+        const reTable = (repickTable || SCAN_ERA_ACTIVE) ? rng.pick(GFONTS[classOf(v.table.fontFamily)]) : v.table.fontFamily;
         v.body.fontFamily = reBody;
         v.body.fontStack = familyStack(reBody);
         v.table.fontFamily = reTable;

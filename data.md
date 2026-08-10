@@ -61,10 +61,10 @@ Kept continuous: `n_series`, `n_marks`, `n_rules`.
 Candidate hard criterion, not in v1 (sidecar doesn't record it yet): value-labels-off
 for multi-series — the CG_HARD recipe. Add if the generator run emits the flag.
 
-## Bboxes — per page, layout elements
+## Bboxes — per page, from `<id>.layout.json`
 
-**Counting unit matters:** count layout-class elements (Table, Picture, headings,
-paragraphs, ... — the generators' layout-GT rule classes / ParseBench Core11-style),
+**Counting unit matters:** count the items in `<id>.layout.json` (Canonical17
+classes — Table, Picture, Section-header, Text, Formula, ...),
 NOT pymupdf raw text blocks and NOT word boxes — dense text pages have dozens of
 blocks and would make `hard` ≈ 90% of pages, destroying the stratification's power.
 
@@ -79,6 +79,10 @@ generated pages; shift the 4/8 cut points if any bucket ends up degenerate.
 
 Kept continuous: `n_boxes`, `min_box_area`, `n_overlapping_pairs` (small and
 overlapping boxes are the actual difficulty drivers; count alone is a proxy).
+
+Reporting option: per-class difficulty slices from the Canonical17 `class` field —
+a Formula-heavy page and a Table-heavy page at the same `n_boxes` are different
+problems, and the slice is a groupby, not a re-annotation.
 
 ## Text & math — per page, from pymupdf sidecars + generator metadata
 
@@ -105,6 +109,44 @@ glyph probe and the audit found real chart labels down to 1.86pt effective. Neve
 filter `size_pt ≥ 4` when building glyph probe sets (real labels go below it).
 
 ---
+
+## Scan severity — orthogonal axis, all task families
+
+`scan_severity ∈ {0..4}` from `src/data/degrade.py` (presets v5). Like `multi_*`,
+this is **not** a difficulty level — a degraded easy table and a clean hard table
+fail differently, and that distinction is a finding. Report as its own slice /
+curve axis, never folded into easy/medium/hard.
+
+| sev | meaning | character |
+|---|---|---|
+| 0 | born-digital | bit-exact passthrough |
+| 1 | light office scan | faint grain, mild skew (≤0.30°) |
+| 2 | typical photocopy | toner texture, banding, bimodal B/W-or-color |
+| 3 | aged re-scanned copy | stains, bleed-through, real skew (≤1.80°) |
+| 4 | fax-grade | sharp 1-bit, nearest-neighbor jaggies, dropout lines |
+
+Hard constraints baked into the presets (user-set — do not drift):
+- **Legibility**: every line of text stays human-readable at every severity;
+  blur is pinned to σ∈(0.05, 0.10) everywhere; rasterization ≥200dpi.
+- **GT exactness**: geometry is one explicit affine per (page, severity), stamped
+  as `scan_geom_matrix` in the transformed sidecar; photometric ops are
+  pixel-position-preserving. Same seed → byte-identical output.
+- **Fonts**: scan-destined batches MUST generate with `CG_SCAN_ERA=1` (both
+  chart- and table-generator) — era-plausible faces only; a 2020s geometric
+  sans under aged grime is an instant synthetic tell.
+
+Probe-harness consumer notes (from the adversarial geometry verification):
+- At sev 4, binarize+bleed dilate ink ~0.6–2.2px beyond the transformed bbox
+  hull — pad hulls ~2px when ink-coverage (vs geometric) boxes are needed.
+- At sev 4 expect ~1-in-10 tiny landmarks occluded by grime; coordinates remain
+  correct, detection may fail — drop, don't relabel.
+- Real scanned PDFs (Internet Archive etc.) are never probe substrate — no
+  latent labels. They serve as transfer-validation anchor, Exp 2 eval slices,
+  and Exp 3 training data only.
+
+Manifest fields: `scan_severity` (int), `scan_geom_matrix` rides in the
+transformed sidecar. Sample pages at every severity per probe family; the
+frontier claim is per-family robustness *curves* over severity.
 
 ## Deviations from the original spoken rules (all deliberate — veto if wrong)
 

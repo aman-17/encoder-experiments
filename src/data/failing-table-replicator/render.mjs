@@ -9,12 +9,16 @@
 // (read-only pass, before printing — does not perturb the PDF). Coordinates are
 // normalized [0,1] over the page, x rightward, y DOWNWARD (top-left origin),
 // bbox = [x0,y0,x1,y1] — the probe convention in encoder_experiments/sites.py.
+// <id>.layout.json sidecar (additive): Canonical17 element sweep of the whole
+// page (layoutSweep.mjs), same normalized page space, COCO [x,y,w,h] bboxes;
+// Table items reuse the cells.json table bboxes verbatim.
 // Existing test.json schema is untouched.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer from "puppeteer";
+import { sweepLayout, buildLayoutSidecar } from "./layoutSweep.mjs";
 
 const [tplPath, seedArg, outArg] = process.argv.slice(2);
 if (!tplPath) { console.error("usage: node render.mjs <template.mjs> <seed> [outdir]"); process.exit(1); }
@@ -73,6 +77,8 @@ const measured = await page.evaluate(() => {
     return { table_index: ti, bbox_px: px(t), n_rows: grid.length, n_cols: Math.max(0, ...grid.map((r) => r.length)), cells };
   });
 });
+// Canonical17 layout sweep (read-only, same print-layout viewport as above).
+const swept = await page.evaluate(sweepLayout, { pageW: wIn * 96 / printScale, pageH: hIn * 96 / printScale });
 const pdf = await page.pdf({ format: "A4", printBackground: true, margin: { top: 0, bottom: 0, left: 0, right: 0 }, ...pageOpts });
 await browser.close();
 
@@ -117,6 +123,13 @@ writeFileSync(`${outDir}/${name}.cells.json`, JSON.stringify({
   page_w_pt: pageWPt, page_h_pt: pageHPt, pages,
   print_fit: { scale: Number(fitS.toFixed(6)), off_x_pt: Number(offXPt.toFixed(2)), off_y_pt: Number(offYPt.toFixed(2)) },
   tables,
+}, null, 1));
+
+// layout.json: Canonical17 sweep through the SAME corrected fit-to-paper norm();
+// Table items take the cells.json table bboxes (converted to [x,y,w,h]).
+writeFileSync(`${outDir}/${name}.layout.json`, JSON.stringify({
+  id: name, template: basename(tplPath), seed,
+  ...buildLayoutSidecar({ swept, norm, tables, pageWPt, pageHPt }),
 }, null, 1));
 
 // thumbnails for visual self-verification (one per page)

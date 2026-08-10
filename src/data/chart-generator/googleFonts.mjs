@@ -12,7 +12,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FONTS_DIR = path.join(HERE, "fonts");
 
 // family -> generic fallback class
-export const GFONTS = {
+const FULL_GFONTS = {
     serif: [
         "Merriweather", "Lora", "Playfair Display", "PT Serif", "Source Serif 4",
         "Libre Baskerville", "EB Garamond", "Bitter", "Crimson Text", "Spectral",
@@ -31,15 +31,37 @@ export const GFONTS = {
     ],
 };
 
-export const ALL_FAMILIES = [...GFONTS.serif, ...GFONTS.sans, ...GFONTS.mono];
+// Scan-era palette (CG_SCAN_ERA=1): documents destined for the degrade stage
+// must not be set in 2020s geometric faces — an aged photocopy in Poppins is an
+// anachronism a reader clocks instantly. Restrict picks to faces plausible in
+// 1990s–2010s office/print documents (Times/Georgia/Helvetica-adjacent).
+const SCAN_ERA_GFONTS = {
+    serif: [
+        "PT Serif", "Noto Serif", "Merriweather", "Lora", "Bitter",
+        "Libre Baskerville", "EB Garamond", "Crimson Text", "Cardo", "Vollkorn",
+    ],
+    sans: ["Open Sans", "Lato", "Source Sans 3", "Noto Sans", "Fira Sans", "Roboto"],
+    mono: ["Inconsolata", "Source Code Pro", "IBM Plex Mono"],
+};
+
+export const SCAN_ERA_ACTIVE = process.env.CG_SCAN_ERA === "1";
+// All rng.pick sites draw from GFONTS, so swapping the export constrains every
+// font decision in the pipeline. Classification (classOf/ALL_FAMILIES) stays on
+// the FULL pool so extracted templates naming a modern face still classify.
+export const GFONTS = SCAN_ERA_ACTIVE ? SCAN_ERA_GFONTS : FULL_GFONTS;
+
+export const ALL_FAMILIES = [...FULL_GFONTS.serif, ...FULL_GFONTS.sans, ...FULL_GFONTS.mono];
 
 const GENERIC = { serif: "Georgia, 'Times New Roman', serif", sans: "Arial, Helvetica, sans-serif", mono: "'Courier New', monospace" };
 
 export function classOf(family) {
-    if (GFONTS.mono.includes(family)) {
+    // Always classify against the FULL pool: under CG_SCAN_ERA a template may
+    // still name a modern face (e.g. "Barlow"), and it must classify as sans so
+    // the era re-pick lands in the right class.
+    if (FULL_GFONTS.mono.includes(family)) {
         return "mono";
     }
-    if (GFONTS.sans.includes(family)) {
+    if (FULL_GFONTS.sans.includes(family)) {
         return "sans";
     }
     return "serif";
@@ -63,6 +85,12 @@ export function mapToGoogle(pdfName, rng) {
     const lower = clean.toLowerCase();
     for (const fam of ALL_FAMILIES) {
         if (fam.toLowerCase().replace(/\s+/g, "").startsWith(lower.replace(/\s+/g, "")) && lower.length >= 4) {
+            // Era mode: a name-matched modern face still leaks the 2020s look —
+            // coerce to an era family of the same class instead.
+            if (SCAN_ERA_ACTIVE && !GFONTS[classOf(fam)].includes(fam)) {
+                const eraCls = classOf(fam);
+                return rng ? rng.pick(GFONTS[eraCls]) : GFONTS[eraCls][0];
+            }
             return fam;
         }
     }
