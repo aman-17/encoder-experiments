@@ -48,12 +48,41 @@ image, x rightward, y downward. Patch centers are `((j+0.5)/W, (i+0.5)/H)` —
 token (pinned by tests). For padded/letterboxed towers (SAM pads to square),
 emit square renders so normalized coords survive preprocessing.
 
-**Layout sidecar:** each page may also ship `<id>.layout.json` — the page's
+**Layout sidecar (v2):** each page may also ship `<id>.layout.json` — the page's
 layout ground truth as a list of items with Canonical17 `class` labels and
-normalized `bbox = [x, y, w, h]` (same coordinate convention as above). It is
-not part of the manifest row; the probe harness joins it on `image_id`, like
-everything else. `src/data/degrade.py` passes it through with bboxes
-transformed by `scan_geom_matrix` and classes/text untouched.
+`bbox = [x, y, w, h]` as **integers on the 0–1000 page scale** (Qwen-VL grounding
+convention; divide by 1000 to recover the normalized frame used everywhere else).
+It is not part of the manifest row; the probe harness joins it on `image_id`.
+`src/data/degrade.py` auto-detects v1 (normalized float) vs v2 (int 0–1000) and
+passes either through with bboxes transformed by `scan_geom_matrix`,
+classes/text untouched.
+
+## Probe suite
+
+Content probes (labels ride in the manifest row, marked points per the
+convention above):
+
+| probe | input site | label |
+|---|---|---|
+| series-ID at marked point | site feature | series identity (charts) |
+| point-coordinate regression | site feature | data-space value (charts) |
+| cell (row,col) at marked point | site feature | logical grid cell (tables) |
+| glyph identity vs font size | site feature | char + `size_pt` (text) |
+
+Layout probes (labels come from `<id>.layout.json`, joined on `image_id` —
+bboxes are first-class in the experiments; modern doc models ground everything):
+
+| probe | input site | label |
+|---|---|---|
+| **P-L1** patch-class | each patch token | Canonical17 class ∪ background (sidecar rasterized to the encoder's own patch grid; majority-at-center, smallest-area-wins on overlap) |
+| **P-L2** extent regression | site feature at a point inside an element | the element's `[x, y, w, h]` /1000 (metric: mean IoU, IoU@0.5) |
+| **P-L3** layout summary | pooled | per-class presence + count bins (ties to Data.md bbox difficulty tags) |
+| **P-L4** (stretch) reading order | two element-site features | which precedes |
+
+All probes fit linear + 2-layer-MLP heads with shuffled-label and random-init
+controls, and slice by token budget, difficulty tags, and `scan_severity` —
+the localization-vs-degradation curves (does noise destroy *where* before
+*what*?) come free from the degraded variants.
 
 ## Usage
 
@@ -79,10 +108,14 @@ kill the run.
 
 ## Disk sizing
 
-fp16 full-grid features: ~1.5–2 MB/image for the 384–1024px towers → **~100 GB
-for 50k images x 7 encoder variants**. SAM is the heavy one (4096 tokens x 768);
-if disk gets tight, run SAM last or cut its probe set — don't drop grids to
-pooled-only, the localization probes need them.
+fp16 full-grid features: ~1.5–2 MB/image for the 384–1024px towers (SAM is the
+heavy one: 4096 tokens × 768) → hundreds of GB at the full 15–20k-page ×
+7-tower scale. The planned fix is a `--sites-from-manifest` extraction mode:
+since marked points are known up front, store pre-sampled site features +
+pooled (~50 KB/image) instead of full grids. The layout probes stay compatible
+by sampling **K ≈ 64–128 labeled patches per page** into the manifest (patch
+center + Canonical17 label) — P-L1 never needs the full grid at scale. Full-grid
+extraction remains the exploratory default at small N.
 
 ## Adding an encoder
 

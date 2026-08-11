@@ -67,6 +67,8 @@ for multi-series — the CG_HARD recipe. Add if the generator run emits the flag
 classes — Table, Picture, Section-header, Text, Formula, ...),
 NOT pymupdf raw text blocks and NOT word boxes — dense text pages have dozens of
 blocks and would make `hard` ≈ 90% of pages, destroying the stratification's power.
+Sidecar bboxes are **v2: integers on the 0–1000 page scale** (÷1000 for the
+normalized frame); `degrade.py` accepts v1 (normalized float) and v2.
 
 | tag | rule |
 |---|---|
@@ -170,6 +172,10 @@ and stratifies on these fields.
 
 - Summary tables: per (task × difficulty), bootstrap CIs over eval items; `multi` as
   its own slice (never merged into the difficulty axis).
+- Layout probes (P-L1/2/3 in the README probe suite) report per Canonical17 class
+  and per `scan_severity`, stratified by these bbox tags — the counting unit and
+  the probe labels come from the same `layout.json` items, so the slices align by
+  construction.
 - Paper figures: degradation curves over the continuous covariates (accuracy vs
   `n_series`, vs `n_logical_cells`, vs `size_pt`) — tags compress these curves to 3
   points and are for exec summaries, not for the reviewers.
