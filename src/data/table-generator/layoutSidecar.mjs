@@ -1,12 +1,14 @@
 // Canonical17 layout sidecar (<id>.layout.json) — the cross-generator layout
 // ground-truth contract shared by every synthetic-doc generator:
 //
-//   { version: 1, coords, ontology: "canonical17", page_w_px, page_h_px,
+//   { version: 2, coords, ontology: "canonical17", page_w_px, page_h_px,
 //     items: [{ id, class, bbox:[x,y,w,h], reading_order, text, attrs }] }
 //
-// Coordinates are normalized [0,1] over the WHOLE page (x rightward, y downward,
-// top-left origin; bbox is COCO-style [x,y,w,h]). Classes are the EXACT enum
-// strings of llamacloud-bench's CanonicalLabel (Canonical17).
+// Coordinates are INTEGER 0-1000 over the WHOLE page (Qwen-VL grounding
+// convention; x rightward, y downward, top-left origin; bbox is COCO-style
+// [x,y,w,h]). All internal math stays normalized float — the int rounding
+// happens only at the final emission point (intBbox below). Classes are the
+// EXACT enum strings of llamacloud-bench's CanonicalLabel (Canonical17).
 //
 // Measurement contract: measureLayoutItems() MUST be evaluated on the CORRECTED
 // print-layout DOM (the charts' pixels.json re-measure fix) — i.e. after the
@@ -106,13 +108,40 @@ export function measureLayoutItems() {
         } else {
             r = tightRect(el);
             if (tag === "li") {
-                // Include the bullet/number marker, which sits left of the
-                // content box (list-style-position: outside).
-                const list = el.closest("ul,ol");
-                const fs = parseFloat(getComputedStyle(el).fontSize) || 12;
-                const minX = list ? list.getBoundingClientRect().x : r.x - 1.4 * fs;
-                const x0 = Math.max(minX, r.x - 1.4 * fs);
-                r = { x: x0, y: r.y, width: r.x + r.width - x0, height: r.height };
+                // Include the bullet/number ::marker. With list-style-position:
+                // outside (the default) the marker is painted LEFT of the li
+                // content box — and when the list has little or no padding it
+                // hangs outside the ul/ol border box too, so no ancestor rect
+                // bounds it. Marker boxes are pseudo-elements a Range cannot
+                // select, so measure the marker's inline advance indirectly:
+                // toggling the SAME li to list-style-position:inside lays the
+                // identical marker box out at the start of the first line,
+                // pushing the first-line text right by exactly the advance
+                // (marker + gap) the outside marker occupies left of the text
+                // start (probe-verified against raster ink for disc/circle/
+                // square/decimal at 8-16px). Both generators run this
+                // measurement AFTER page.pdf(), so the transient relayout
+                // cannot perturb any output, and restoring the inline style
+                // restores the exact previous layout.
+                const firstLineX = () => {
+                    const range = document.createRange();
+                    range.selectNodeContents(el);
+                    const q = [...range.getClientRects()].filter((k) => k.width > 0.5 && k.height > 0.5);
+                    return q.length ? q[0].x : el.getBoundingClientRect().x;
+                };
+                const prevPos = el.style.listStylePosition;
+                el.style.listStylePosition = "outside";
+                const xOut = firstLineX();
+                el.style.listStylePosition = "inside";
+                const xIn = firstLineX();
+                el.style.listStylePosition = prevPos;
+                const advance = xIn - xOut; // 0 when there is no marker (list-style: none)
+                if (advance > 0.5) {
+                    // marker box spans [firstLineX - advance, firstLineX) in
+                    // the RESTORED layout, for outside and inside alike.
+                    const x0 = Math.min(r.x, firstLineX() - advance);
+                    r = { x: x0, y: r.y, width: r.x + r.width - x0, height: r.height };
+                }
             }
         }
         if (!(r.width > 0.5 && r.height > 0.5)) { continue; }
@@ -173,9 +202,24 @@ function canonical17(el) {
     return { class: "Text" };
 }
 
+// Final emission: normalized-float [x,y,w,h] -> INTEGER 0-1000 page coords.
+// Each value = Math.round(norm*1000) clamped to [0,1000]; then w,h are floored
+// at 1 (no zero-size boxes) and x,y re-clamped so x+w<=1000, y+h<=1000.
+export function intBbox(x, y, w, h) {
+    const q = (v) => Math.max(0, Math.min(1000, Math.round(v * 1000)));
+    const W = Math.max(1, q(w));
+    const H = Math.max(1, q(h));
+    const X = Math.min(q(x), 1000 - W);
+    const Y = Math.min(q(y), 1000 - H);
+    return [X, Y, W, H];
+}
+
+export const COORDS_V2 = "integer 0-1000 scale over the page, x rightward, y downward (top-left origin); bbox=[x,y,w,h]";
+
 // measured: measureLayoutItems() output, taken at the PRINT layout (viewport
 // printW/scale x printH/scale); scale: the pdf print scale; pageW/pageH: the
-// printed page in px @96dpi. bbox = measured px * scale / page px, clamped.
+// printed page in px @96dpi. bbox = measured px * scale / page px, clamped
+// (float internally, integerized only by intBbox at emission).
 export function buildLayoutSidecar(measured, scale, pageW, pageH) {
     const items = [];
     const deferred = []; // watermarks read last (they overlay the whole page)
@@ -190,7 +234,7 @@ export function buildLayoutSidecar(measured, scale, pageW, pageH) {
         const item = {
             id: 0,
             class: m.class,
-            bbox: [x, y, w, h].map((v) => +v.toFixed(6)),
+            bbox: intBbox(x, y, w, h),
             reading_order: 0,
             text: noText ? null : String(el.text || "").replace(/\s+\n/g, "\n").trim(),
         };
@@ -200,8 +244,8 @@ export function buildLayoutSidecar(measured, scale, pageW, pageH) {
     items.push(...deferred);
     items.forEach((it, i) => { it.id = i; it.reading_order = i; });
     return {
-        version: 1,
-        coords: "normalized [0,1] over the page, x rightward, y downward (top-left origin); bbox=[x,y,w,h] COCO-style",
+        version: 2,
+        coords: COORDS_V2,
         ontology: "canonical17",
         page_w_px: pageW,
         page_h_px: pageH,

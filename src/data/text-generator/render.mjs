@@ -7,8 +7,8 @@
 // }
 // <id>.layout.json sidecar (additive; PDF + test.json output unchanged):
 // Canonical17 element sweep (layoutSweep.mjs) measured from the live DOM at the
-// print-layout viewport, normalized [0,1] over the page (top-left origin),
-// COCO [x,y,w,h] bboxes.
+// print-layout viewport, INTEGER 0-1000 over the page (top-left origin;
+// Qwen-VL grounding convention), COCO [x,y,w,h] bboxes.
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";

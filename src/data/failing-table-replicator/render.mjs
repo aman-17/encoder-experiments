@@ -10,7 +10,8 @@
 // normalized [0,1] over the page, x rightward, y DOWNWARD (top-left origin),
 // bbox = [x0,y0,x1,y1] — the probe convention in encoder_experiments/sites.py.
 // <id>.layout.json sidecar (additive): Canonical17 element sweep of the whole
-// page (layoutSweep.mjs), same normalized page space, COCO [x,y,w,h] bboxes;
+// page (layoutSweep.mjs), INTEGER 0-1000 page coords (Qwen-VL grounding
+// convention; cells.json stays normalized), COCO [x,y,w,h] bboxes;
 // Table items reuse the cells.json table bboxes verbatim.
 // Existing test.json schema is untouched.
 import { execFileSync } from "node:child_process";

@@ -590,20 +590,49 @@ def transform_sidecar(
     return out
 
 
-def _xf_layout_item(item: Any, M: np.ndarray) -> Any:
+def _layout_scale(data: Any) -> float:
+    """Layout-sidecar coordinate scale: 1000.0 for v2 integer 0-1000 sidecars
+    (Qwen-VL grounding convention), 1.0 for v1 normalized-float ones. Detects
+    by `version` first, then by the `coords` string."""
+    if isinstance(data, dict):
+        if data.get("version") == 2:
+            return 1000.0
+        coords = data.get("coords")
+        if isinstance(coords, str) and "integer 0-1000" in coords:
+            return 1000.0
+    return 1.0
+
+
+def _int_bbox_1000(x: float, y: float, w: float, h: float) -> list[int]:
+    """v2 emission rule (mirror of the generators' intBbox): each value =
+    round(norm*1000) half-up (JS Math.round) clamped to [0,1000]; then w,h
+    floored at 1 and x,y re-clamped so x+w<=1000, y+h<=1000."""
+    def q(v: float) -> int:
+        return max(0, min(1000, int(math.floor(v * 1000.0 + 0.5))))
+    wi, hi = max(1, q(w)), max(1, q(h))
+    xi = min(q(x), 1000 - wi)
+    yi = min(q(y), 1000 - hi)
+    return [xi, yi, wi, hi]
+
+
+def _xf_layout_item(item: Any, M: np.ndarray, scale: float = 1.0) -> Any:
     """One `<stem>.layout.json` item. Its bbox is COCO-style [x, y, w, h] - NOT
     the [x0,y0,x1,y1] the generic `bbox` key means elsewhere - so it gets a
-    dedicated pass: axis-aligned hull of the affined rect, back to [x,y,w,h].
-    Every other field (class, text, attrs, reading_order, ...) is copied
-    verbatim."""
+    dedicated pass: de-scale to normalized floats (v2 ints /1000; v1 already
+    normalized), axis-aligned hull of the affined rect, back to [x,y,w,h] at
+    the input's scale (v2 re-rounded to ints, v1 kept float). Every other
+    field (class, text, attrs, reading_order, ...) is copied verbatim."""
     if not isinstance(item, dict):
         return item
     out = dict(item)
     bb = item.get("bbox")
     if _bboxlike(bb):
-        x, y, bw, bh = (float(v) for v in bb)
+        x, y, bw, bh = (float(v) / scale for v in bb)
         x0, y0, x1, y1 = xf_bbox(M, [x, y, x + bw, y + bh])
-        out["bbox"] = [_round(x0), _round(y0), _round(x1 - x0), _round(y1 - y0)]
+        if scale == 1.0:
+            out["bbox"] = [_round(x0), _round(y0), _round(x1 - x0), _round(y1 - y0)]
+        else:
+            out["bbox"] = _int_bbox_1000(x0, y0, x1 - x0, y1 - y0)
     return out
 
 
@@ -616,25 +645,37 @@ def transform_layout_sidecar(
     extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """`<stem>.layout.json` in -> out: every item bbox through M_norm, nothing
-    else touched. Top-level fields (version, ontology, coords, page_*_px, ...)
-    ride along verbatim; the same scan_* stamps as `transform_sidecar` are
-    added."""
+    else touched. Handles BOTH sidecar versions: v1 normalized floats stay
+    float; v2 integer 0-1000 bboxes are de-scaled to normalized floats, put
+    through the exact same affine hull, then re-scaled and re-rounded to ints
+    (deterministic). Top-level fields (version, ontology, coords, page_*_px,
+    ...) ride along verbatim; the same scan_* stamps as `transform_sidecar`
+    are added. scan_geom_matrix operates on NORMALIZED coords in both cases."""
     M = np.asarray(M_norm, dtype=np.float64)
+    scale = _layout_scale(data)
     if isinstance(data, dict):
         out: dict[str, Any] = dict(data)
         if isinstance(out.get("items"), list):
-            out["items"] = [_xf_layout_item(it, M) for it in out["items"]]
+            out["items"] = [_xf_layout_item(it, M, scale) for it in out["items"]]
     else:   # bare items list
-        out = {"items": [_xf_layout_item(it, M) for it in data]}
+        out = {"items": [_xf_layout_item(it, M, scale) for it in data]}
     out["scan_severity"] = _base_severity(severity)
     out["severity_key"] = str(severity)
     out["scan_geom_matrix"] = [[_round(v) for v in row] for row in np.asarray(M_norm)]
     out["geom_valid"] = True
-    out["scan_coords"] = (
-        "normalized [0,1] over the DEGRADED page image; x rightward, y downward "
-        "(top-left origin). Every item bbox [x,y,w,h] is the axis-aligned hull of "
-        "scan_geom_matrix applied to the original rect."
-    )
+    if scale == 1.0:
+        out["scan_coords"] = (
+            "normalized [0,1] over the DEGRADED page image; x rightward, y downward "
+            "(top-left origin). Every item bbox [x,y,w,h] is the axis-aligned hull of "
+            "scan_geom_matrix applied to the original rect."
+        )
+    else:
+        out["scan_coords"] = (
+            "integer 0-1000 scale over the DEGRADED page image; x rightward, y downward "
+            "(top-left origin). Every item bbox [x,y,w,h] is the axis-aligned hull of "
+            "scan_geom_matrix applied to the original rect in normalized coords, "
+            "re-rounded to integers."
+        )
     if page_index is not None:
         out["scan_page_index"] = int(page_index)
     if extra:

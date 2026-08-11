@@ -147,6 +147,28 @@ function measureMathElements() {
             const tr = range.getBoundingClientRect();
             if (tr.width > 0 && tr.height > 0) { r = tr; }
         }
+        // Display math: in KaTeX display mode .katex-display, its .katex child
+        // AND .katex-html are all full-column blocks, so the element rect can
+        // be ~9x wider than short centered equations. Take horizontal bounds
+        // from a Range over the .katex-html contents instead: it unions the
+        // shrink-to-fit .base inline-blocks with the absolutely-positioned
+        // .tag child (\tag equation numbers stay inside the box) and never
+        // sees the clipped .katex-mathml mirror (a sibling of .katex-html).
+        // Vertical bounds stay the block's — those are already ink-exact.
+        if (el.classList.contains("disp")) {
+            let left = Infinity;
+            let right = -Infinity;
+            for (const kh of el.querySelectorAll(".katex-html")) {
+                const range = document.createRange();
+                range.selectNodeContents(kh);
+                const kr = range.getBoundingClientRect();
+                if (kr.width > 0) {
+                    left = Math.min(left, kr.left);
+                    right = Math.max(right, kr.right);
+                }
+            }
+            if (right > left) { r = { x: left, y: r.y, width: right - left, height: r.height }; }
+        }
         // KaTeX keeps the exact source in the MathML annotation.
         const ann = el.classList.contains("disp") ? el.querySelector('annotation[encoding="application/x-tex"]') : null;
         return {
@@ -204,21 +226,35 @@ function classifyMathElement(el) {
     return { cls, attrs };
 }
 
-// Build the <id>.layout.json sidecar (contract: normalized [0,1] COCO-style
-// [x,y,w,h], top-left origin, Canonical17 enum strings, items in reading
-// order = DOM order, which IS the logical order even in 2-column flows).
+// Final emission: normalized-float [x,y,w,h] -> INTEGER 0-1000 page coords.
+// Each value = Math.round(norm*1000) clamped to [0,1000]; then w,h are floored
+// at 1 (no zero-size boxes) and x,y re-clamped so x+w<=1000, y+h<=1000.
+function intBbox(x, y, w, h) {
+    const q = (v) => Math.max(0, Math.min(1000, Math.round(v * 1000)));
+    const W = Math.max(1, q(w));
+    const H = Math.max(1, q(h));
+    const X = Math.min(q(x), 1000 - W);
+    const Y = Math.min(q(y), 1000 - H);
+    return [X, Y, W, H];
+}
+
+// Build the <id>.layout.json sidecar (contract: INTEGER 0-1000 COCO-style
+// [x,y,w,h], top-left origin — Qwen-VL grounding convention — Canonical17
+// enum strings, items in reading order = DOM order, which IS the logical
+// order even in 2-column flows). All internal math stays normalized float;
+// the int rounding happens only at the final emission point (intBbox).
 function layoutSidecar(measured, scale, printW, printH) {
     const items = [];
     for (const el of measured) {
         if (el.w <= 0 || el.h <= 0) { continue; }
         if (!el.text && !el.latex) { continue; } // empty runhead cells etc.
         const { cls, attrs } = classifyMathElement(el);
-        const bbox = [
+        const bbox = intBbox(
             (el.x * scale) / printW,
             (el.y * scale) / printH,
             (el.w * scale) / printW,
             (el.h * scale) / printH,
-        ].map((v) => Math.max(0, Math.min(1, Math.round(v * 1e5) / 1e5)));
+        );
         items.push({
             id: items.length,
             class: cls,
@@ -229,8 +265,8 @@ function layoutSidecar(measured, scale, printW, printH) {
         });
     }
     return {
-        version: 1,
-        coords: "normalized [0,1] over the page, x rightward, y downward (top-left origin); bbox=[x,y,w,h] COCO-style",
+        version: 2,
+        coords: "integer 0-1000 scale over the page, x rightward, y downward (top-left origin); bbox=[x,y,w,h]",
         ontology: "canonical17",
         page_w_px: printW,
         page_h_px: printH,
