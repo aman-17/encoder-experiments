@@ -13,7 +13,11 @@ Output: features/<encoder>[__rand]/<image_id>.safetensors holding
     tokens [N, D] fp16, pooled [D] fp16
 with metadata {grid_h, grid_w, num_tokens, checkpoint, pooled_kind, ...}.
 Re-running skips existing files (resume-safe); per-image failures append to
-errors.jsonl and never kill the run.
+errors.jsonl and never kill the run. A finiteness guard runs before the fp16
+storage cast is written: NaN/Inf tokens or pooled vectors (including fp16
+overflow) raise NonFiniteFeaturesError — the image lands in errors.jsonl with
+per-tensor nan/inf/absmax counts and NO feature file is cached (MPS has
+produced NaN CLIP grids while reporting success; this makes that loud).
 """
 
 from __future__ import annotations
@@ -36,12 +40,57 @@ def safe_image_id(image_id: str) -> str:
     return image_id.replace("/", "__").replace("\\", "__")
 
 
+class NonFiniteFeaturesError(RuntimeError):
+    """Encoder produced NaN/Inf tokens or pooled vector (or values that
+    overflow the fp16 storage cast). Raised BEFORE anything is written, so a
+    corrupt feature file is never cached. `details` carries per-tensor
+    {nan, inf, absmax} counts for errors.jsonl."""
+
+    def __init__(self, message: str, details: dict):
+        super().__init__(message)
+        self.details = details
+
+
+FP16_MAX = 65504.0
+
+
+def _check_finite(tensors: dict[str, torch.Tensor], source: EncoderFeatures) -> None:
+    """Guard the fp16 storage cast: NaN/Inf in the cast tensors, or source
+    values past fp16's 65504 ceiling, fail the image loudly. The overflow
+    check is explicit against the SOURCE because some backends (MPS) saturate
+    the fp16 cast to +-65504 instead of producing Inf — the absmax-pinned-at-
+    the-fp16-ceiling signature. MPS has produced NaN/1e9-magnitude CLIP grids
+    while reporting success; this makes that loud instead of silently caching
+    corrupt features."""
+    details: dict[str, dict] = {}
+    bad = False
+    for name, t in tensors.items():
+        src = getattr(source, name).detach().float()
+        n_nan = int(torch.isnan(t).sum())
+        n_inf = int(torch.isinf(t).sum())
+        n_overflow = int((src.abs() > FP16_MAX).sum())
+        absmax = float(src.abs().max()) if src.numel() else 0.0
+        details[name] = {"nan": n_nan, "inf": n_inf, "overflow": n_overflow, "absmax": absmax}
+        bad = bad or n_nan > 0 or n_inf > 0 or n_overflow > 0
+    if bad:
+        raise NonFiniteFeaturesError(
+            "non-finite features at fp16 storage: "
+            + ", ".join(
+                f"{k}(nan={v['nan']}, inf={v['inf']}, overflow={v['overflow']}, "
+                f"absmax={v['absmax']:.4g})"
+                for k, v in details.items()
+            ),
+            details,
+        )
+
+
 def save_features(path: Path, feats: EncoderFeatures, meta: dict[str, str]) -> None:
     grid_h, grid_w = feats.grid_hw if feats.grid_hw is not None else (-1, -1)
     tensors = {
         "tokens": feats.tokens.detach().to("cpu", torch.float16).contiguous(),
         "pooled": feats.pooled.detach().to("cpu", torch.float16).contiguous(),
     }
+    _check_finite(tensors, feats)  # never cache corrupt features
     metadata = {
         **meta,
         "grid_h": str(grid_h),
@@ -132,8 +181,12 @@ def main(argv: list[str] | None = None) -> int:
                 done += 1
             except Exception as exc:  # noqa: BLE001 — per-image isolation is the point
                 failed += 1
+                record = {"image_id": row["image_id"], "error": repr(exc)}
+                details = getattr(exc, "details", None)
+                if details:  # NonFiniteFeaturesError: per-tensor nan/inf/absmax
+                    record["counts"] = details
                 with open(errors_path, "a") as ef:
-                    ef.write(json.dumps({"image_id": row["image_id"], "error": repr(exc)}) + "\n")
+                    ef.write(json.dumps(record) + "\n")
 
     print(f"[extract] {tag}: done={done} skipped={skipped} failed={failed}")
     if failed:

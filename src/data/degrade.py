@@ -62,7 +62,12 @@ nothing else touched. Recognised: `<stem>.cells.json`, `<stem>.pixels.json`,
 Canonical17 items list with COCO-style `bbox = [x, y, w, h]` (NOT corners):
 each bbox becomes the axis-aligned hull of the affined rect, exactly like the
 {x,y,w,h} rect path; `class` / `text` / `attrs` pass through verbatim.
-Coordinate convention everywhere - input and
+Cells sidecars have TWO producers with different `bbox` conventions — the
+replicator's corners [x0,y0,x1,y1] vs the table-generator's [x,y,w,h] — so the
+convention is sniffed PER FILE from the self-describing payload
+(`detect_cells_bbox_convention`: coords string, then schema keys, then the
+corner geometric invariant) and each file is transformed in, and stays in, its
+own convention. Coordinate convention everywhere - input and
 output - is normalized [0,1] over the page, x rightward, y downward
 (top-left origin), matching encoder_experiments/sites.py.
 """
@@ -470,6 +475,84 @@ def _round(v: float) -> float:
     return round(float(v), 6)
 
 
+# Two cells.json producers exist with DIFFERENT bbox conventions for the very
+# same "bbox" key (the files are self-describing — never guess by generator):
+#   - failing-table-replicator: corner bboxes [x0, y0, x1, y1]; its `coords`
+#     string says so ("bbox=[x0,y0,x1,y1]") and its tables carry n_rows /
+#     n_cols with dom_row / dom_slot / is_header / row_span / col_span cells;
+#   - table-generator (groundTruth.mjs): COCO-style [x, y, w, h]; its tables
+#     carry grid_rows / grid_cols with grid_row / grid_col / rowspan /
+#     colspan / tag ("th"/"td") cells and no bbox spec in `coords`.
+# Transforming an xywh bbox down the corner path scrambles it (the hull of an
+# inverted rect), so every cells.json gets its convention detected per file.
+
+_CORNER_CELL_KEYS = frozenset({"dom_row", "dom_slot", "is_header", "row_span", "col_span"})
+_XYWH_CELL_KEYS = frozenset({"grid_row", "grid_col", "rowspan", "colspan", "tag"})
+
+
+def detect_cells_bbox_convention(data: Any) -> str:
+    """Sniff a cells.json payload -> "corners" | "xywh".
+
+    Evidence, strongest first: (1) the `coords` self-description naming the
+    bbox layout; (2) the producer schema keys on tables/cells; (3) the corner
+    geometric invariant (x1 >= x0, y1 >= y0 — any violation proves xywh).
+    Raises when no evidence resolves, rather than silently scrambling coords.
+    """
+    if not isinstance(data, dict):
+        raise ValueError("cells.json payload is not an object; cannot sniff bbox convention")
+
+    coords = data.get("coords")
+    if isinstance(coords, str):
+        c = coords.lower().replace(" ", "")
+        if "x0,y0,x1,y1" in c or "[x0,y0,x1,y1]" in c:
+            return "corners"
+        if "x,y,w,h" in c or "[x,y,w,h]" in c or "coco" in c:
+            return "xywh"
+
+    corner_votes = 0
+    xywh_votes = 0
+    bboxes: list[list[float]] = []
+    tables = data.get("tables")
+    for table in tables if isinstance(tables, list) else []:
+        if not isinstance(table, dict):
+            continue
+        if "n_rows" in table or "n_cols" in table:
+            corner_votes += 1
+        if "grid_rows" in table or "grid_cols" in table:
+            xywh_votes += 1
+        if _bboxlike(table.get("bbox")):
+            bboxes.append(table["bbox"])
+        cells = table.get("cells")
+        for cell in cells if isinstance(cells, list) else []:
+            if not isinstance(cell, dict):
+                continue
+            keys = set(cell)
+            if keys & _CORNER_CELL_KEYS:
+                corner_votes += 1
+            if keys & _XYWH_CELL_KEYS:
+                xywh_votes += 1
+            if _bboxlike(cell.get("bbox")):
+                bboxes.append(cell["bbox"])
+    if corner_votes and not xywh_votes:
+        return "corners"
+    if xywh_votes and not corner_votes:
+        return "xywh"
+
+    # geometric invariant: corners always satisfy x1 >= x0 and y1 >= y0
+    if any(b[2] < b[0] or b[3] < b[1] for b in bboxes):
+        return "xywh"
+
+    raise ValueError(
+        "cannot detect cells.json bbox convention (no coords self-description, "
+        f"ambiguous schema keys: corner_votes={corner_votes} xywh_votes={xywh_votes}); "
+        "refusing to guess — a wrong convention silently scrambles every bbox"
+    )
+
+
+def _is_cells_payload(data: Any) -> bool:
+    return isinstance(data, dict) and isinstance(data.get("tables"), list)
+
+
 class _Ctx:
     """Traversal context: the matrix plus a companion coord for lone scalars.
 
@@ -479,16 +562,30 @@ class _Ctx:
     line that sits at the plot centre, which is what tick readouts sample.
     """
 
-    __slots__ = ("M", "scale", "ref")
+    __slots__ = ("M", "scale", "ref", "bbox_fmt")
 
-    def __init__(self, M: np.ndarray, ref: tuple[float, float] = (0.5, 0.5)):
+    def __init__(self, M: np.ndarray, ref: tuple[float, float] = (0.5, 0.5),
+                 bbox_fmt: str = "corners"):
+        if bbox_fmt not in ("corners", "xywh"):
+            raise ValueError(f"bbox_fmt must be 'corners' or 'xywh', got {bbox_fmt!r}")
         self.M = M
         self.scale = _linear_scale(M)
         self.ref = ref
+        self.bbox_fmt = bbox_fmt
 
     def with_ref(self, ref: tuple[float, float]) -> "_Ctx":
-        c = _Ctx(self.M, ref)
+        c = _Ctx(self.M, ref, self.bbox_fmt)
         return c
+
+
+def _xf_bbox_fmt(M: np.ndarray, bbox, fmt: str) -> list[float]:
+    """Transform one bbox 4-vector in its file's convention, staying in that
+    convention: corners -> hull corners; xywh -> hull re-expressed as xywh."""
+    if fmt == "xywh":
+        x, y, w, h = (float(v) for v in bbox)
+        x0, y0, x1, y1 = xf_bbox(M, [x, y, x + w, y + h])
+        return [_round(x0), _round(y0), _round(x1 - x0), _round(y1 - y0)]
+    return [_round(c) for c in xf_bbox(M, bbox)]
 
 
 def _xf_node(node: Any, ctx: _Ctx) -> Any:
@@ -545,9 +642,9 @@ def _xf_node(node: Any, ctx: _Ctx) -> Any:
         if k.startswith("svg_"):        # raw svg user space - never page coords
             out[k] = v
         elif k == "bbox" and _bboxlike(v):
-            out[k] = [_round(c) for c in xf_bbox(M, v)]
+            out[k] = _xf_bbox_fmt(M, v, ctx.bbox_fmt)
         elif k == "bbox" and isinstance(v, list) and all(_bboxlike(b) for b in v) and v:
-            out[k] = [[_round(c) for c in xf_bbox(M, b)] for b in v]
+            out[k] = [_xf_bbox_fmt(M, b, ctx.bbox_fmt) for b in v]
         elif k in ("r", "radius") and _num(v):
             out[k] = _round(v * ctx.scale)
         elif k in ("w", "h") and _num(v):   # length with no anchor to rotate about
@@ -564,13 +661,23 @@ def transform_sidecar(
     *,
     page_index: int | None = None,
     extra: dict[str, Any] | None = None,
+    bbox_fmt: str | None = None,
 ) -> Any:
     """Sidecar in -> sidecar out with every page coordinate through M_norm.
 
     Only coordinates change. Labels, text, spans, indices and the raw `svg_*`
     debug fields are copied verbatim.
+
+    `bbox_fmt` fixes the convention of `bbox` 4-vectors ("corners" or "xywh").
+    When None it is detected per file: cells.json payloads (a `tables` list)
+    are sniffed with `detect_cells_bbox_convention`; everything else keeps the
+    historical corner convention. Either way the output stays in the INPUT's
+    convention, so downstream consumers see the producer's own schema.
     """
-    ctx = _Ctx(np.asarray(M_norm, dtype=np.float64))
+    if bbox_fmt is None:
+        bbox_fmt = (detect_cells_bbox_convention(data)
+                    if _is_cells_payload(data) else "corners")
+    ctx = _Ctx(np.asarray(M_norm, dtype=np.float64), bbox_fmt=bbox_fmt)
     out = _xf_node(data, ctx)
     if not isinstance(out, dict):
         out = {"records": out}
@@ -578,11 +685,20 @@ def transform_sidecar(
     out["severity_key"] = str(severity)
     out["scan_geom_matrix"] = [[_round(v) for v in row] for row in np.asarray(M_norm)]
     out["geom_valid"] = True
-    out["scan_coords"] = (
-        "normalized [0,1] over the DEGRADED page image; x rightward, y downward "
-        "(top-left origin). Every coordinate above is scan_geom_matrix applied to "
-        "the original; bboxes are the axis-aligned hull of the transformed rect."
-    )
+    out["scan_bbox_fmt"] = bbox_fmt
+    if bbox_fmt == "xywh":
+        out["scan_coords"] = (
+            "normalized [0,1] over the DEGRADED page image; x rightward, y downward "
+            "(top-left origin). Every coordinate above is scan_geom_matrix applied to "
+            "the original; bboxes are [x,y,w,h] of the axis-aligned hull of the "
+            "transformed rect (input convention preserved)."
+        )
+    else:
+        out["scan_coords"] = (
+            "normalized [0,1] over the DEGRADED page image; x rightward, y downward "
+            "(top-left origin). Every coordinate above is scan_geom_matrix applied to "
+            "the original; bboxes are the axis-aligned hull of the transformed rect."
+        )
     if page_index is not None:
         out["scan_page_index"] = int(page_index)
     if extra:

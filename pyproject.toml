@@ -10,10 +10,12 @@ dependencies = [
     "pillow>=10.0",
     "safetensors>=0.4",
     "numpy>=1.26",
+    "scikit-learn>=1.4",
     "tqdm>=4.66",
     "pymupdf>=1.28.0",
     "augraphy>=8.2.6",
     "opencv-python-headless>=5.0.0.93",
+    "modal>=1.5.3",
 ]
 
 [dependency-groups]

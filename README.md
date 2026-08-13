@@ -3,10 +3,10 @@
 Difficulty taxonomy for probe data (easy/medium/hard + multi-as-flag, versioned
 rules): see [Data.md](Data.md).
 
-Frozen-encoder feature extraction for the encoder-anatomy paper. No training
-happens here: each tower runs forward once per image, features are cached to
-disk, and the probe harness (next step) fits linear / 2-layer-MLP heads on the
-cache.
+Frozen-encoder feature extraction + probe harness for the encoder-anatomy
+paper. No training happens here: each tower runs forward once per image,
+features are cached to disk, and `probe_fit` fits linear / 2-layer-MLP heads
+on the cache. Interim pilot results: [RESULTS.md](RESULTS.md).
 
 ## Encoders
 
@@ -24,12 +24,17 @@ Notes:
   LM; at Exp 1 its vision side *is* `sam_vit_b`. A4/A5 results at this stage
   read as "does the raw backbone carry the info", not a verdict on the
   (not-yet-built) hybrids.
-- **`deepseek_ocr` needs one-time wiring** on the box with the checkpoint: the
-  adapter auto-probes known encode entry points and fails loudly with the
-  module list if the release moved them. It's a probe-only reference; nothing
-  blocks on it.
+- **`deepseek_ocr` is wired directly against the checkpoint's `deepencoder.py`**
+  (SAM→16×conv→CLIP→projector, weights prefix-filtered from the safetensors
+  shard, strict-loud on mismatch) — the remote-code VLM path is bypassed
+  entirely. GLOBAL 1024px view only, 256 tokens (16×16): production DeepSeek-OCR
+  adds tiled crops, so its probe numbers read as "the global encoder alone",
+  not the full serving stack.
 - **Random-init floor control**: `--random-init` rebuilds the architecture from
   config with fresh weights. Supported for the four public towers only.
+  **`sam_vit_b__rand` emits exactly-zero features** (a property of SAM's
+  pre-neck at random init, verified) — it has no usable floor; use the CLIP
+  and SigLIP2 rand floors instead.
 
 ## Manifest contract (data side)
 
@@ -55,7 +60,10 @@ convention; divide by 1000 to recover the normalized frame used everywhere else)
 It is not part of the manifest row; the probe harness joins it on `image_id`.
 `src/data/degrade.py` auto-detects v1 (normalized float) vs v2 (int 0–1000) and
 passes either through with bboxes transformed by `scan_geom_matrix`,
-classes/text untouched.
+classes/text untouched. Cells sidecars likewise get their `bbox` convention
+sniffed **per file** (replicator corners `[x0,y0,x1,y1]` vs table-generator
+`[x,y,w,h]` — the payloads are self-describing) and are transformed in, and
+stay in, their own convention.
 
 ## Probe suite
 
@@ -64,10 +72,11 @@ convention above):
 
 | probe | input site | label |
 |---|---|---|
-| series-ID at marked point | site feature | series identity (charts) |
-| point-coordinate regression | site feature | data-space value (charts) |
-| cell (row,col) at marked point | site feature | logical grid cell (tables) |
-| glyph identity vs font size | site feature | char + `size_pt` (text) |
+| series-ID at marked point (`series_id`) | site feature | series identity (charts) |
+| point-coordinate regression (`point_value`) | site feature | data-space value (charts) |
+| cell row at marked point (`cell_row`) | site feature | int row index (tables, classification) — shares its sampled cells with `cell_col`; the two sub-probes are fitted independently and reported side by side |
+| cell column at marked point (`cell_col`) | site feature | int column index (tables, classification) |
+| glyph identity vs font size (`glyph_id`) | site feature | char + `size_pt` (text) |
 
 Layout probes (labels come from `<id>.layout.json`, joined on `image_id` —
 bboxes are first-class in the experiments; modern doc models ground everything):
@@ -76,7 +85,7 @@ bboxes are first-class in the experiments; modern doc models ground everything):
 |---|---|---|
 | **P-L1** patch-class | each patch token | Canonical17 class ∪ background (sidecar rasterized to the encoder's own patch grid; majority-at-center, smallest-area-wins on overlap) |
 | **P-L2** extent regression | site feature at a point inside an element | the element's `[x, y, w, h]` /1000 (metric: mean IoU, IoU@0.5) |
-| **P-L3** layout summary | pooled | per-class presence + count bins (ties to Data.md bbox difficulty tags) |
+| **P-L3** layout summary | pooled | flat float vector: per-class presence (0/1, Canonical17 order) + `n_boxes` as the last element (regression; ties to Data.md bbox difficulty tags) |
 | **P-L4** (stretch) reading order | two element-site features | which precedes |
 
 All probes fit linear + 2-layer-MLP heads with shuffled-label and random-init
@@ -99,12 +108,85 @@ uv run python -m encoder_experiments.extract \
 uv run python -m encoder_experiments.extract \
     --manifest data/probe_v1/manifest.jsonl \
     --encoder siglip2_naflex --random-init --out features/
+
+# probe harness: cached features + probes.jsonl -> results table
+uv run python -m encoder_experiments.probe_fit \
+    --features features/ --probes probes.jsonl \
+    --encoders clip_vit_l_336,siglip2_so400m_384,siglip2_naflex \
+    --out results/
 ```
+
+`probe_fit` fits linear (LogisticRegression / Ridge) + 2-layer-MLP heads per
+(probe family × encoder) on a fixed **document-level** train/test split (a doc
+never straddles the split — hard-asserted after splitting; `doc_id` per row
+[the sampler copies it from the manifest], or derived by stripping
+`__sev<key>`/`__p<N>`/`_s<NNN>` suffixes), with a shuffled-train-label control
+per head, 95% CIs from 1000 bootstrap resamples over test documents, and
+slices by `meta.scan_severity` (the severity KEY string, e.g. `'2b'`, with
+`meta.severity_level` the int base level), `meta.difficulty`, and per-class
+for `pl1*`. A (probe × encoder) pair that raises records the error in its
+results JSON and the run continues; `summary.md` is always written with the
+successful families plus an errors section (`--min-samples` tunes the skip
+threshold). Site probes
+read `sites.features_at(tokens, grid, point_xy)`; `pl3*` (or `"site":
+"pooled"`) reads the pooled vector. `pl2*` labels are `[x, y, w, h]` scored by
+mean IoU / IoU@0.5. Feature files are opened lazily one image at a time (only
+site vectors are kept in memory). Outputs `results/<probe>__<encoder>.json` +
+consolidated `results/summary.md`. The probes.jsonl row schema is documented
+in `probe_fit.py`'s module docstring.
 
 Output: `features/<encoder>[__rand]/<image_id>.safetensors` with `tokens`
 [N, D] + `pooled` [D] in fp16, grid shape and provenance in the metadata.
 Re-runs skip existing files; per-image failures go to `errors.jsonl` and never
 kill the run.
+
+## Modal (GPU extraction + fitting)
+
+`modal_extract.py` runs the same extraction loop and the same `probe_fit`
+pipeline on L40S GPUs (app `encoder-anatomy-pilot`, workspace
+llamaindex-research; volume `encoder-anatomy-pilot` at `/vol`, HF cache =
+`ocr-rl-trainer-hf-cache-0` shared with the RL trainers). Invoke via **this
+repo's venv** (`uv run modal ...` — the module is mounted from the invoking
+environment; the ocr_postraining venv can't see it):
+
+```bash
+# upload a corpus (paths in the manifest must be corpus-relative)
+modal volume put encoder-anatomy-pilot data/pilot_1k/images /corpus/images
+modal volume put encoder-anatomy-pilot data/pilot_1k/images_modal.jsonl /corpus/images_modal.jsonl
+
+# extraction fan-out (encoder x shard); resume-safe
+uv run modal run --detach modal_extract.py \
+    --encoders clip_vit_l_336,siglip2_naflex,qwen35_vit --shards 4 \
+    --images-subpath images_modal.jsonl
+
+# probe fitting next to the features; one container per encoder parallelizes
+uv run modal run --detach modal_extract.py --fit \
+    --encoders qwen35_vit --probes-subpath probes.jsonl --run pilot_v1
+```
+
+Hard-won rules baked in:
+- **Compute dtype is fp32 by default** (`--dtype` to override). "auto" picks
+  bf16 on CUDA, and these ViTs amplify bf16 noise over layers (per-token min
+  cosine ~0.25 vs fp32 on low-norm patches — verified dtype-, not
+  Modal-caused). Features must be box-independent; storage stays fp16.
+- **Always `--detach`** for anything long: a `modal run` app dies with the
+  local client (one restart killed 4 encoders' fits mid-run).
+- Each `--fit` invocation writes its own `summary.md` (last-writer-wins) —
+  fan out per encoder and consolidate the per-pair JSONs yourself.
+- A finiteness guard refuses to cache NaN/Inf/fp16-overflow features (MPS
+  *saturates* fp16 casts instead of producing Inf — the guard checks source
+  absmax; local MPS runs have produced corrupt CLIP grids while reporting
+  success, so prefer `--device cpu` locally or extract on Modal).
+
+## Pilot v1 (1k docs)
+
+`data/pilot_1k/`: 1,000 generated docs (300 charts / 250 tables / 250 math —
+200 old-book / 100 replicator / 100 text), 1,420 images (420 degraded at
+severities 1–3b), full GT sidecars, `images.jsonl` + `probes.jsonl`
+(288,329 samples, 8 families), audit in `DATASHEET.md`, browsable gallery at
+`browse/index.html`. Feature cache + per-pair fit results live on the Modal
+volume (`/vol/features`, `/vol/results/pilot_v1/`). Findings and caveats:
+[RESULTS.md](RESULTS.md).
 
 ## Disk sizing
 

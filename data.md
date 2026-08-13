@@ -78,6 +78,12 @@ normalized frame); `degrade.py` accepts v1 (normalized float) and v2.
 
 ⚠ **Calibrate before freezing**: check the empirical `n_boxes` distribution on real
 generated pages; shift the 4/8 cut points if any bucket ends up degenerate.
+*Measured on pilot_1k (2026-08-13): the 4/8 cuts ARE degenerate on dense synthetic
+pages — bboxes family tags ~100% hard for charts/math/text, dragging page-level
+difficulty to hard for 90–100% of those generators (per-family spreads are healthy,
+e.g. charts 87/89/124 easy/med/hard). Cut points need raising (or per-generator
+quantiles) before difficulty slices are meaningful for layout-dense pages —
+owner decision pending.*
 
 Kept continuous: `n_boxes`, `min_box_area`, `n_overlapping_pairs` (small and
 overlapping boxes are the actual difficulty drivers; count alone is a proxy).

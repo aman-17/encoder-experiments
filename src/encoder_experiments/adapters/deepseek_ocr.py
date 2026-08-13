@@ -1,13 +1,28 @@
 """P2 — released DeepSeek-OCR DeepEncoder (unmatched probe-only reference).
 
-Honest status: the checkpoint ships as remote code, and the exact attribute
-path to the SAM->conv16x->CLIP encode path varies by release. This adapter
-tries the known entry points and otherwise FAILS LOUDLY with the module list,
-so wiring it up is a five-minute edit on the box that has the checkpoint —
-not a silent wrong-features run.
+Wired directly against the checkpoint's own `deepencoder.py` instead of the
+full remote-code VLM: `AutoModel.from_pretrained(..., trust_remote_code=True)`
+pulls in `modeling_deepseekocr.py`, which needs addict/matplotlib/requests and
+instantiates the whole DeepseekV2 MoE LM we would immediately throw away.
+
+The encode path, read straight out of `modeling_deepseekocr.DeepseekOCRModel.
+forward` (global view, no crops):
+
+    f1 = sam_model(pixels)                 # SAM-ViT-B + 16x conv compressor -> [B, 1024, 16, 16]
+    f2 = vision_model(pixels, f1)          # CLIP-L, patch embeds REPLACED by f1 -> [B, 1+256, 1024]
+    tokens = projector(cat(f2[:, 1:], f1.flatten(2).permute(0, 2, 1)))  # [B, 256, 1280]
+
+Preprocessing (from `infer()`): pad to base_size x base_size (1024) with mean
+color, normalize mean=std=(0.5, 0.5, 0.5).  We take the global view only —
+crop mode is the VLM's tiling policy, not part of the encoder anatomy probe.
+
+Weights come from the checkpoint safetensors filtered to the three module
+prefixes; `load()` fails loudly on missing/unexpected keys.
 
 P2 is a reference point, not a trained arm (its training data confounds
 everything); nothing downstream blocks on it.
+
+Extra deps beyond the base stack: einops, easydict (imported by deepencoder.py).
 """
 
 from __future__ import annotations
@@ -15,12 +30,11 @@ from __future__ import annotations
 import math
 
 import torch
-from PIL import Image
+from PIL import Image, ImageOps
 
 from .base import EncoderAdapter, EncoderFeatures
 
-# Method names seen across DeepSeek-OCR releases for image->vision-tokens.
-_ENCODE_FNS = ("encode_images", "get_image_features", "encode_image")
+_PREFIXES = ("model.sam_model.", "model.vision_model.", "model.projector.")
 
 
 class DeepSeekOcrDeepEncoder(EncoderAdapter):
@@ -30,47 +44,80 @@ class DeepSeekOcrDeepEncoder(EncoderAdapter):
     supports_random_init = False
 
     def load(self) -> None:
-        from transformers import AutoModel
+        import importlib.util
+        import json
+
+        from easydict import EasyDict
+        from huggingface_hub import hf_hub_download
+        from safetensors import safe_open
 
         self.checkpoint = self._arg("checkpoint", self.checkpoint)
-        self.model = AutoModel.from_pretrained(
-            self.checkpoint, trust_remote_code=True, torch_dtype=self.dtype
-        ).eval().to(self.device)
+        self.base_size = self._arg("base_size", 1024)
 
-        self._encode_fn = None
-        for fn_name in _ENCODE_FNS:
-            fn = getattr(self.model, fn_name, None)
-            if callable(fn):
-                self._encode_fn = fn
-                break
+        # 1) Import the checkpoint's own deepencoder module (torch-only code).
+        enc_py = hf_hub_download(self.checkpoint, "deepencoder.py")
+        spec = importlib.util.spec_from_file_location("dsocr_deepencoder", enc_py)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
 
+        self.sam = mod.build_sam_vit_b()
+        self.clip = mod.build_clip_l()
+        self.projector = mod.MlpProjector(
+            EasyDict(projector_type="linear", input_dim=2048, n_embed=1280)
+        )
+
+        # 2) Pull the three submodules' weights out of the checkpoint shards.
         try:
-            from transformers import AutoImageProcessor
-
-            self.processor = AutoImageProcessor.from_pretrained(
-                self.checkpoint, trust_remote_code=True
-            )
+            index = json.load(open(hf_hub_download(self.checkpoint, "model.safetensors.index.json")))
+            shards = sorted({
+                shard for key, shard in index["weight_map"].items()
+                if key.startswith(_PREFIXES)
+            })
         except Exception:
-            self.processor = None  # encode() raises with instructions below
+            shards = ["model.safetensors"]  # unsharded fallback
+        state: dict[str, dict[str, torch.Tensor]] = {"sam": {}, "clip": {}, "projector": {}}
+        for shard in shards:
+            with safe_open(hf_hub_download(self.checkpoint, shard), framework="pt") as f:
+                for key in f.keys():
+                    if not key.startswith(_PREFIXES):
+                        continue
+                    _, module_name, sub = key.split(".", 2)
+                    bucket = {"sam_model": "sam", "vision_model": "clip", "projector": "projector"}[module_name]
+                    state[bucket][sub] = f.get_tensor(key)
 
-        if self._encode_fn is None or self.processor is None:
-            modules = [n for n, _ in self.model.named_children()]
-            raise RuntimeError(
-                f"{self.checkpoint}: could not auto-wire the DeepEncoder path "
-                f"(encode fn found: {self._encode_fn is not None}, "
-                f"processor found: {self.processor is not None}).\n"
-                f"Top-level modules: {modules}\n"
-                f"Fix: point _ENCODE_FNS / the preprocessing in adapters/deepseek_ocr.py "
-                f"at this release's image-encode entry point (see its modeling_*.py)."
-            )
+        for module, sd in (
+            (self.sam, state["sam"]),
+            (self.clip, state["clip"]),
+            (self.projector, state["projector"]),
+        ):
+            missing, unexpected = module.load_state_dict(sd, strict=False)
+            # position_ids buffers are registered but not saved; anything else is a wiring bug.
+            real_missing = [k for k in missing if not k.endswith("position_ids")]
+            if real_missing or unexpected:
+                raise RuntimeError(
+                    f"{self.checkpoint}: DeepEncoder weight wiring mismatch for "
+                    f"{type(module).__name__}: missing={real_missing[:5]} unexpected={list(unexpected)[:5]}"
+                )
+
+        for module in (self.sam, self.clip, self.projector):
+            module.eval().to(self.device, self.dtype)
 
     def encode(self, image: Image.Image) -> EncoderFeatures:
-        inputs = self.processor(images=[image], return_tensors="pt")
-        pixel_values = inputs["pixel_values"].to(self.device, self.dtype)
-        tokens = self._encode_fn(pixel_values)
-        if isinstance(tokens, (tuple, list)):
-            tokens = tokens[0]
-        tokens = tokens[0] if tokens.dim() == 3 else tokens  # [N, D]
+        # Global view: pad to square on the mean color, normalize to [-1, 1].
+        global_view = ImageOps.pad(
+            image.convert("RGB"), (self.base_size, self.base_size), color=(127, 127, 127)
+        )
+        import numpy as np
+
+        arr = np.asarray(global_view, dtype=np.float32) / 255.0
+        pixels = torch.from_numpy(arr).permute(2, 0, 1)
+        pixels = ((pixels - 0.5) / 0.5).unsqueeze(0).to(self.device, self.dtype)
+
+        f1 = self.sam(pixels)  # [1, 1024, h, w]
+        f2 = self.clip(pixels, f1)  # [1, 1 + h*w, 1024], CLS first
+        feats = torch.cat((f2[:, 1:], f1.flatten(2).permute(0, 2, 1)), dim=-1)  # [1, h*w, 2048]
+        tokens = self.projector(feats)[0]  # [h*w, 1280]
+
         side = math.isqrt(tokens.shape[0])
         grid_hw = (side, side) if side * side == tokens.shape[0] else None
         return EncoderFeatures(tokens=tokens, grid_hw=grid_hw, pooled=tokens.mean(dim=0))
