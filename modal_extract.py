@@ -208,7 +208,12 @@ def extract_encoder(
 
 @app.function(
     image=image,
-    gpu="L40S",  # MLP heads train on GPU; probe_fit falls back to CPU cleanly
+    # CPU on purpose: the linear heads are sklearn (CPU-bound) and the MLP heads
+    # are small; L40S queueing in the shared workspace got our pending apps
+    # CLI-stopped twice during a capacity crunch. CPU containers schedule
+    # instantly and dodge the contention entirely.
+    cpu=16.0,
+    memory=65536,
     timeout=3600 * 4,
     volumes={VOL_PATH: data_volume},
 )
