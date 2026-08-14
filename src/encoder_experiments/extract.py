@@ -18,6 +18,26 @@ storage cast is written: NaN/Inf tokens or pooled vectors (including fp16
 overflow) raise NonFiniteFeaturesError — the image lands in errors.jsonl with
 per-tensor nan/inf/absmax counts and NO feature file is cached (MPS has
 produced NaN CLIP grids while reporting success; this makes that loud).
+
+SITE MODE (--sites-from <probes.jsonl | sites manifest>): for the budget
+sweep, where full grids cost ~1.5-2 MB/image. Since every probe row's read
+location is known up front, extraction pre-samples exactly those sites: per
+image it computes sites = sites.features_at over the image's manifest points
+— on the fp16-roundtripped grid, so the vectors go through the SAME rounding
+path a full-grid cache read would — and stores
+<image_id>.sites.safetensors holding
+    sites [K, D] fp16, points [K, 2] fp32, pooled [D] fp16
+(~50 KB/image). probe_fit reads either layout transparently. Full-grid mode
+is unchanged and remains the exploratory default.
+
+SWEEP METADATA CONTRACT: every stored file (both layouts) carries
+    budget_tokens  actual token count of THIS image's encode (never the
+                   nominal knob setting — NaFlex et al. round)
+    mechanism      how the budget was reached: resolution | res-mode |
+                   merge | native   (--mechanism)
+    knob           the knob setting that produced it, free string
+                   (--knob, e.g. "max_num_patches=1024")
+probe_fit copies these into its results JSONs.
 """
 
 from __future__ import annotations
@@ -34,6 +54,8 @@ from tqdm import tqdm
 
 from .adapters.base import EncoderFeatures
 from .registry import ADAPTERS, build, resolve_device, resolve_dtype
+from .site_store import MECHANISMS, SITES_SUFFIX, load_site_manifest
+from .sites import features_at
 
 
 def safe_image_id(image_id: str) -> str:
@@ -97,10 +119,60 @@ def save_features(path: Path, feats: EncoderFeatures, meta: dict[str, str]) -> N
         "grid_w": str(grid_w),
         "num_tokens": str(feats.tokens.shape[0]),
         "feat_dim": str(feats.tokens.shape[1]),
+        # sweep contract: budget is the ACTUAL token count, never the nominal knob
+        "budget_tokens": str(feats.tokens.shape[0]),
     }
     tmp = path.with_suffix(".tmp")
     save_file(tensors, tmp, metadata=metadata)
     tmp.rename(path)  # atomic-ish: resume never sees a half-written file
+
+
+def save_sites(
+    path: Path,
+    feats: EncoderFeatures,
+    points: list[list[float]],
+    meta: dict[str, str],
+) -> None:
+    """Site-mode storage: pre-sampled site vectors instead of the full grid.
+
+    The parity contract (pinned by tests/test_site_store.py): the stored
+    `sites` must be BIT-IDENTICAL to what probe_fit would compute from a
+    full-grid cache of the same encode — features_at on the fp16-stored-then-
+    floated grid — followed by the same fp16 storage cast. So the grid is
+    roundtripped through fp16 BEFORE sampling; sampling the raw fp32 grid
+    would produce vectors that differ in the last bits from a full-grid read.
+    """
+    grid_h, grid_w = feats.grid_hw if feats.grid_hw is not None else (-1, -1)
+    tokens16 = feats.tokens.detach().to("cpu", torch.float16).contiguous()
+    pooled16 = feats.pooled.detach().to("cpu", torch.float16).contiguous()
+    # same guard as full-grid: never cache corrupt features (sites are convex
+    # combinations of tokens, so finite tokens => finite sites)
+    _check_finite({"tokens": tokens16, "pooled": pooled16}, feats)
+    pts = torch.tensor(points, dtype=torch.float32).reshape(-1, 2).contiguous()
+    if len(points) == 0:
+        sites16 = torch.zeros((0, tokens16.shape[1]), dtype=torch.float16)
+    else:
+        if feats.grid_hw is None:
+            raise ValueError("encoder produced no spatial grid; site mode needs grid_hw")
+        # fp16 roundtrip first = the exact tensor a full-grid reader would load
+        sites16 = features_at(tokens16.float(), feats.grid_hw, pts).to(torch.float16)
+    tensors = {
+        "sites": sites16.contiguous(),
+        "points": pts,
+        "pooled": pooled16,
+    }
+    metadata = {
+        **meta,
+        "grid_h": str(grid_h),
+        "grid_w": str(grid_w),
+        "num_tokens": str(feats.tokens.shape[0]),
+        "feat_dim": str(feats.tokens.shape[1]),
+        "num_sites": str(pts.shape[0]),
+        "budget_tokens": str(feats.tokens.shape[0]),
+    }
+    tmp = path.with_suffix(".tmp")
+    save_file(tensors, tmp, metadata=metadata)
+    tmp.rename(path)
 
 
 def read_manifest(path: Path, limit: int | None) -> list[dict]:
@@ -140,7 +212,25 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--overwrite", action="store_true")
     ap.add_argument("--adapter-arg", action="append", default=[], metavar="KEY=VALUE")
+    ap.add_argument(
+        "--sites-from", type=Path, default=None, metavar="PROBES_OR_MANIFEST",
+        help="site mode: probes.jsonl or a precomputed sites manifest; stores "
+             "pre-sampled <image_id>.sites.safetensors instead of full grids",
+    )
+    ap.add_argument(
+        "--mechanism", default="native", choices=list(MECHANISMS),
+        help="sweep metadata: how the token budget was reached",
+    )
+    ap.add_argument(
+        "--knob", default="native",
+        help="sweep metadata: the knob setting that produced the budget "
+             '(e.g. "max_num_patches=1024")',
+    )
     args = ap.parse_args(argv)
+
+    site_manifest: dict | None = None
+    if args.sites_from is not None:
+        site_manifest = load_site_manifest(args.sites_from)["images"]
 
     device = resolve_device(args.device)
     dtype = resolve_dtype(args.dtype, device)
@@ -156,7 +246,11 @@ def main(argv: list[str] | None = None) -> int:
     errors_path = out_dir / "errors.jsonl"
 
     rows = read_manifest(args.manifest, args.limit)
-    print(f"[extract] {tag}: {len(rows)} images -> {out_dir}  (device={device}, dtype={dtype})")
+    mode = "sites" if site_manifest is not None else "full-grid"
+    print(
+        f"[extract] {tag}: {len(rows)} images -> {out_dir}  "
+        f"(device={device}, dtype={dtype}, mode={mode})"
+    )
     adapter.load()
 
     meta = {
@@ -165,19 +259,32 @@ def main(argv: list[str] | None = None) -> int:
         "pooled_kind": adapter.pooled_kind,
         "random_init": str(args.random_init),
         "compute_dtype": str(dtype),
+        "mechanism": args.mechanism,
+        "knob": args.knob,
     }
 
-    done = skipped = failed = 0
+    done = skipped = failed = no_sites = 0
     with torch.inference_mode():
         for row in tqdm(rows, unit="img"):
-            path = out_dir / f"{safe_image_id(row['image_id'])}.safetensors"
+            sid = safe_image_id(row["image_id"])
+            if site_manifest is not None:
+                spec = site_manifest.get(row["image_id"]) or site_manifest.get(sid)
+                if spec is None:  # image has no probe rows at all — nothing to store
+                    no_sites += 1
+                    continue
+                path = out_dir / f"{sid}{SITES_SUFFIX}"
+            else:
+                path = out_dir / f"{sid}.safetensors"
             if path.exists() and not args.overwrite:
                 skipped += 1
                 continue
             try:
                 image = Image.open(row["image_path"]).convert("RGB")
                 feats = adapter.encode(image)
-                save_features(path, feats, meta)
+                if site_manifest is not None:
+                    save_sites(path, feats, spec["points"], meta)
+                else:
+                    save_features(path, feats, meta)
                 done += 1
             except Exception as exc:  # noqa: BLE001 — per-image isolation is the point
                 failed += 1
@@ -188,7 +295,8 @@ def main(argv: list[str] | None = None) -> int:
                 with open(errors_path, "a") as ef:
                     ef.write(json.dumps(record) + "\n")
 
-    print(f"[extract] {tag}: done={done} skipped={skipped} failed={failed}")
+    tail = f" no_sites={no_sites}" if site_manifest is not None else ""
+    print(f"[extract] {tag}: done={done} skipped={skipped} failed={failed}{tail}")
     if failed:
         print(f"[extract] failures logged to {errors_path}", file=sys.stderr)
     return 1 if failed and not done else 0

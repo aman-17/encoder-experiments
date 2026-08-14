@@ -140,6 +140,22 @@ Output: `features/<encoder>[__rand]/<image_id>.safetensors` with `tokens`
 Re-runs skip existing files; per-image failures go to `errors.jsonl` and never
 kill the run.
 
+**Site mode (budget sweep):** `extract --sites-from <probes.jsonl | sites
+manifest>` stores `<image_id>.sites.safetensors` with pre-sampled `sites`
+[K, D] fp16 + `points` [K, 2] fp32 + `pooled` [D] fp16 (~50 KB/image instead
+of full grids). The site vectors are computed by `sites.features_at` on the
+fp16-roundtripped grid — bit-identical to what a full-grid cache read would
+produce (pinned by `tests/test_site_store.py`). `site_store.build_site_manifest`
+turns a probes.jsonl into the deterministic per-image point manifest (unique
+6dp-rounded points; pl3/pooled rows need only the pooled vector). `probe_fit`
+reads either layout transparently, matching each row's `point_xy` against the
+stored points by exact 6dp equality — a miss is a hard error naming the
+nearest stored point. Sweep metadata contract: every stored file carries
+`budget_tokens` (the ACTUAL token count of that encode, never the nominal
+knob), `mechanism` (`resolution|res-mode|merge|native`, `--mechanism`) and
+`knob` (`--knob`, e.g. `"max_num_patches=1024"`); `probe_fit` copies them
+into each results JSON.
+
 ## Modal (GPU extraction + fitting)
 
 `modal_extract.py` runs the same extraction loop and the same `probe_fit`
@@ -178,6 +194,41 @@ Hard-won rules baked in:
   absmax; local MPS runs have produced corrupt CLIP grids while reporting
   success, so prefer `--device cpu` locally or extract on Modal).
 
+## Budget sweep (Exp 2 token frontier)
+
+`LADDER = [64, 100, 144, 196, 256, 400, 576, 784, 1024]` target tokens
+(`encoder_experiments/budgets.py`). Two derivation routes, one output layout —
+the site-mode contract above (`sites` + `points` + `pooled`, `budget_tokens` =
+ACTUAL realized count) under `features_sweep/<encoder>@<budget>/`:
+
+- **Knob towers** (`mechanism` `resolution` / `res-mode`): the preprocessing
+  knob realizes the budget — `siglip2_naflex` → `max_num_patches=budget`,
+  `qwen35_vit` → `max_pixels=budget*784` (14px patch × 2×2 merge → 784
+  px/merged token), `deepseek_ocr` → `base_size` per `{64:512, 100:640,
+  144:768, 196:896, 256:1024, 400:1280}` (grid side is exactly base_size/64;
+  no rung above 400). naflex/qwen realize ≤ budget (asserted in the
+  adapters), deepseek is exact; analysis must plot against the recorded
+  ACTUAL counts.
+
+      uv run modal run --detach modal_extract.py \
+          --encoders siglip2_naflex,qwen35_vit,deepseek_ocr \
+          --budget 64,100,144,196,256,400,576,784,1024 \
+          --shards 4 --probes-subpath probes.jsonl   # sites-mode is mandatory
+
+- **Merge towers** (`mechanism` `merge`): the fixed-res grids (clip 24×24,
+  siglip2 27×27, sam 64×64) are adaptive-average-pooled DOWN from the
+  existing full-grid caches (fp32 pooling, then bilinear site readout at the
+  probes' points, via the same `save_sites` writer) — no re-extraction.
+  Rungs above native are skipped; the pooled vector becomes the merged-grid
+  mean (`source_pooled_kind` preserved).
+
+      uv run python -m encoder_experiments.derive_pooled \
+          --features-in features/clip_vit_l_336 --probes probes.jsonl \
+          --rungs 64,100,144,196,256,400,576 --out features_sweep/
+      # or on Modal (CPU), against /vol/features/<tower>:
+      uv run modal run --detach modal_extract.py --derive-pooled \
+          --encoders clip_vit_l_336,siglip2_so400m_384,sam_vit_b
+
 ## Pilot v1 (1k docs)
 
 `data/pilot_1k/`: 1,000 generated docs (300 charts / 250 tables / 250 math —
@@ -192,7 +243,7 @@ volume (`/vol/features`, `/vol/results/pilot_v1/`). Findings and caveats:
 
 fp16 full-grid features: ~1.5–2 MB/image for the 384–1024px towers (SAM is the
 heavy one: 4096 tokens × 768) → hundreds of GB at the full 15–20k-page ×
-7-tower scale. The planned fix is a `--sites-from-manifest` extraction mode:
+7-tower scale. The fix is the `--sites-from` extraction mode above:
 since marked points are known up front, store pre-sampled site features +
 pooled (~50 KB/image) instead of full grids. The layout probes stay compatible
 by sampling **K ≈ 64–128 labeled patches per page** into the manifest (patch

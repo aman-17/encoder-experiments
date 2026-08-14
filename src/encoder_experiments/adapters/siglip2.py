@@ -58,7 +58,7 @@ class Siglip2NaFlex(EncoderAdapter):
     def load(self) -> None:
         from transformers import AutoProcessor, Siglip2VisionConfig, Siglip2VisionModel
 
-        max_patches = self._arg("max_num_patches", 0)  # 0 -> processor default (256)
+        max_patches = self.max_num_patches = self._arg("max_num_patches", 0)  # 0 -> default (256)
         proc_kwargs = {"max_num_patches": max_patches} if max_patches else {}
         self.processor = AutoProcessor.from_pretrained(self.checkpoint, **proc_kwargs)
         if self.random_init:
@@ -77,4 +77,10 @@ class Siglip2NaFlex(EncoderAdapter):
         )
         h, w = (int(x) for x in inputs.spatial_shapes[0])
         tokens = out.last_hidden_state[0, : h * w]  # strip padding
+        if self.max_num_patches:
+            # Realized-budget guard: the processor promises h*w <= the budget.
+            assert h * w <= self.max_num_patches, (
+                f"budget overrun: {h}x{w}={h * w} patches > "
+                f"max_num_patches={self.max_num_patches}"
+            )
         return EncoderFeatures(tokens=tokens, grid_hw=(h, w), pooled=out.pooler_output[0])

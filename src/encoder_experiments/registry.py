@@ -20,7 +20,7 @@ import torch
 from .adapters.base import EncoderAdapter
 from .adapters.clip import ClipVitL336
 from .adapters.deepseek_ocr import DeepSeekOcrDeepEncoder
-from .adapters.qwen_vit import Qwen35Vit
+from .adapters.qwen_vit import Qwen35Vit, Qwen3VlVit
 from .adapters.sam import SamVitB
 from .adapters.siglip2 import Siglip2NaFlex, Siglip2So400m384
 
@@ -31,6 +31,7 @@ ADAPTERS: dict[str, type[EncoderAdapter]] = {
         Siglip2So400m384,
         Siglip2NaFlex,
         Qwen35Vit,
+        Qwen3VlVit,
         SamVitB,
         DeepSeekOcrDeepEncoder,
     )

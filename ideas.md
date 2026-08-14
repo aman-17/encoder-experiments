@@ -138,4 +138,56 @@ All three are hypotheses; no direction or threshold is asserted pre-data. The fo
 
 ---
 
+## 9. Concurrent external evidence (Goodfire/Silico, Aug 2026)
+
+Goodfire's autonomous research agent (Silico) trained a vision adapter for
+Qwen3-8B, matched Qwen3-VL-8B on GQA/POPE/MMMU, lagged on TextVQA, and
+self-diagnosed the cause as a too-coarse vision→language bridge
+(x.com/GoodfireAI/status/2088298362730877139). Their ablation, vs. a single-384px
+baseline (stated noise floor ±2 pts):
+
+| config | TextVQA | GQA | POPE | MMMU |
+|---|---|---|---|---|
+| tiling, all tile tokens | **+7.0** | +0.4 | +0.7 | +1.3 |
+| tiling, 4× pixel-shuffle | +1.1 | −1.3 | +0.3 | +2.2 |
+| **compression cost (Δ)** | **−5.9** | −1.7 | −0.4 | +0.9 |
+
+Only the TextVQA effects clear the noise floor. Absolute: 63.5 (baseline) →
+70.6 (all tokens) vs. 83.5 (official Qwen3-VL-8B).
+
+**Why this belongs in the paper's motivation, not its results:**
+
+- **Field observation of H1's expected ordering.** "Text dies first, semantics
+  survive" at the benchmark level = S1 (glyph identity) collapsing before
+  semantic/layout signals — precisely the survival-order phenomenon Exp 1
+  measures per-signal and per-family. Our pilot already shows the probe-level
+  twin: the 16×-compressed serial reference (P2) sits at the glyph-probe floor
+  while leading the pooled layout-summary probe; CLIP@336 equals its own
+  random-init on glyphs.
+- **Field observation of H3's compression component.** Both their conditions
+  tile (coverage held constant); only the pixel-shuffle compressor varies. The
+  −5.9 TextVQA delta is therefore a compression-driven loss at fixed effective
+  resolution — the exact quantity Exp 2a/4c isolate, observed in the wild at a
+  single ratio on a single stack.
+- **Instrument contrast (the positioning sentence).** Silico localized the
+  bottleneck *by intervention*: hypothesize → rebuild the adapter → overnight
+  retrain → re-benchmark, with localization inferred from the fix working.
+  Our probe suite answers the same question *by measurement*: pre-decoder,
+  per-signal, across all towers simultaneously, at negligible cost — and the
+  fact that all-tile-tokens recovered the gap implies the information existed
+  in the encoder and died at the hand-off, which is exactly the stage
+  distinction Exp 2's site-wise probing measures rather than infers. The two
+  compose: probes to localize cheaply, intervention to confirm causally —
+  structurally our Part I → Part II gate.
+- **Their residual gap motivates Part II.** After the granularity fix they
+  remain ~13 pts under the official stack (70.6 vs 83.5) — everything left is
+  pretraining/data/recipe confounds, i.e. the matched-adaptation question.
+
+Caveats when citing: single stack, single compression ratio, benchmark-level
+metrics only (no per-signal decomposition), n=1 training run per condition
+with a self-reported ±2 noise floor, and a tweet rather than a paper (check
+for an accompanying blog/preprint before camera-ready).
+
+---
+
 *Internal mapping (remove before submission): Part I ≡ the Stage-0 deliverable — inference-only, runs within current constraints, feeds the gate review and the CVPR submission. Part II is gated on the same evidence that gates the Path B build; one compute budget serves the gate memo, the deck, and the paper.*

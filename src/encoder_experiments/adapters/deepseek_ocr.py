@@ -53,6 +53,10 @@ class DeepSeekOcrDeepEncoder(EncoderAdapter):
 
         self.checkpoint = self._arg("checkpoint", self.checkpoint)
         self.base_size = self._arg("base_size", 1024)
+        if self.base_size % 64 != 0:
+            # Grid side is base_size/16 (SAM patches) further /4 by the conv
+            # compressor — non-multiples of 64 cannot form a clean token grid.
+            raise ValueError(f"base_size must be a multiple of 64, got {self.base_size}")
 
         # 1) Import the checkpoint's own deepencoder module (torch-only code).
         enc_py = hf_hub_download(self.checkpoint, "deepencoder.py")
@@ -120,4 +124,11 @@ class DeepSeekOcrDeepEncoder(EncoderAdapter):
 
         side = math.isqrt(tokens.shape[0])
         grid_hw = (side, side) if side * side == tokens.shape[0] else None
+        # Budget contract: base_size maps to an exact (base_size/64)^2 grid
+        # (512->8x8=64, 640->10x10=100, ..., 1280->20x20=400 tokens).
+        expected_side = self.base_size // 64
+        assert grid_hw == (expected_side, expected_side), (
+            f"deepseek_ocr grid mismatch: base_size={self.base_size} expects "
+            f"{expected_side}x{expected_side}, got {tokens.shape[0]} tokens"
+        )
         return EncoderFeatures(tokens=tokens, grid_hw=grid_hw, pooled=tokens.mean(dim=0))

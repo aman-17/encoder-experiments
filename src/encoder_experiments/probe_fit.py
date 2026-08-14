@@ -40,6 +40,16 @@ Conventions:
     "error" field) and the run continues; summary.md is always written with
     the successful families plus an errors section.
 
+Feature layouts (read transparently, per image — downstream code paths are
+identical): full-grid <image_id>.safetensors (tokens + pooled; site vectors
+sampled here via sites.features_at) OR site-mode <image_id>.sites.safetensors
+from extract.py --sites-from (pre-sampled sites [K, D] + points [K, 2] +
+pooled; a row's point_xy is matched against `points` by EXACT 6dp equality —
+a miss is a hard error naming the nearest stored point, because it means the
+sites cache was built from a different probes.jsonl). The budget-sweep
+metadata fields {budget_tokens, mechanism, knob} are copied from the feature
+files into every results JSON.
+
 Per (probe family x encoder) it fits linear + 2-layer-MLP heads on a fixed
 document-level train/test split (never samples of one doc on both sides), runs
 a shuffled-train-label control per head, bootstraps CIs over test documents,
@@ -70,6 +80,7 @@ from safetensors import safe_open
 from .extract import safe_image_id
 from .heads import fit_predict_linear, fit_predict_mlp
 from .probe_metrics import PRIMARY_METRIC, bootstrap_ci, compute_metrics
+from .site_store import SITES_SUFFIX, SWEEP_META_FIELDS, round6
 from .sites import features_at
 
 TASK_TYPES = {"classification", "regression", "bbox"}
@@ -182,15 +193,67 @@ def encode_labels(task_type: str, rows: list[ProbeRow]) -> tuple[np.ndarray, lis
 # feature assembly (lazy, one image at a time)
 # --------------------------------------------------------------------------- #
 
+def _lookup_site_vectors(
+    f, path: Path, rows: list[ProbeRow], site_idxs: list[int]
+) -> dict[int, np.ndarray]:
+    """Read pre-sampled site vectors from a .sites.safetensors file.
+
+    Each probe row's point_xy must match a stored point EXACTLY at 6dp (the
+    site_store identity contract — fp32 storage round-trips 6dp decimals in
+    [0, 1] exactly). A miss means the sites cache was built from a different
+    probes.jsonl: hard error listing the nearest stored point, never a silent
+    nearest-neighbor substitution.
+    """
+    points = f.get_tensor("points")  # [K, 2] fp32, manifest order
+    key_to_idx = {
+        (round6(x), round6(y)): k for k, (x, y) in enumerate(points.tolist())
+    }
+    sites = f.get_tensor("sites").float().numpy()  # [K, D]
+    out: dict[int, np.ndarray] = {}
+    for i in site_idxs:
+        x, y = rows[i].point_xy
+        k = key_to_idx.get((round6(x), round6(y)))
+        if k is None:
+            if points.shape[0] == 0:
+                raise ValueError(
+                    f"{path}: probe {rows[i].probe!r} needs a site at "
+                    f"({x:.6f}, {y:.6f}) but the file stores 0 site points "
+                    "(pooled-only) — re-extract with --sites-from the probes "
+                    "file that contains this row"
+                )
+            d = ((points - torch.tensor([x, y], dtype=points.dtype)) ** 2).sum(1)
+            k_near = int(d.argmin())
+            nx, ny = (float(v) for v in points[k_near])
+            raise ValueError(
+                f"{path}: probe {rows[i].probe!r} point ({x:.6f}, {y:.6f}) has "
+                f"no exact 6dp match among the {points.shape[0]} stored sites; "
+                f"nearest stored point is ({nx:.6f}, {ny:.6f}) at distance "
+                f"{float(d[k_near]) ** 0.5:.3g} — the sites cache was built "
+                "from a different probes.jsonl; re-extract with --sites-from "
+                "this probes file"
+            )
+        out[i] = sites[k]
+    return out
+
+
 def assemble_features(
     rows: list[ProbeRow], enc_dir: Path
-) -> tuple[np.ndarray, list[ProbeRow], int]:
-    """-> (X [n_kept, D] float32, kept rows in original order, n_missing).
+) -> tuple[np.ndarray, list[ProbeRow], int, dict]:
+    """-> (X [n_kept, D] float32, kept rows in original order, n_missing,
+    sweep_meta).
 
     Opens each image's safetensors lazily (safe_open), reads only the tensor it
     needs, samples every site of that image in one features_at call, and drops
     the grid before moving on — full grids are never held for more than one
-    image.
+    image. Reads full-grid <id>.safetensors and site-mode <id>.sites.safetensors
+    transparently (per image; full grid wins when both exist): site vectors in
+    a sites file were pre-sampled through the identical fp16 rounding path, so
+    downstream code cannot tell the layouts apart.
+
+    sweep_meta collects the budget-sweep contract fields
+    {budget_tokens, mechanism, knob} from the opened files' metadata: the
+    unique value per field, a sorted list when files disagree, None when absent
+    (pre-contract caches).
     """
     by_image: dict[str, list[int]] = defaultdict(list)
     for i, r in enumerate(rows):
@@ -198,12 +261,23 @@ def assemble_features(
 
     feats: dict[int, np.ndarray] = {}
     n_missing = 0
+    sweep_vals: dict[str, set] = {k: set() for k in SWEEP_META_FIELDS}
     for image_id, idxs in by_image.items():
-        path = enc_dir / f"{safe_image_id(image_id)}.safetensors"
+        stem = safe_image_id(image_id)
+        path = enc_dir / f"{stem}.safetensors"
+        is_sites = False
         if not path.exists():
-            n_missing += len(idxs)
-            continue
+            path = enc_dir / f"{stem}{SITES_SUFFIX}"
+            is_sites = True
+            if not path.exists():
+                n_missing += len(idxs)
+                continue
         with safe_open(path, framework="pt", device="cpu") as f:
+            meta = f.metadata() or {}
+            for key in SWEEP_META_FIELDS:
+                if key in meta:
+                    val = int(meta[key]) if key == "budget_tokens" else meta[key]
+                    sweep_vals[key].add(val)
             pooled_idxs = [i for i in idxs if rows[i].pooled]
             site_idxs = [i for i in idxs if not rows[i].pooled]
             if pooled_idxs:
@@ -211,23 +285,31 @@ def assemble_features(
                 for i in pooled_idxs:
                     feats[i] = vec
             if site_idxs:
-                meta = f.metadata()
-                grid_hw = (int(meta["grid_h"]), int(meta["grid_w"]))
-                if grid_hw[0] <= 0:
-                    raise ValueError(
-                        f"{path}: encoder cached no spatial grid; site probes need one"
+                if is_sites:
+                    feats.update(_lookup_site_vectors(f, path, rows, site_idxs))
+                else:
+                    grid_hw = (int(meta["grid_h"]), int(meta["grid_w"]))
+                    if grid_hw[0] <= 0:
+                        raise ValueError(
+                            f"{path}: encoder cached no spatial grid; site probes need one"
+                        )
+                    tokens = f.get_tensor("tokens")
+                    pts = torch.tensor(
+                        [rows[i].point_xy for i in site_idxs], dtype=torch.float32
                     )
-                tokens = f.get_tensor("tokens")
-                pts = torch.tensor([rows[i].point_xy for i in site_idxs], dtype=torch.float32)
-                sampled = features_at(tokens, grid_hw, pts).numpy()  # [K, D] float32
-                for k, i in enumerate(site_idxs):
-                    feats[i] = sampled[k]
+                    sampled = features_at(tokens, grid_hw, pts).numpy()  # [K, D] float32
+                    for k, i in enumerate(site_idxs):
+                        feats[i] = sampled[k]
 
+    sweep_meta = {
+        k: (next(iter(v)) if len(v) == 1 else sorted(v) if v else None)
+        for k, v in sweep_vals.items()
+    }
     kept = [i for i in range(len(rows)) if i in feats]
     if not kept:
-        return np.zeros((0, 0), dtype=np.float32), [], n_missing
+        return np.zeros((0, 0), dtype=np.float32), [], n_missing, sweep_meta
     X = np.stack([feats[i] for i in kept]).astype(np.float32)
-    return X, [rows[i] for i in kept], n_missing
+    return X, [rows[i] for i in kept], n_missing, sweep_meta
 
 
 # --------------------------------------------------------------------------- #
@@ -325,7 +407,7 @@ def _fit_predict(
 
 
 def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) -> dict | None:
-    X, kept, n_missing = assemble_features(rows, enc_dir)
+    X, kept, n_missing, sweep_meta = assemble_features(rows, enc_dir)
     if len(kept) < cfg.min_samples:
         print(
             f"[probe_fit] SKIP {probe} x {enc_dir.name}: only {len(kept)} samples "
@@ -385,6 +467,11 @@ def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) ->
     return {
         "probe": probe,
         "encoder": enc_dir.name,
+        # sweep contract, copied verbatim from the feature files' metadata
+        # (None on pre-contract caches; a sorted list if files disagree)
+        "budget_tokens": sweep_meta["budget_tokens"],
+        "mechanism": sweep_meta["mechanism"],
+        "knob": sweep_meta["knob"],
         "task_type": task_type,
         "primary_metric": PRIMARY_METRIC[task_type],
         "n_samples": int(len(kept)),

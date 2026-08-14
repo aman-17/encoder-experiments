@@ -16,6 +16,13 @@ dependencies = [
     "augraphy>=8.2.6",
     "opencv-python-headless>=5.0.0.93",
     "modal>=1.5.3",
+    # frontier_score.py — deps of the vendored pb_table TEDS/GriTS metrics
+    "lxml>=5.0",
+    "beautifulsoup4>=4.12",
+    "rapidfuzz>=3.0",
+    "scipy>=1.11",
+    "apted>=1.0.3",
+    "levenshtein>=0.25",
 ]
 
 [dependency-groups]
