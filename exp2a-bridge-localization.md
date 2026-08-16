@@ -1,5 +1,17 @@
 # Exp 2a — Bridge localization on the production tower (pre-registered)
 
+> **Paper role (2026-08-15): this experiment is §3 of the bridge-repair paper**
+> ([ideas.md](ideas.md)) — the diagnosis the whole submission rests on. Its
+> reconstruction result (+.350 functional residual at native, 44% of the
+> pre-merge glyph readout unrecoverable from post-merge) is the number the
+> method in [phase-b-causal.md](phase-b-causal.md) §B4 is built to recover.
+> Two open dependencies: **V0** (verify the merger concatenates rather than
+> pools — decides the method's residual source and the paper's framing
+> sentence) and **G2** (re-run this localization on real documents;
+> [measurement-validation.md](measurement-validation.md)). The `pl2_extent`
+> arms below are retained as record; that family is demoted and its Δ≈0 result
+> now serves only as the signal-specificity contrast.
+
 **Question.** Where does OCR-relevant information become unrecoverable in the
 production stack: ViT proper, the 2×2 merger+MLP bridge, or the decoder?
 **Driving hypothesis (Aman).** The bridge; corollary: retraining it with frozen

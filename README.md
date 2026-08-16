@@ -3,14 +3,26 @@
 Difficulty taxonomy for probe data (easy/medium/hard + multi-as-flag, versioned
 rules): see [Data.md](Data.md).
 
-Frozen-encoder feature extraction + probe harness for the encoder-anatomy
-paper. No training happens here: each tower runs forward once per image,
-features are cached to disk, and `probe_fit` fits linear / 2-layer-MLP heads
-on the cache. Results (pilot table, survival curves, task frontier, caveats):
+Frozen-encoder feature extraction + probe harness. No training happens in the
+extraction/probe path: each tower runs forward once per image, features are
+cached to disk, and `probe_fit` fits linear / 2-layer-MLP heads on the cache.
+Results (pilot table, survival curves, task frontier, caveats):
 [RESULTS.md](RESULTS.md); figures in `figures/`. Probe-validity program
-(shortcut baselines, corrected floors, OOD plan):
+(shortcut baselines, corrected floors, OOD gate):
 [measurement-validation.md](measurement-validation.md), raw baselines in
-`validation/`. Paper framing: [ideas.md](ideas.md).
+`validation/`.
+
+**Paper framing (pivoted 2026-08-15): the bridge-repair paper** —
+[ideas.md](ideas.md). The probe harness documented below is now the *diagnostic
+instrument* (§3, [exp2a-bridge-localization.md](exp2a-bridge-localization.md)),
+not the contribution; the contribution is the causal localization and the
+LoRA-scale projector repair pre-registered in
+[phase-b-causal.md](phase-b-causal.md) (trainer:
+[modal_phaseb_train.py](modal_phaseb_train.py)). Two probe families
+(`glyph_id`, `pl1_class`) and two towers (`qwen35_vit`, `deepseek_ocr`) carry
+the paper; the rest of this README's surface remains supported but is
+appendix-scoped. **Gate G1 ([phase-b-causal.md](phase-b-causal.md) §B2) decides
+paper vs venue — run it before any scale-up.**
 
 ## Encoders
 

@@ -1,4 +1,22 @@
-# Difficulty taxonomy for Exp 1 probe data
+# Difficulty taxonomy for Exp 1 probe data — `[UNNECESSARY]`
+
+> **Whole file `[UNNECESSARY]` for the bridge-repair paper (2026-08-15).**
+> Nothing in the submission stratifies on difficulty tags, and the tags are
+> degenerate anyway: measured on pilot_1k they come out ~100% `hard` for
+> charts/math/text (see the calibration note under §Bboxes), so they carry no
+> discriminative power even if something did use them. `difficulty_tagger.py`
+> is not implemented and **should not be** — do not spend the week.
+>
+> **What survives from this file, and only this:** the raw continuous
+> covariates the generators already emit (`size_pt` especially — it drives the
+> glyph signal the repair targets) stay in the manifest, and the 20k
+> generation run is weighted by them (≥60% glyph-heavy: small `size_pt`, dense
+> text, math, label-heavy charts — [ideas.md](ideas.md) §Data). Scan-severity
+> presets stay too: degraded twins are B1's causal instrument
+> ([phase-b-causal.md](phase-b-causal.md) §B1), not a difficulty axis.
+>
+> Kept unedited below as the spec of record, in case the survival-curve paper
+> returns via a G1 failure.
 
 How probe data is tagged for stratified results reporting. The shape: every object
 gets **`difficulty ∈ {easy, medium, hard}`** plus **orthogonal flags** (`multi_*`,

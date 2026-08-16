@@ -1,3 +1,37 @@
+# Measurement record
+
+> **Paper-scope banner (2026-08-15).** The project pivoted to the bridge-repair
+> paper ([ideas.md](ideas.md)). **Nothing in this file is deleted or amended by
+> that decision** — it is the measurement record, refuted findings included, and
+> it stays complete. What changed is which parts appear in the submission:
+>
+> | section | paper role |
+> |---|---|
+> | Exp 2a bridge localization (bottom) | **§3 — the diagnosis. The paper's core.** |
+> | glyph_id + pl1_class rows, everywhere | **kept** — headline signal + specificity contrast |
+> | Measurement-validity addendum | **appendix** — validity section, re-scoped to those two |
+> | Survival curves / budget sweep | one motivation figure |
+> | Task frontier (eyes-vs-brain inversion) | intro framing sentence, not a results section |
+> | point_value, pl2_extent, pl3, cell_row/col | appendix table; not reported as findings |
+> | CLIP / SigLIP2 / NaFlex / SAM + rand floors | one appendix table |
+>
+> Demotion is a scope decision, not a retraction. If gate G1
+> ([phase-b-causal.md](phase-b-causal.md) §B2) fails, the survival-curve framing
+> returns as a TMLR submission and most of this file is promoted back.
+>
+> **Inline tags (added 2026-08-15).** Every item below is marked for the
+> bridge-repair paper:
+>
+> - `[UNNECESSARY]` — not needed for this paper. Do not spend time on it, do not
+>   re-run it, do not write it up. Kept here as record only.
+> - `[APPENDIX]` — not a finding, but reviewers will ask; it ships in the
+>   supplementary.
+> - `[KEEP]` — load-bearing for the submission.
+>
+> Untagged prose is scaffolding for whichever tagged item it sits under.
+
+---
+
 # Pilot v1 results — FINAL (64/64 pairs, 2026-08-13)
 
 > **Budget-sweep addendum (2026-08-14, 448/448 pairs): see "Survival curves"
@@ -10,38 +44,46 @@ splits, bootstrap CIs. Per-pair JSONs: Modal volume `/vol/results/pilot_v1/`.
 
 ## Linear-head table (primary)
 
-| probe (chance)               | CLIP  | CLIP-rnd | SigLIP2 | SigL-rnd | NaFlex | SAM   | Qwen-ViT | DeepSeek |
-|------------------------------|-------|----------|---------|----------|--------|-------|----------|----------|
-| glyph_id, 81-way (.04)       | .062  | .061     | .122    | .070     | .185   | .079  | **.466** | .065     |
-| cell_row (.05)               | .094  | .070     | .163    | .087     | .167   | .144  | **.200** | .142     |
-| cell_col (.14)               | .331  | .191     | .359    | .156     | .387   | .410  | **.493** | .282     |
-| series_id (.28)              | .384  | .397     | .388    | .371     | .414   | .398  | **.533** | .342     |
-| point_value R² (floor −.61)  | −.68  | −1.16    | −.82    | −1.55    | −.82   | −.50  | −.93     | −.91     |
-| pl1_class (.57)              | .683  | .577     | .777    | .600     | .794   | .763  | **.831** | .732     |
-| pl2_extent mIoU (.01)        | .042  | .013     | .070    | .013     | .079   | **.165** | .055  | .096     |
-| pl3_summary R² (floor −2.8)  | −.41  | .01      | .06     | −.48     | .08    | .28   | .41      | **.43**  |
+Column scope: **Qwen-ViT `[KEEP]`** (the stack being repaired) and **DeepSeek
+`[KEEP]`** (compressed-bridge contrast) carry the paper. CLIP / CLIP-rnd /
+SigLIP2 / SigL-rnd / NaFlex / SAM are **`[APPENDIX]`** — one table, no findings.
+
+| probe (chance) | tag | CLIP  | CLIP-rnd | SigLIP2 | SigL-rnd | NaFlex | SAM   | Qwen-ViT | DeepSeek |
+|---|---|-------|----------|---------|----------|--------|-------|----------|----------|
+| glyph_id, 81-way (.04) | **`[KEEP]`** — headline signal; the repair target | .062  | .061     | .122    | .070     | .185   | .079  | **.466** | .065     |
+| pl1_class (.57) | **`[KEEP]`** — specificity contrast (H4: must stay flat under repair) | .683  | .577     | .777    | .600     | .794   | .763  | **.831** | .732     |
+| cell_row (.05) | `[UNNECESSARY]` — 1.9× floor, demoted | .094  | .070     | .163    | .087     | .167   | .144  | **.200** | .142     |
+| cell_col (.14) | `[UNNECESSARY]` — largely an x-coordinate readout (.376 shortcut) | .331  | .191     | .359    | .156     | .387   | .410  | **.493** | .282     |
+| series_id (.28) | `[UNNECESSARY]` — floor was wrong; real margin +.036, counterfactuals never run | .384  | .397     | .388    | .371     | .414   | .398  | **.533** | .342     |
+| point_value R² (floor −.61) | `[UNNECESSARY]` — **broken probe**, negative R² everywhere, both heads. Never report | −.68  | −1.16    | −.82    | −1.55    | −.82   | −.50  | −.93     | −.91     |
+| pl2_extent mIoU (.01) | `[UNNECESSARY]` — **refuted**; coord prior (.235) beats every tower | .042  | .013     | .070    | .013     | .079   | **.165** | .055  | .096     |
+| pl3_summary R² (floor −2.8) | `[UNNECESSARY]` — page gist, not topology; demoted before the pivot | −.41  | .01      | .06     | −.48     | .08    | .28   | .41      | **.43**  |
 
 MLP heads track linear (same ranking) with two notable lifts: Qwen glyph
-.466→**.528**, and pl3 for everyone (.51–.64) — page-layout summary is present
-but stored *nonlinearly* in most towers.
+.466→**.528** `[KEEP]`, and pl3 for everyone (.51–.64) `[UNNECESSARY]` —
+page-layout summary is present but stored *nonlinearly* in most towers.
 
 ## Findings
 
-1. **Qwen3.5's tower (production, A3) has the strongest probe-recoverable
+1. **`[KEEP]` (glyph + pl1 clauses only; the cell/series clauses are
+   `[UNNECESSARY]`)** — **Qwen3.5's tower (production, A3) has the strongest
+   probe-recoverable
    fine-grained symbolic content among the evaluated towers** — glyphs (.466,
    2.5× the best public tower), cell indexing, chart series binding, layout
    class (.831). Native resolution + OCR-adjacent pretraining compound.
    *(Validity addendum below: cell_col and series margins shrink
    substantially against the measured shortcut floors; glyph and pl1
    survive.)*
-2. **…while SAM retains substantially better spatial-extent readout** (.165
+2. `[UNNECESSARY]` — **refuted by our own refit; do not write this up.**
+   **…while SAM retains substantially better spatial-extent readout** (.165
    vs Qwen .055; DeepSeek .096). *(REFUTED by the [features ⊕ coords] refit,
    2026-08-15: no tower's features add anything over the coordinate prior —
    SAM Δ −.001, best Δ +.004, prior alone .235 mIoU. The pl2 column measured
    how linearly each tower encodes position, not extent retention; the
    SAM-vs-Qwen "double dissociation" does not survive. Extent claims await a
    redesigned probe — see measurement-validation.md.)*
-3. **CLIP ≈ random-init CLIP on two families** — glyphs (.062 vs .061) and
+3. `[APPENDIX]` — a probe-validity signal, not a finding about CLIP; CLIP is
+   not in the paper. **CLIP ≈ random-init CLIP on two families** — glyphs (.062 vs .061) and
    series-ID (.384 vs .397): under these probes, at 336px, on this corpus,
    learned CLIP features do not outperform the random-init control for fine
    document content (its only clear learned margin is layout class, .683 vs
@@ -51,35 +93,44 @@ but stored *nonlinearly* in most towers.
    does not exist in this corpus, so what remains after the multi-series
    refit is candidate binding signal — counterfactual (color-permutation)
    evidence is still required before any binding claim.
-4. **Resolution handling is the cleanest causal contrast**: same-lineage A1→A2
+4. `[UNNECESSARY]` — SigLIP2 lineage is out of scope; the causal contrast in
+   this paper is site-wise (S1/S2/S3), not cross-tower.
+   **Resolution handling is the cleanest causal contrast**: same-lineage A1→A2
    (SigLIP2 fixed → NaFlex) lifts glyphs .122→.185 and cell_col .359→.387.
-5. **DeepSeek's 256-token global view: gist survives, detail doesn't.** At
+5. `[APPENDIX]` — the glyph-at-floor half supports the compressed-bridge
+   contrast; the pl3 half is `[UNNECESSARY]`.
+   **DeepSeek's 256-token global view: gist survives, detail doesn't.** At
    the majority floor on glyphs (.065 vs .091 floor) but **best-in-table pl3
    layout-category-presence summary** (R² .43; "pl3 layout summary" is
    renamed — it measures page gist, per-class presence + counts, not layout
    topology) — its 16× compression keeps page-level structure while
    character identity rides on its (unprobed) crop path.
-6. **Layout localization is robust to scan degradation**: pl1 accuracy is FLAT
+6. `[APPENDIX]` — degradation robustness is B1's *instrument*, not a result of
+   this paper. **Layout localization is robust to scan degradation**: pl1 accuracy is FLAT
    across severities for every tower (Qwen .819–.874 over sev 0→3b). Noise
    destroys high-frequency content (glyphs) long before low-frequency layout —
    though glyph-vs-severity itself is still an open measurement (below).
 
 ## Caveats
 
-- **point_value R² < 0 for all towers, both heads** — probe design review
+- `[UNNECESSARY]` **point_value R² < 0 for all towers, both heads** — probe design review
   needed (per-axis target normalization) before reading it as "values absent".
-- **glyph probes are clean-pages-only** (no degraded text-layer GT in pilot) —
+  *(Probe is cut. No review, no normalization fix, no mention.)*
+- `[KEEP]` **glyph probes are clean-pages-only** (no degraded text-layer GT in pilot) —
   the glyph-vs-severity curve, likely the most damage-sensitive one, is not
-  yet measured.
-- **DeepSeek measured on its global 1024px view only** (production adds tiled
-  crops). **sam_vit_b__rand excluded** (exact-zero features at random init).
-- Severity slices partially confound with doc mix (only era-font docs were
-  degraded); scale-up should degrade a stratified sample instead.
-- pl1's chance floor is high (.57, background-heavy); read margins over floor.
-- Corpus skews: bar-family chart types; no degraded replicator pages; bbox
-  difficulty tags saturate (Data.md calibration note).
+  yet measured. *(Still true and still a real limitation — B1's degraded twins
+  are transcription-scored, not glyph-probed.)*
+- `[KEEP]` **DeepSeek measured on its global 1024px view only** (production adds tiled
+  crops). `[APPENDIX]` **sam_vit_b__rand excluded** (exact-zero features at random init).
+- `[UNNECESSARY]` Severity slices partially confound with doc mix (only era-font docs were
+  degraded); scale-up should degrade a stratified sample instead. *(No severity
+  slice is reported in this paper.)*
+- `[KEEP]` pl1's chance floor is high (.57, background-heavy); read margins over floor.
+- `[APPENDIX]` Corpus skews: bar-family chart types; no degraded replicator pages; bbox
+  difficulty tags saturate (Data.md calibration note). *(The bbox-tag half is
+  `[UNNECESSARY]` — tagging is dropped entirely.)*
 
-## Ops notes (for the 10k run)
+## Ops notes `[KEEP]` — retitle "for the 20k bridge-training run"
 
 - Extraction: fp32 compute mandatory (bf16 per-token divergence), `--detach`
   mandatory, features fp16 on volume (~45 GB for this pilot).
@@ -90,7 +141,13 @@ but stored *nonlinearly* in most towers.
 
 ---
 
-# Survival curves — budget sweep (448/448 pairs, 2026-08-14)
+# Survival curves — budget sweep (448/448 pairs, 2026-08-14) `[UNNECESSARY]`
+
+> **Whole section `[UNNECESSARY]` except one panel.** The budget sweep survives
+> as a single motivation figure (glyph is steeply budget-bound; structure is
+> not — Fig 2's premise), and only for the two towers in scope. The 448-pair
+> grid, the mechanism decomposition, the knee analysis, and all five findings
+> below are cut. This was the old paper's centerpiece; it is now one panel.
 
 7 towers × ladder {64…1024 actual tokens} × 8 probe families; linear heads,
 doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
@@ -144,7 +201,15 @@ doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
 
 ---
 
-# Task frontier — full corpus (7 configs × 1,420 pages, 2026-08-15)
+# Task frontier — full corpus (7 configs × 1,420 pages, 2026-08-15) `[APPENDIX]`
+
+> **Section `[APPENDIX]`, two items excepted.** Finding 2 (the eyes-vs-brain
+> inversion) becomes **one framing sentence in the intro** — it is why the
+> paper is about the bridge rather than the encoder — and finding 4 (starved
+> vision inflates decode cost) is the **supporting inset**. The frontier table
+> itself is synthetic-scored and does not appear in the results section; the
+> headline table is real benchmarks (B5). Findings 1 and 3 are
+> `[UNNECESSARY]`.
 
 Full stacks generating markdown, scored against gold (TEDS via pipe→HTML /
 edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](figures/frontier_pilot1k.png).
@@ -194,7 +259,12 @@ edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](figures/fr
 
 ---
 
-## Retroactive caveat (2026-08-15): qwen3_vl_vit numbers describe ONE of four bridges
+## Retroactive caveat (2026-08-15): qwen3_vl_vit numbers describe ONE of four bridges `[APPENDIX]`
+
+> Not a finding, but **load-bearing as the stated reason Qwen3-VL is excluded**
+> from the causal work — a single-bridge stack is what makes exp2a
+> architecturally complete. Two sentences in the scope paragraph. All
+> qwen3_vl_vit *numbers* elsewhere in this file are `[UNNECESSARY]`.
 
 Qwen3-VL-4B-Instruct uses DeepStack (`deepstack_visual_indexes: [5, 11, 17]`):
 ViT features from three intermediate layers are injected at multiple decoder
@@ -207,7 +277,14 @@ bridge-localization experiment, are architecturally complete for that model.
 
 ---
 
-# Measurement-validity addendum (2026-08-15) — shortcut baselines, measured
+# Measurement-validity addendum (2026-08-15) — shortcut baselines, measured `[APPENDIX]`
+
+> **Section `[APPENDIX]` — this is what makes §3 credible.** The glyph_id and
+> pl1_class rows are `[KEEP]`: no positional shortcut, 5.1× floor, survives
+> font-held-out. That is the appendix a reviewer needs before believing the
+> repair target. The cell_col / pl2_extent / series_id corrections are
+> `[UNNECESSARY]` as write-up — those families are cut — but they stay in this
+> file as the record of why.
 
 External review (accepted) demanded shortcut baselines before trusting any
 probe number. Coordinate-only (linear + kNN-50) and color-only baselines,
@@ -243,7 +320,14 @@ verdicts, and the remaining battery: [measurement-validation.md](measurement-val
 
 ---
 
-# Exp 2a — bridge localization on the production tower (2026-08-15, exp2a_v1)
+# Exp 2a — bridge localization on the production tower (2026-08-15, exp2a_v1) `[KEEP]`
+
+> **THIS SECTION IS THE PAPER (§3).** Everything above it is motivation,
+> appendix, or cut. The reconstruction table below produces the number the
+> method is built to recover (+.350 native functional residual = 44% of the
+> pre-merge glyph readout). Two open dependencies before it can be written up:
+> **V0** (verify the merger concatenates rather than pools) and **G2** (does
+> this residual reproduce on real documents) — [phase-b-causal.md](phase-b-causal.md).
 
 Pre-registration: [exp2a-bridge-localization.md](exp2a-bridge-localization.md).
 Full grid ran clean: 48 fit jobs + 4 reconstruction jobs, 0 errors; raw
@@ -286,9 +370,11 @@ the merger itself reorganize it.
   non-goal boundary): S3 measures what remains linearly present at a decoder
   mid-layer, not what the decoder consumed — a decoder that has already read
   the glyphs need not keep them linearly decodable.
-- pl1_class: small S1-advantage gaps count at compressed budgets (~+.02).
-- cell_row / cell_col: no counting gaps anywhere.
-- **pl2_extent: all 16 Δ-over-coords cells are ≈0 or negative** (−.022 to
+- `[KEEP]` pl1_class: small S1-advantage gaps count at compressed budgets (~+.02).
+  *(The specificity contrast — layout barely moves where glyph does. H4 predicts
+  the repair leaves this flat.)*
+- `[UNNECESSARY]` cell_row / cell_col: no counting gaps anywhere.
+- `[APPENDIX]` (as a null, one line) — **pl2_extent: all 16 Δ-over-coords cells are ≈0 or negative** (−.022 to
   +.012, |Δ| ≤ .022) — extent-beyond-position exists at NO site and NO
   budget in the production stack. The nominally "counting" pl2 gaps are
   differences between two ≈0 deltas and are dismissed as such.

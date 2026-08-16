@@ -1,53 +1,48 @@
-# Measurement validation (pre-registered; gates all further compute)
+# Measurement validation (pre-registered)
 
-Reviewer verdict accepted (2026-08-15): before Part II or any scale-up, the
-next budget validates the measurement itself. If the core curves survive this
-battery, scale; if they don't, the corrected measurement is the contribution.
+**Scope change 2026-08-15.** This file gated the survival-curve paper's
+scale-up. Under the bridge-repair framing ([ideas.md](ideas.md)) it has two
+jobs and no longer gates all compute:
 
-## Shortcut audit — measured results (round 1, pilot corpus)
+1. **Gate G2 (blocking, weeks 2–4):** does the *diagnosis* — the S1→S2 glyph
+   residual — reproduce on real documents? This is the highest-variance unknown
+   in the project and the one that decides whether the method has a motivation
+   on its own evaluation distribution.
+2. **The paper's appendix validity section**, re-scoped to the two surviving
+   probe families (`glyph_id`, `pl1_class`). Everything about the six demoted
+   families is retained below as record, not as work.
+
+Battery items for probes that left the paper are **closed, not pending** — see
+§Closed. The compute gate that matters now is G1 (B2 pilot,
+[phase-b-causal.md](phase-b-causal.md)).
+
+---
+
+## Round 1 — shortcut audit (complete, pilot corpus)
 
 Labels predicted from (x, y) coordinates alone (linear + kNN-50) and from
 local window color alone; doc-level split, same discipline as probe_fit.
 Script: shortcut_baselines*.py; raw JSON alongside. Plain accuracy, matching
 the pilot table's metric.
 
-| probe | test-majority floor | coord baseline | best encoder (pilot) | verdict |
-|---|---|---|---|---|
-| glyph_id | **.091** (table said .04) | .071–.091 (≤ floor) | Qwen .466 | **survives** — no positional shortcut; Qwen = 5.1× floor. CLIP/SAM/DeepSeek (.062–.079) are AT/BELOW floor, not "weak signal" |
-| cell_row | **.107** (said .05) | .096–.110 (≈ floor) | Qwen .200 | survives with smaller margin (1.9× floor); no y-shortcut (tables sit at varying page offsets) |
-| cell_col | **.202** (said .14) | **.376** (x-shortcut, linear) | Qwen .493 | **largely positional** — only Qwen (+.117) and marginally SAM (+.034) beat the shortcut; every other tower is at/below it |
-| series_id | **.497** (said .28) | .470–.497 (≤ floor) | Qwen .533 | floors were wrong: most towers (.34–.41) score BELOW bias-only; Qwen's margin over floor is +.036, not +.25. Re-analysis on the multi-series slice required (below) |
-| pl1_class | .578 (as stated) | .592 (kNN, +.014) | Qwen .831 | survives — positional shortcut negligible vs margins |
-| pl2_extent | — | **.235 mIoU** (point-position prior) | SAM .165 | **invalid as an absolute measure** — every tower scores BELOW the coordinate prior. By element size: medium .336, small .166, large .155 |
+| probe | test-majority floor | coord baseline | best encoder (pilot) | verdict | paper status |
+|---|---|---|---|---|---|
+| glyph_id | **.091** (table said .04) | .071–.091 (≤ floor) | Qwen .466 | **survives** — no positional shortcut; Qwen = 5.1× floor. CLIP/SAM/DeepSeek (.062–.079) are AT/BELOW floor | **KEPT — headline** |
+| pl1_class | .578 (as stated) | .592 (kNN, +.014) | Qwen .831 | survives — positional shortcut negligible vs margins | **KEPT — specificity contrast** |
+| cell_row | **.107** (said .05) | .096–.110 (≈ floor) | Qwen .200 | survives with smaller margin (1.9× floor); no y-shortcut | demoted → appendix |
+| cell_col | **.202** (said .14) | **.376** (x-shortcut, linear) | Qwen .493 | **largely positional** — only Qwen (+.117) clears it | demoted → appendix |
+| series_id | **.497** (said .28) | .470–.497 (≤ floor) | Qwen .533 | floors were wrong; Qwen margin +.036, not +.25 | demoted → appendix |
+| pl2_extent | — | **.235 mIoU** (point-position prior) | SAM .165 | **invalid** — every tower below the coordinate prior | demoted → appendix (refuted) |
 
 **Color shortcut for series_id: structurally absent in this corpus.** Window
 color at the marked point predicts series at .289 vs .309 majority
 (multi-series slice) — per-label mean colors are indistinguishable
 (~[0.6,0.6,0.6], std ~0.2) because the generators randomize palettes per
-chart, so no global color→series map exists for any global probe (linear
-probes included) to exploit. Caveat: 9×9 window mean; an exact-pixel +
-legend-swatch-matching variant is still owed (below).
+chart, so no global color→series map exists for any global probe to exploit.
+Caveat: 9×9 window mean; the exact-pixel + swatch-matching variant is now
+closed unrun (§Closed).
 
-## Consequences already adopted
-
-- All probe results are re-reported as **margin over the measured shortcut
-  baseline** (coord for cell_*/pl2, majority for the rest); the "(chance)"
-  column in the pilot table is superseded.
-- **pl2_extent redesign** before it can headline anything (incl. exp2a):
-  refit heads on [features ⊕ (x,y)] and report Δ over the coords-only
-  baseline — the increment attributable to features. The SAM-vs-Qwen extent
-  ordering is unverified until then (SAM's lead may be "features linearly
-  encode position better", not "extent information").
-- **series_id re-analysis on the multi-series slice only** (floor .309;
-  all-rows floor .497 is inflated by single-series charts where label≡0).
-  Needs the cached features on the Modal volume; no new extraction.
-- pl3 renamed "layout category presence" everywhere (it measures page gist,
-  not topology).
-
-## Refit round 1 — all 8 towers, native caches (2026-08-15, validation_v1)
-
-The blocking refits, complete (raw, doc-level split; per-pair JSONs on
-/vol/results/validation_v1/ + validation/refits_summary.json):
+## Refit round 1 — all 8 towers, native caches (complete, validation_v1)
 
 | tower | pl2 Δ lin | series multi lin/mlp | glyph font-held-out lin (in-dist) |
 |---|---|---|---|
@@ -70,19 +65,14 @@ linear column.)
    anything beyond the coordinate prior (best Δ +.004; SAM, the supposed
    extent specialist, −.001). The pilot's "SAM retains extent 3× Qwen"
    finding is REFUTED — it measured how linearly a tower's features encode
-   *position*, not element extent. Any extent-retention claim now requires a
-   redesigned probe: restrict to small elements (coord prior .166 there vs
-   .336 medium), or predict boundary distance / is-edge-adjacent, where the
-   positional prior is weak.
-2. **Series binding is a Qwen-only signal, and it sharpens.** On the honest
-   multi-series slice every public tower sits AT the .304 floor (.278–.327);
-   only qwen35_vit separates (+.14 linear, +.18 MLP). Color shortcut
-   structurally absent (palette randomization). Counterfactual twins remain
-   the last check before a binding claim.
+   *position*, not element extent.
+2. **Series binding is a Qwen-only signal.** On the honest multi-series slice
+   every public tower sits AT the .304 floor (.278–.327); only qwen35_vit
+   separates (+.14 linear, +.18 MLP). Color shortcut structurally absent.
 3. **Glyph survives font-held-out for the towers that read at all**: Qwen
    .412 vs .466 in-distribution (~11% relative drop), NaFlex .142 vs .185;
    CLIP drops to its shuffled floor (and random-init CLIP scores ABOVE
-   learned CLIP out-of-font — the CLIP≈rand pattern again).
+   learned CLIP out-of-font).
 
 MLP head calibration (validation/mlp_calibration.json): epochs=300, lr=3e-5
 restores MLP ≥ linear on the arms where that is attainable; on S1
@@ -90,37 +80,90 @@ concat4/pl2-S1 arms the linear>MLP ordering is a transfer property of the
 arm, not undertraining (exhaustive sweep) — the exp2a yardstick clamps
 negative lifts at 0 accordingly.
 
-## Remaining battery (pre-registered, in priority order)
+**Why this section survives into the paper.** Glyph_id is the family the entire
+diagnosis and repair target rests on, and it is the family that passed every
+check: no positional shortcut, 5.1× floor, survives font-held-out. That is the
+appendix that makes §3 credible. It is also why six other families are gone —
+we ran the audit, and we report what it did to them.
 
-1. **pl2 refit + series multi-series refit** (Modal CPU, cached features;
-   hours). Blocking for exp2a's headline-cell choice.
-2. **Glyph validity splits**: refit glyph_id with font-family-held-out and
-   character-held-out splits (font metadata is in the generator sidecars);
-   report Qwen's .466 under both. Position/background randomization already
-   present in the corpus; add anti-aliasing/rendering variation at
-   generation time for the scale-up.
-3. **Probe ceilings**: raw-pixel probe (patch crop at the point → linear +
-   small-CNN) per family — if raw pixels can't solve a task, the synthetic
-   task is broken; OCR-engine reference for glyph_id (the "solvable by
-   off-the-shelf reading" ceiling).
-4. **Series counterfactual twins** (chart-generator change): same chart data
-   re-rendered with (a) permuted palette, (b) markers-only, (c) dash-only,
-   (d) legend moved/far. Binding claim requires retention under (a).
-   Exact-pixel + swatch-matching color baseline rides along.
-5. **OOD validation**: probes trained on generated docs, tested on real
-   annotated pages — OmniDocBench (layout classes + text GT → pl1/pl2/glyph
-   at word level) + our old-book scans. The claim under test is that the
-   survival ORDERING transfers, not the absolute numbers.
-6. **Pixel-information control** (within-tower H3): qwen35_vit high-res
-   encode → adaptive-pool tokens to each ladder rung vs the existing
-   resolution rungs at matched realized tokens. Native grids are cached;
-   only pooling + fits are new. Separates never-captured from
-   captured-then-discarded.
-7. **DeepSeek crop path**: extend the frontier (and, if feasible, the probe
-   pass) to the production tiled-crop mode; until then every DeepSeek number
-   carries the "global-view only" label.
+---
+
+## OPEN — Gate G2: does the diagnosis reproduce on real documents? (BLOCKING)
+
+The one item promoted, not demoted. Everything else in this file is either
+complete or closed.
+
+**Claim under test.** The S1→S2 glyph residual on the production Qwen3.5 stack
+exists on *real* document pages, not only on our renderer. Absolute numbers are
+not expected to transfer; the residual's existence and rough magnitude must.
+
+**Instrument.** OmniDocBench (real annotated pages: layout classes + word-level
+text GT) — word/character-level glyph readout at marked points inside annotated
+text regions, plus `pl1_class` from the layout annotations as the specificity
+contrast. Old-book scans as a secondary anchor.
+
+**Procedure.** Re-run the exp2a S1 (pre-merge) / S2 (post-merge) probe pair and
+the reconstruction test at native resolution on real pages. Same
+capacity-matched heads, same doc-level split discipline, same shuffled controls.
+No new machinery — `site=premerge` extraction + `probe_fit` + `reconstruct.py`
+already do this; only the label pipeline is new.
+
+**Pre-registered readings.**
+
+| outcome | action |
+|---|---|
+| residual present, comparable magnitude | G2 passes; proceed to B4/B5 as planned |
+| residual present but much smaller | method motivation survives; **re-scope the headline number to real pages** and report the synthetic/real gap honestly as a rendering-sensitivity result |
+| residual absent on real pages | the diagnosis is a synthetic artifact. Stop before training spend; restructure. This is a publishable negative and it is far better learned in week 3 than week 11 |
+
+**Cost.** Days, on cached-feature CPU fits plus one extraction pass. It runs
+early *because* it is cheap and decisive.
+
+---
+
+## Closed (no longer pending — the probes they validate left the paper)
+
+Retained so the record shows these were deliberate scope decisions, not
+oversights. Any of them reopens automatically if the corresponding family
+returns to the paper.
+
+- **pl2 probe redesign** (small-elements / boundary-distance variants, where the
+  coordinate prior is weak). Closed: pl2 is refuted and demoted; exp2a already
+  showed extent-beyond-position at no site and no budget.
+- **Series counterfactual twins** (permuted palette / markers-only / dash-only /
+  moved legend) + exact-pixel and swatch-matching color baselines. Closed:
+  series_id is demoted. This was real work and a real experiment — it belongs to
+  the survival-curve paper, and returns with it if G1 sends us to TMLR.
+- **Raw-pixel probe ceilings and small-CNN references** across families.
+  Closed for the demoted families; **retained for glyph_id only** as an appendix
+  sanity check ("can raw pixels at this crop size read the character at all"),
+  since a broken synthetic task would invalidate the repair target.
+- **OCR-engine reference for glyph_id.** Retained, appendix, cheap — it is the
+  "solvable by off-the-shelf reading" ceiling and reviewers ask for it.
+- **Pixel-information control** (within-tower H3). Closed as a headline item;
+  results exist in `validation/b3_pixel_control.json` and stay as the appendix
+  answer to "is the residual a bridge property or an input-sampling property"
+  ([phase-b-causal.md](phase-b-causal.md) §B3).
+- **DeepSeek crop path.** Closed as blocking. DeepSeek is now a contrast tower
+  with no efficiency claim attached, so the "global-view only" label is
+  sufficient. Reopens only if a DeepSeek production-efficiency claim re-enters.
+- **Corpus-wide difficulty stratification** ([data.md](data.md)). Closed: the
+  tags are degenerate (~100% hard on dense pages) and nothing in this paper
+  stratifies on them.
+
+## Retained additions to the generator (scale-up spec)
+
+Not validation of past results — insurance for the new ones. Fold into the 20k
+generation run ([ideas.md](ideas.md) §Data):
+
+- **Rendering variation**: anti-aliasing modes, subpixel positioning, DPI
+  jitter. "Your effect is a renderer artifact" is now a first-order reviewer
+  risk, and it is cheapest to defeat at generation time.
+- **Glyph-weighted mix** (≥60% glyph-heavy: small `size_pt`, dense text, math,
+  label-heavy charts) — the pages where the measured residual lives.
+- Keep exact-GT sidecars and scan-severity twins (B1's instrument).
 
 ## Non-goals
 
-No new encoders. No Part II compute. No additional probe families beyond the
-redesigns above.
+No new encoders. No new probe families. No re-validation of demoted families
+unless they return to the paper.
