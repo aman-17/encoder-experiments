@@ -46,8 +46,7 @@ Realism rules baked into the ops (the "does this look synthetic" failure modes):
 Determinism: all randomness comes from a per-(image_id, severity, seed) RNG
 derived by hashing those three (blake2b). No global RNG reuse, no clock. The
 augraphy bridge pins `random` / `np.random` global state per op from that same
-stream, which was verified deterministic for every op in the roster. Same
-inputs + same seed => byte-identical PNGs.
+stream. Same inputs + same seed => byte-identical PNGs.
 
 Usage:
   uv run python src/data/degrade.py --pdfs '<glob>' --out <dir> --severity sweep
@@ -87,10 +86,8 @@ from typing import Any, Callable
 import cv2
 import numpy as np
 
-# --------------------------------------------------------------------------
 # Severity presets - the retuning surface. Ranges are (lo, hi), sampled
 # uniformly per page; probabilities are per page.
-# --------------------------------------------------------------------------
 
 # Paper substrate colours, BGR. Index range per severity (lo, hi_exclusive).
 PAPER_TONES: list[tuple[int, int, int]] = [
@@ -102,10 +99,8 @@ PAPER_TONES: list[tuple[int, int, int]] = [
     (226, 233, 241),  # 5 yellowed
     (233, 234, 232),  # 6 grey recycled
     (222, 230, 240),  # 7 old newsprint-ish
-    # Book-scan tones (indices 8-11), matched against the real scanned-book
-    # samples in math-scanned-old-example-templates: the browned letterpress
-    # pages sit around RGB(215,185,135), the clean ones near warm cream /
-    # grey-white. Only the *b presets index into this range.
+    # Book-scan tones (indices 8-11), matched to real scanned math books;
+    # only the *b presets index into this range.
     (122, 180, 214),  # 8 deep amber (browned letterpress)
     (160, 198, 222),  # 9 aged tan
     (205, 227, 240),  # 10 warm cream
@@ -144,7 +139,7 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "gamma": (0.97, 1.05),
             "contrast": (1.00, 1.06),
             "binarize": None,
-            "blur": (0.05, 0.10),  # v5 (user): blur pinned to 0.05-0.1 everywhere
+            "blur": (0.05, 0.10),
             "low_dpi": (0.92, 1.00),
             "noise": (1.0, 2.2),
             "noise_edge": 1.2,
@@ -164,7 +159,7 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "lighting": (0.06, 0.13),
             "vignette": (0.04, 0.10),
             "desat": 0.75,
-            "desat_bimodal": 0.55,   # judge fix: full-B/W copy or honest color, never half
+            "desat_bimodal": 0.55,   # full-B/W copy or honest color, never half
             "ink_ops": (("InkMottling", 0.5), ("InkBleed", 0.4), ("Letterpress", 0.30)),
             "toner_dropout": 0.05,
             "bleed_p": 0.30,
@@ -180,7 +175,7 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "gamma": (0.88, 1.02),
             "contrast": (1.05, 1.22),
             "binarize": None,
-            "blur": (0.05, 0.10),  # v5 (user): blur pinned to 0.05-0.1 everywhere
+            "blur": (0.05, 0.10),
             "low_dpi": (0.72, 0.90),
             "noise": (2.0, 3.8),
             "noise_edge": 1.8,
@@ -199,10 +194,8 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "fibre": 0.024,
             "lighting": (0.07, 0.14),
             "vignette": (0.05, 0.11),
-            # LEGIBILITY IS THE CONSTRAINT (user, v3): every line of text stays
-            # human-readable; "aged" comes from tone, stains and mild speckle —
-            # never from stroke destruction. The v2 toner/Letterpress bumps that
-            # compensated for the blur cut ate thin glyphs; reverted below.
+            # Legibility constraint: every line stays human-readable — "aged"
+            # comes from tone, stains and mild speckle, never stroke destruction.
             "desat": 0.88,
             "desat_bimodal": 0.70,   # 70% full-B/W copies, else colors survive honestly
             "ink_ops": (("InkMottling", 0.6), ("InkBleed", 0.45), ("Letterpress", 0.40),
@@ -221,10 +214,9 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "gamma": (0.88, 1.00),
             "contrast": (1.06, 1.22),
             "binarize": None,
-            # user feedback 2026-08-05: aged copies must stay CRISP — age shows in
-            # toner erosion/specks/stains, not defocus. Blur cut ~3x, resample mild;
-            # toner_dropout/Letterpress above carry the "aged" read instead.
-            "blur": (0.05, 0.10),  # v5 (user): blur pinned to 0.05-0.1 everywhere
+            # aged copies stay crisp: age shows in toner erosion/specks/stains,
+            # not defocus — toner_dropout/Letterpress carry the "aged" read.
+            "blur": (0.05, 0.10),
             "low_dpi": (0.85, 1.0),
             "noise": (2.2, 4.0),
             "noise_edge": 2.4,
@@ -247,9 +239,8 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             # black corners, the classic synthetic tell.
             "lighting": (0.04, 0.10),
             "vignette": (0.02, 0.07),
-            # LEGIBILITY IS THE CONSTRAINT (user, v3): a real fax of normal text
-            # is ugly but readable — jaggies and 1-bit character, not shredded
-            # strokes. Downsample floor raised, ink destruction halved.
+            # Legibility constraint: a real fax of normal text is ugly but
+            # readable — jaggies and 1-bit character, not shredded strokes.
             "desat": 1.0,
             "ink_ops": (("Letterpress", 0.45), ("LowInkPeriodicLines", 0.25),
                         ("LowInkRandomLines", 0.25), ("InkBleed", 0.5)),
@@ -266,24 +257,19 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
             "scan_edge_p": 0.55,
             "gamma": (0.85, 1.00),
             "contrast": (1.15, 1.40),
-            # near-binarization: sigmoid steepness, threshold as FRACTION OF THE
-            # PAGE'S PAPER LEVEL (fax thresholds adapt - any ink goes dark, faint
-            # ink is not bleached to white), spatial wobble
-            # user feedback 2026-08-05: real fax output is SHARP — 1-bit, jagged,
-            # never soft. Blur is sensor-level only; harder sigmoid; nearest-neighbor
-            # up-resample supplies the jaggies that read as "fax" to a human.
+            # near-binarization: sigmoid steepness, threshold as a FRACTION OF
+            # THE PAGE'S PAPER LEVEL (fax thresholds adapt — any ink goes dark,
+            # faint ink is not bleached to white), spatial wobble.
             "binarize": {"k": (30.0, 60.0), "t_frac": (0.84, 0.91), "wobble": (0.02, 0.04)},
-            "blur": (0.05, 0.10),  # v5 (user): blur pinned to 0.05-0.1 everywhere
-            "low_dpi": (0.70, 0.85),   # v4: jaggies survive, small glyphs stay whole
-            "low_dpi_up": "nearest",
+            "blur": (0.05, 0.10),
+            "low_dpi": (0.70, 0.85),   # jaggies survive, small glyphs stay whole
+            "low_dpi_up": "nearest",   # nearest up-resample = the 1-bit fax jaggies
             "noise": (3.0, 5.5),
             "noise_edge": 2.8,
             "fax_lines": 0.45,
             "jpeg": (46, 64),
-            # v3: BadPhotoCopy, DirtyDrum and Stains all removed at sev4 — any
-            # mid-gray texture they add gets slammed to black by the hard
-            # threshold, producing the toner-storm clusters that made pages
-            # unreadable. Fax character = jaggies + specks + dropout lines.
+            # no BadPhotoCopy/DirtyDrum/Stains here: their mid-gray texture gets
+            # slammed to black by the hard threshold (toner-storm clusters).
             "aug": (("SubtleNoise", 0.8), ("NoiseTexturize", 0.3)),
         },
     },
@@ -292,20 +278,11 @@ SEVERITY_PRESETS: dict[int, dict[str, Any]] = {
 SEVERITIES = tuple(sorted(SEVERITY_PRESETS))
 
 
-# --------------------------------------------------------------------------
 # BOOK-SCAN variants ("1b".."3b"): compose on top of the numeric severities.
-# Modeled on the real scanned-book pages in math-scanned-old-example-templates:
-#   * deep amber/tan substrate on the letterpress-era pages, warm cream or
-#     grey-white on the clean ones (PAPER_TONES 8-11);
-#   * a one-sided gutter shadow (recto/verso, per-page seeded) — PHOTOMETRIC
-#     ONLY, a smooth multiplicative band; page curl / geometric warp is banned
-#     by the GT contract;
-#   * slightly darker outer margins + occasional foxing (small brown blotches,
-#     stain machinery with a brown absorb).
-# A book page is photographed/scanned in COLOR — the tone must survive — so
-# the B/W-copier desat branch is disabled (desat_bimodal would grayscale the
-# amber away on most pages).
-# --------------------------------------------------------------------------
+# See the module docstring for the full contract; key points: gutter shadow is
+# PHOTOMETRIC only (geometric page curl is banned by the GT contract), and the
+# B/W-copier desat branch is disabled — a book page is scanned in color, so
+# desat_bimodal would grayscale the amber tone away.
 
 def _book_variant(base_sev: int, *, paper_tone: tuple[int, int],
                   tone_strength: float, gutter_depth: tuple[float, float],
@@ -371,9 +348,7 @@ AUGRAPHY_ALLOWED = frozenset({
 })
 
 
-# --------------------------------------------------------------------------
 # Deterministic per-page randomness
-# --------------------------------------------------------------------------
 
 def page_seed(image_id: str, severity: int | str, base_seed: int) -> int:
     """Stable 63-bit seed for one (page, severity). No clock, no global state.
@@ -396,9 +371,7 @@ def _i(rng: np.random.Generator, rangepair: tuple[int, int]) -> int:
     return int(lo) if hi <= lo else int(rng.integers(lo, hi))
 
 
-# --------------------------------------------------------------------------
 # Geometry - the explicit affine, in pixels and in normalized page coords
-# --------------------------------------------------------------------------
 
 def build_affine(
     rng: np.random.Generator, w: int, h: int, geom: dict[str, float]
@@ -456,9 +429,7 @@ def _linear_scale(M: np.ndarray) -> float:
     return math.sqrt(det) if det > 0 else 1.0
 
 
-# --------------------------------------------------------------------------
 # Sidecar pass-through: transform coordinates, touch nothing else
-# --------------------------------------------------------------------------
 
 SIDECAR_SUFFIXES = (".cells.json", ".pixels.json", ".sidecar.json", ".layout.json")
 
@@ -475,16 +446,11 @@ def _round(v: float) -> float:
     return round(float(v), 6)
 
 
-# Two cells.json producers exist with DIFFERENT bbox conventions for the very
-# same "bbox" key (the files are self-describing — never guess by generator):
-#   - failing-table-replicator: corner bboxes [x0, y0, x1, y1]; its `coords`
-#     string says so ("bbox=[x0,y0,x1,y1]") and its tables carry n_rows /
-#     n_cols with dom_row / dom_slot / is_header / row_span / col_span cells;
-#   - table-generator (groundTruth.mjs): COCO-style [x, y, w, h]; its tables
-#     carry grid_rows / grid_cols with grid_row / grid_col / rowspan /
-#     colspan / tag ("th"/"td") cells and no bbox spec in `coords`.
-# Transforming an xywh bbox down the corner path scrambles it (the hull of an
-# inverted rect), so every cells.json gets its convention detected per file.
+# cells.json has two producers with DIFFERENT conventions for the same "bbox"
+# key: failing-table-replicator emits corners [x0,y0,x1,y1] (n_rows/n_cols
+# tables, dom_row/... cells), table-generator emits COCO [x,y,w,h] (grid_rows/
+# grid_cols tables, grid_row/... cells). Transforming xywh down the corner path
+# scrambles it, so the convention is detected per file from these schema keys.
 
 _CORNER_CELL_KEYS = frozenset({"dom_row", "dom_slot", "is_header", "row_span", "col_span"})
 _XYWH_CELL_KEYS = frozenset({"grid_row", "grid_col", "rowspan", "colspan", "tag"})
@@ -574,8 +540,7 @@ class _Ctx:
         self.bbox_fmt = bbox_fmt
 
     def with_ref(self, ref: tuple[float, float]) -> "_Ctx":
-        c = _Ctx(self.M, ref, self.bbox_fmt)
-        return c
+        return _Ctx(self.M, ref, self.bbox_fmt)
 
 
 def _xf_bbox_fmt(M: np.ndarray, bbox, fmt: str) -> list[float]:
@@ -813,9 +778,7 @@ def find_sidecars(sidecar_dir: Path | None, stem: str, page_index: int) -> list[
     return hits
 
 
-# --------------------------------------------------------------------------
 # Noise fields (per-page unique, never tiled)
-# --------------------------------------------------------------------------
 
 def _fbm(rng: np.random.Generator, h: int, w: int, base_cells: float = 3.0,
          octaves: int = 4, persistence: float = 0.55) -> np.ndarray:
@@ -861,9 +824,7 @@ def _modulate(img: np.ndarray, field: np.ndarray, ink: np.ndarray | None = None,
     return img * m[..., None]
 
 
-# --------------------------------------------------------------------------
 # Photometric ops - all pixel-position-preserving
-# --------------------------------------------------------------------------
 
 def op_paper(img, rng, ink, p):
     h, w = ink.shape
@@ -904,9 +865,9 @@ def op_stains(img, rng, ink, p):
         if rng.random() < 0.25:                       # some grime is just grey
             absorb[:] = float(rng.uniform(0.85, 1.0))
         img = img * (1.0 - alpha * mask[..., None] * absorb[None, None, :])
-        # Judge-panel fix: liquid wicks into toner — under a strong stain, ink
-        # edges feather instead of staying razor-sharp. Positionally exact
-        # (gaussian blend, no displacement); weight capped so text stays legible.
+        # Liquid wicks into toner: under a strong stain, ink edges feather.
+        # Positionally exact (gaussian blend, no displacement); weight capped
+        # so text stays legible.
         wick = np.clip(mask * alpha * 6.0, 0.0, 0.45).astype(np.float32)
         if float(wick.max()) > 0.02:
             soft = cv2.GaussianBlur(img, (0, 0), 0.9)
@@ -1011,11 +972,10 @@ def op_edge_shadow(img, rng, ink, p, quad: np.ndarray | None):
 
 
 def op_foxing(img, rng, ink, b):
-    """Foxing: the small rust-brown blotches of aged book paper (clearly visible
-    on the grey-white cover sample). Same machinery as op_stains — a windowed
-    fbm mask, per-channel absorption — but small radii and an always-brown
-    absorb (blue eaten hardest). Alpha is capped low enough that text under a
-    spot stays readable. Pixel-position-preserving (pure multiply)."""
+    """Foxing: the small rust-brown blotches of aged book paper. Same machinery
+    as op_stains — a windowed fbm mask, per-channel absorption — but small radii
+    and an always-brown absorb (blue eaten hardest). Alpha is capped low enough
+    that text under a spot stays readable. Pixel-position-preserving."""
     n = _i(rng, b["foxing"])
     if n <= 0:
         return img
@@ -1076,8 +1036,7 @@ def op_book_shadow(img, rng, ink, b):
 def op_tone_response(img, rng, ink, p):
     """Desaturation + copier gamma/contrast curve.
 
-    Judge-panel fix: partial desaturation is a synthetic tell ("vivid green bars
-    on a page dressed as a B/W photocopy"). Real pages are bimodal — a copy is
+    Partial desaturation is a synthetic tell — real pages are bimodal: a copy is
     FULLY grayscale, a color scan keeps its colors. `desat_bimodal` = probability
     this page went through a B/W copier; otherwise colors survive nearly intact."""
     desat = p["desat"]
@@ -1176,9 +1135,7 @@ def op_jpeg(img, rng, p):
     return cv2.imdecode(buf, cv2.IMREAD_COLOR).astype(np.float32) if ok else img
 
 
-# --------------------------------------------------------------------------
 # Augraphy bridge - curated roster only, global RNG state pinned per op
-# --------------------------------------------------------------------------
 
 _AUG_MOD: Any = None
 _AUG_TRIED = False
@@ -1270,14 +1227,22 @@ def apply_augraphy(name: str, img: np.ndarray, seed: int) -> np.ndarray | None:
     return out.astype(np.float32)
 
 
-# --------------------------------------------------------------------------
 # Pipeline
-# --------------------------------------------------------------------------
 
 def degrade_image(
-    img_bgr: np.ndarray, image_id: str, severity: int | str, base_seed: int = 0
+    img_bgr: np.ndarray, image_id: str, severity: int | str, base_seed: int = 0,
+    *, no_geom: bool = False,
 ) -> tuple[np.ndarray, dict[str, Any]]:
-    """One page -> (degraded BGR uint8, metadata incl. the 2x3 matrices)."""
+    """One page -> (degraded BGR uint8, metadata incl. the 2x3 matrices).
+
+    `no_geom=True` disables the affine scan-geometry component entirely: the
+    stamped matrices are identity, pixels are never warped, and only the
+    photometric roster runs (B1 twin contract: degraded twin at identical
+    pixel positions). The rng stream diverges from the geometry path (the
+    affine draws are skipped), so a no_geom page is its own deterministic
+    variant, not the geometry page minus the warp. Default False is
+    byte-identical to the historical behavior.
+    """
     if severity not in ALL_PRESETS:
         raise ValueError(f"severity {severity} not in {SEVERITIES + BOOK_SEVERITIES}")
     preset = ALL_PRESETS[severity]
@@ -1297,26 +1262,37 @@ def degrade_image(
         "geom_valid": True,
         "ops": [],
     }
+    if no_geom:     # keyed only on the new path: existing metas stay byte-stable
+        meta["geom_disabled"] = True
 
-    if preset["photo"] is None and all(v == 0 for v in preset["geom"].values()):
+    if preset["photo"] is None and (no_geom or all(v == 0 for v in preset["geom"].values())):
         meta["scan_geom_matrix"] = IDENTITY_2X3.tolist()
         meta["scan_geom_matrix_px"] = IDENTITY_2X3.tolist()
         meta["geom_params"] = {k: 0.0 for k in ("rot_deg", "skew_deg", "scale_x", "scale_y",
                                                 "shift_x_px", "shift_y_px")}
         return np.ascontiguousarray(img_bgr), meta
 
-    M_px, M_norm, gparams = build_affine(rng, w, h, preset["geom"])
+    if no_geom:
+        M_px, M_norm = IDENTITY_2X3.copy(), IDENTITY_2X3.copy()
+        gparams = {k: 0.0 for k in ("rot_deg", "skew_deg", "scale_x", "scale_y",
+                                    "shift_x_px", "shift_y_px")}
+    else:
+        M_px, M_norm, gparams = build_affine(rng, w, h, preset["geom"])
     meta["scan_geom_matrix"] = [[float(v) for v in row] for row in M_norm]
     meta["scan_geom_matrix_px"] = [[float(v) for v in row] for row in M_px]
     meta["geom_params"] = gparams
 
     src = img_bgr.astype(np.float32)
-    border = [float(np.percentile(src[..., c], 96)) for c in range(3)]
-    img = cv2.warpAffine(src, M_px.astype(np.float32), (w, h), flags=cv2.INTER_CUBIC,
-                         borderMode=cv2.BORDER_CONSTANT, borderValue=border)
-    meta["ops"].append("affine")
-    quad = cv2.transform(np.array([[[0, 0], [w, 0], [w, h], [0, h]]], np.float32),
-                         M_px.astype(np.float32))[0]
+    if no_geom:
+        img = src.copy()
+        quad = None     # no skew -> no exposed platen edge to render
+    else:
+        border = [float(np.percentile(src[..., c], 96)) for c in range(3)]
+        img = cv2.warpAffine(src, M_px.astype(np.float32), (w, h), flags=cv2.INTER_CUBIC,
+                             borderMode=cv2.BORDER_CONSTANT, borderValue=border)
+        meta["ops"].append("affine")
+        quad = cv2.transform(np.array([[[0, 0], [w, 0], [w, h], [0, h]]], np.float32),
+                             M_px.astype(np.float32))[0]
 
     p = preset["photo"]
     if p is None:
@@ -1387,9 +1363,7 @@ def degrade_image(
     return np.ascontiguousarray(out), meta
 
 
-# --------------------------------------------------------------------------
 # Rasterization / IO
-# --------------------------------------------------------------------------
 
 def rasterize_pdf(pdf_path: Path, dpi: int) -> list[np.ndarray]:
     import pymupdf  # noqa: PLC0415
@@ -1407,9 +1381,10 @@ def rasterize_pdf(pdf_path: Path, dpi: int) -> list[np.ndarray]:
 def process_page(
     img: np.ndarray, stem: str, page_index: int, n_pages: int, severity: int | str,
     out_dir: Path, base_seed: int, sidecar_dir: Path | None, dpi: int | None,
+    no_geom: bool = False,
 ) -> dict[str, Any]:
     page_id = stem if n_pages == 1 else f"{stem}__p{page_index}"
-    out_img, meta = degrade_image(img, page_id, severity, base_seed)
+    out_img, meta = degrade_image(img, page_id, severity, base_seed, no_geom=no_geom)
     meta["page_index"] = page_index
     meta["source_dpi"] = dpi
     img_path = out_dir / f"{page_id}__sev{severity}.png"
@@ -1426,11 +1401,9 @@ def process_page(
             extra={"scan_source_sidecar": sc.name, "scan_image": img_path.name},
         )
         suffix = "".join(sc.suffixes[-2:]) if len(sc.suffixes) >= 2 else sc.suffix
-        name = sc.name[: -len(suffix)] if sc.name.endswith(suffix) else sc.stem
         dest = out_dir / f"{page_id}__sev{severity}{suffix}"
         dest.write_text(json.dumps(moved, ensure_ascii=False, indent=1))
         written.append(dest.name)
-        del name
     meta["sidecars"] = written
     meta["image"] = img_path.name
     (out_dir / f"{page_id}__sev{severity}.degrade.json").write_text(
@@ -1470,7 +1443,8 @@ def run(args: argparse.Namespace) -> int:
         for pi, page in enumerate(pages):
             for sev in severities:
                 meta = process_page(page, stem, pi, len(pages), sev, out_dir,
-                                    args.seed, sidecar_dir, args.dpi if args.pdfs else None)
+                                    args.seed, sidecar_dir, args.dpi if args.pdfs else None,
+                                    no_geom=args.no_geom)
                 manifest.append(meta)
                 print(f"{meta['image']}  {meta['severity_label']}  "
                       f"rot={meta['geom_params']['rot_deg']:+.2f}deg  "
@@ -1481,9 +1455,7 @@ def run(args: argparse.Namespace) -> int:
     return 0
 
 
-# --------------------------------------------------------------------------
 # Self-test: a calibration page of crosses at known normalized coordinates
-# --------------------------------------------------------------------------
 
 def make_calibration_page(w: int = 1275, h: int = 1650, cols: int = 5, rows: int = 7,
                           seed: int = 0) -> tuple[np.ndarray, list[tuple[float, float]], int]:
@@ -1656,11 +1628,14 @@ def main() -> None:
     ap.add_argument("--sidecars", help="dir holding *.cells.json / *.pixels.json / "
                                        "*.layout.json / *.sidecar.json")
     ap.add_argument("--out", help="output dir")
-    ap.add_argument("--dpi", type=int, default=200, help="rasterization DPI for --pdfs (v5: raised from 150 per user)")
+    ap.add_argument("--dpi", type=int, default=200, help="rasterization DPI for --pdfs")
     ap.add_argument("--severity", default="sweep",
                     help="0..4, a book variant '1b'/'2b'/'3b', 'sweep' (all five "
                          "numeric) or 'sweep-book' (the three book variants)")
     ap.add_argument("--seed", type=int, default=0, help="base seed; mixed with (id, severity)")
+    ap.add_argument("--no-geom", action="store_true",
+                    help="disable the affine scan-geometry component (identity matrix, "
+                         "photometric ops only; degraded pixels stay position-aligned)")
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--selftest", action="store_true", help="run the cross-target geometry check")
     args = ap.parse_args()

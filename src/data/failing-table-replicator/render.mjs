@@ -89,13 +89,13 @@ writeFileSync(`${outDir}/${name}.test.json`, JSON.stringify({ expected_markdown:
 
 // cells.json: normalize CSS px -> per-page [0,1] using the ACTUAL pdf page size.
 //
-// Fit-to-paper correction: page.pdf() gets format:"A4" as a default under ...pageOpts,
-// and puppeteer gives `format` priority over width/height. Templates that set
-// width/height WITHOUT preferCSSPageSize therefore lay out at their CSS page size but
-// print min-fit-scaled + centered onto A4 (e.g. Letter -> 0.9737x + 35.4pt y-offset).
-// The PDFs are correct (and byte-stable with the original datasets), so the fix lives
-// HERE: detect the layout-vs-paper mismatch from pdfinfo and compose the same uniform
-// min-fit transform into the normalization. Assumes @page CSS size == pageOpts
+// Fit-to-paper correction: page.pdf() defaults to format:"A4" under ...pageOpts,
+// and puppeteer gives `format` priority over width/height, so templates that set
+// width/height WITHOUT preferCSSPageSize lay out at their CSS page size but print
+// min-fit-scaled + centered onto A4 (e.g. Letter -> 0.9737x + 35.4pt y-offset).
+// The PDFs must stay byte-stable, so the correction lives HERE: detect the
+// layout-vs-paper mismatch from pdfinfo and compose the same uniform min-fit
+// transform into the normalization. Assumes @page CSS size == pageOpts
 // width/height (true for all current templates).
 const info = execFileSync("/opt/homebrew/bin/pdfinfo", [pdfPath]).toString();
 const pages = Number(/Pages:\s+(\d+)/.exec(info)?.[1] ?? 1);

@@ -1,0 +1,33 @@
+== corpus-wide label majority fraction ==
+glyph_id n: 41011 n_classes: 80 majority: 4 0.0907
+cell_row n: 20592 n_classes: 113 majority: 3 0.0891
+cell_col n: 20592 n_classes: 26 majority: 0 0.2028
+series_id n: 6937 n_classes: 7 majority: 0 0.4887
+
+== kNN(50) on coordinates ==
+glyph_id knn_acc: 0.0706  test_majority: 0.0908
+cell_row knn_acc: 0.1096  test_majority: 0.1072
+cell_col knn_acc: 0.3757  test_majority: 0.2021
+series_id knn_acc: 0.4702  test_majority: 0.4965
+pl1_class knn_acc: 0.5921  test_majority: 0.5777
+
+== series_id restricted to n_series > 1 ==
+n rows: 5197 of 6937
+multi-series slice: knn_coord_acc 0.3009  test_majority 0.3090  n_test 1356
+
+== palette consistency: window color by series label (multi-series charts) ==
+label 0: n 1650  mean RGB [0.607 0.613 0.602]  per-channel std [0.204 0.223 0.208]
+label 1: n 1682  mean RGB [0.64  0.63  0.625]  per-channel std [0.179 0.214 0.21 ]
+label 2: n 1072  mean RGB [0.653 0.648 0.625]  per-channel std [0.179 0.205 0.201]
+label 3: n 512  mean RGB [0.656 0.663 0.65 ]  per-channel std [0.172 0.183 0.194]
+multi-series color kNN acc: 0.2891 (majority 0.3090)
+multi-series color+coord kNN acc: 0.3083
+
+== pl2 coordinate prior by generator ==
+generators: {'charts': 18268, 'math': 18442, 'replicator': 2328, 'tables': 11020, 'text': 5442}
+pl2 coord Ridge mIoU (recheck): 0.2351  IoU@0.5: 0.0310
+  small elements (sqrt-area 0-0.1): mIoU 0.1656  n 6724
+  medium elements (sqrt-area 0.1-0.25): mIoU 0.3362  n 5190
+  large elements (sqrt-area 0.25-1.0): mIoU 0.1550  n 724
+
+[exited with code 0]

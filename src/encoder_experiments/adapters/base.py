@@ -63,6 +63,27 @@ class EncoderAdapter(ABC):
     def encode(self, image: Image.Image) -> EncoderFeatures:
         """One forward pass. Caller wraps in torch.inference_mode()."""
 
+    # -- cache identity -------------------------------------------------------
+
+    @property
+    def cache_tag(self) -> str:
+        """Feature-directory tag. `name` by default; adapters whose
+        adapter_args change the emitted feature space (e.g. a capture site)
+        extend it so caches never collide."""
+        return self.name
+
+    @property
+    def extra_meta(self) -> dict[str, str]:
+        """Adapter-specific metadata stored with every feature file."""
+        return {}
+
+    @property
+    def budget_multiplier(self) -> int:
+        """Realized tokens allowed per nominal budget token (valid after
+        load()). 1 whenever the emitted tokens ARE the budgeted tokens; a
+        pre-merge capture site emits merge^2 tokens per budgeted merged one."""
+        return 1
+
     # -- shared helpers -------------------------------------------------------
 
     def _arg(self, key: str, default):

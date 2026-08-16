@@ -1,0 +1,3108 @@
+{
+  "experiment": "b3_pixel_control",
+  "tower": "qwen35_vit",
+  "arms": {
+    "pooled_native": "native full grids adaptive-avg-pooled to the rung (mechanism merge; captured-then-discarded)",
+    "resolution": "pixel-budget knob at extraction (mechanism resolution; never-captured)"
+  },
+  "delta_definition": "pooled_native - resolution on the primary metric, per head",
+  "fit": {
+    "runs": [
+      "pixelcontrol_v1",
+      "sweep_v1"
+    ],
+    "split": "document",
+    "train_frac": 0.8,
+    "split_seed": 0
+  },
+  "probes": {
+    "glyph_id": [
+      {
+        "rung": 64,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->6x10",
+            "adaptive_avg_pool:52x73->6x9",
+            "adaptive_avg_pool:67x53->8x7",
+            "adaptive_avg_pool:69x53->9x7",
+            "adaptive_avg_pool:73x52->9x6",
+            "adaptive_avg_pool:81x53->9x6",
+            "adaptive_avg_pool:98x53->10x5"
+          ],
+          "realized_tokens": {
+            "raw": [
+              50,
+              54,
+              56,
+              60,
+              63
+            ],
+            "median": 56
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.08859730608453321,
+              "ci95": [
+                0.0810859645455417,
+                0.09718965371232827
+              ],
+              "shuffled": 0.035067347886669764
+            },
+            "mlp": {
+              "accuracy": 0.10299581978634463,
+              "ci95": [
+                0.09431115238529691,
+                0.11274453847307744
+              ],
+              "shuffled": 0.04598235020901068
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=50176",
+          "realized_tokens": {
+            "raw": [
+              40,
+              42,
+              45
+            ],
+            "median": 42
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.052136553646075244,
+              "ci95": [
+                0.04428625156328657,
+                0.06193604748208052
+              ],
+              "shuffled": 0.03320947515095216
+            },
+            "mlp": {
+              "accuracy": 0.07303762192289828,
+              "ci95": [
+                0.0637529613307554,
+                0.08383671249798592
+              ],
+              "shuffled": 0.04238272178355783
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.03646075243845797,
+          "mlp": 0.029958197863446348
+        }
+      },
+      {
+        "rung": 100,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->7x13",
+            "adaptive_avg_pool:52x73->8x11",
+            "adaptive_avg_pool:67x53->11x8",
+            "adaptive_avg_pool:69x53->11x8",
+            "adaptive_avg_pool:73x52->11x8",
+            "adaptive_avg_pool:81x53->12x8",
+            "adaptive_avg_pool:98x53->13x7"
+          ],
+          "realized_tokens": {
+            "raw": [
+              88,
+              91,
+              96
+            ],
+            "median": 91
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.10241523455643288,
+              "ci95": [
+                0.0934977275771305,
+                0.11239542886119966
+              ],
+              "shuffled": 0.03657686948444032
+            },
+            "mlp": {
+              "accuracy": 0.11286576869484441,
+              "ci95": [
+                0.10320790510367332,
+                0.12334465630143615
+              ],
+              "shuffled": 0.04296330701346958
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=78400",
+          "realized_tokens": {
+            "raw": [
+              63,
+              66,
+              70
+            ],
+            "median": 66
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.06200650255457501,
+              "ci95": [
+                0.05552910035283315,
+                0.0694440197330696
+              ],
+              "shuffled": 0.030306549001393405
+            },
+            "mlp": {
+              "accuracy": 0.07524384579656293,
+              "ci95": [
+                0.06733846907897541,
+                0.08430723367290531
+              ],
+              "shuffled": 0.03831862517417557
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.04040873200185787,
+          "mlp": 0.03762192289828148
+        }
+      },
+      {
+        "rung": 144,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->9x15",
+            "adaptive_avg_pool:52x73->10x14",
+            "adaptive_avg_pool:67x53->13x10",
+            "adaptive_avg_pool:69x53->13x10",
+            "adaptive_avg_pool:73x52->14x10",
+            "adaptive_avg_pool:81x53->14x9",
+            "adaptive_avg_pool:98x53->16x8"
+          ],
+          "realized_tokens": {
+            "raw": [
+              126,
+              128,
+              130,
+              135,
+              140
+            ],
+            "median": 130
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.10926614026939155,
+              "ci95": [
+                0.10106190907737049,
+                0.11894245724776698
+              ],
+              "shuffled": 0.03715745471435207
+            },
+            "mlp": {
+              "accuracy": 0.11576869484440316,
+              "ci95": [
+                0.10586713267471318,
+                0.12591901106523934
+              ],
+              "shuffled": 0.04238272178355783
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=112896",
+          "realized_tokens": {
+            "raw": [
+              96,
+              98,
+              99
+            ],
+            "median": 98
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.07094751509521598,
+              "ci95": [
+                0.06378491341748875,
+                0.07919967390396243
+              ],
+              "shuffled": 0.03158383650719926
+            },
+            "mlp": {
+              "accuracy": 0.07814677194612168,
+              "ci95": [
+                0.06944290842064417,
+                0.08776968895198968
+              ],
+              "shuffled": 0.04447282861124013
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.03831862517417557,
+          "mlp": 0.03762192289828148
+        }
+      },
+      {
+        "rung": 196,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->10x18",
+            "adaptive_avg_pool:52x73->11x16",
+            "adaptive_avg_pool:67x53->15x12",
+            "adaptive_avg_pool:69x53->15x12",
+            "adaptive_avg_pool:73x52->16x11",
+            "adaptive_avg_pool:81x53->17x11",
+            "adaptive_avg_pool:98x53->19x10"
+          ],
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187,
+              190
+            ],
+            "median": 183.5
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.11785880167208546,
+              "ci95": [
+                0.10901339078711983,
+                0.12782185684393885
+              ],
+              "shuffled": 0.035067347886669764
+            },
+            "mlp": {
+              "accuracy": 0.1322573153738969,
+              "ci95": [
+                0.12249771323693838,
+                0.14340346344811378
+              ],
+              "shuffled": 0.04563399907106363
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=153664",
+          "realized_tokens": {
+            "raw": [
+              130,
+              135,
+              140,
+              144
+            ],
+            "median": 137.5
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.07466326056665118,
+              "ci95": [
+                0.06696406728156883,
+                0.08363632919121904
+              ],
+              "shuffled": 0.031235485369252206
+            },
+            "mlp": {
+              "accuracy": 0.08894565722248025,
+              "ci95": [
+                0.0800447247706422,
+                0.09794362128100828
+              ],
+              "shuffled": 0.03646075243845796
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.043195541105434276,
+          "mlp": 0.043311658151416646
+        }
+      },
+      {
+        "rung": 256,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->12x21",
+            "adaptive_avg_pool:52x73->13x18",
+            "adaptive_avg_pool:67x53->17x14",
+            "adaptive_avg_pool:69x53->18x14",
+            "adaptive_avg_pool:73x52->18x13",
+            "adaptive_avg_pool:81x53->19x12",
+            "adaptive_avg_pool:98x53->21x11"
+          ],
+          "realized_tokens": {
+            "raw": [
+              228,
+              231,
+              234,
+              238,
+              252
+            ],
+            "median": 234
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.12888992104040872,
+              "ci95": [
+                0.11906305890631712,
+                0.13975079888876407
+              ],
+              "shuffled": 0.04087320018578727
+            },
+            "mlp": {
+              "accuracy": 0.14746864839758478,
+              "ci95": [
+                0.13557928343428344,
+                0.1601096596080229
+              ],
+              "shuffled": 0.04168601950766373
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=200704",
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187
+            ],
+            "median": 180
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.07489549465861589,
+              "ci95": [
+                0.06802179674801728,
+                0.08330582218113153
+              ],
+              "shuffled": 0.034370645610775664
+            },
+            "mlp": {
+              "accuracy": 0.09382257315373897,
+              "ci95": [
+                0.08562367120143043,
+                0.10319812151062535
+              ],
+              "shuffled": 0.03971202972596377
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.05399442638179283,
+          "mlp": 0.053646075243845806
+        }
+      },
+      {
+        "rung": 400,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->15x26",
+            "adaptive_avg_pool:52x73->16x23",
+            "adaptive_avg_pool:67x53->22x17",
+            "adaptive_avg_pool:69x53->22x17",
+            "adaptive_avg_pool:73x52->23x16",
+            "adaptive_avg_pool:81x53->24x16",
+            "adaptive_avg_pool:98x53->27x14"
+          ],
+          "realized_tokens": {
+            "raw": [
+              368,
+              374,
+              378,
+              384,
+              390
+            ],
+            "median": 378
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.15373896888063168,
+              "ci95": [
+                0.14295605304337786,
+                0.16464675949639046
+              ],
+              "shuffled": 0.03715745471435207
+            },
+            "mlp": {
+              "accuracy": 0.1658151416627961,
+              "ci95": [
+                0.15519476298100737,
+                0.17824293698021149
+              ],
+              "shuffled": 0.04540176497909893
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=313600",
+          "realized_tokens": {
+            "raw": [
+              276,
+              280,
+              285,
+              294,
+              299
+            ],
+            "median": 285
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.10450534138411519,
+              "ci95": [
+                0.09586682590990478,
+                0.11357228421859095
+              ],
+              "shuffled": 0.03332559219693451
+            },
+            "mlp": {
+              "accuracy": 0.12157454714352067,
+              "ci95": [
+                0.11216877600836918,
+                0.13135358216870158
+              ],
+              "shuffled": 0.04551788202508128
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.0492336274965165,
+          "mlp": 0.04424059451927542
+        }
+      },
+      {
+        "rung": 576,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->18x31",
+            "adaptive_avg_pool:52x73->20x28",
+            "adaptive_avg_pool:67x53->26x21",
+            "adaptive_avg_pool:69x53->27x21",
+            "adaptive_avg_pool:73x52->28x20",
+            "adaptive_avg_pool:81x53->29x19",
+            "adaptive_avg_pool:98x53->32x17"
+          ],
+          "realized_tokens": {
+            "raw": [
+              544,
+              546,
+              551,
+              558,
+              560,
+              567
+            ],
+            "median": 554.5
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.18102647468648397,
+              "ci95": [
+                0.16907692014408343,
+                0.1933736218355881
+              ],
+              "shuffled": 0.037505805852299116
+            },
+            "mlp": {
+              "accuracy": 0.19066418950301905,
+              "ci95": [
+                0.1789902856024348,
+                0.20429133765379862
+              ],
+              "shuffled": 0.04215048769159312
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=451584",
+          "realized_tokens": {
+            "raw": [
+              408,
+              414,
+              420,
+              425
+            ],
+            "median": 417.0
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.12018114259173246,
+              "ci95": [
+                0.11163441460749868,
+                0.128978680019816
+              ],
+              "shuffled": 0.031932187645146305
+            },
+            "mlp": {
+              "accuracy": 0.13725034835113795,
+              "ci95": [
+                0.12842603140019346,
+                0.14793507475248946
+              ],
+              "shuffled": 0.04307942405945193
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.060845332094751514,
+          "mlp": 0.05341384115188111
+        }
+      },
+      {
+        "rung": 784,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->21x37",
+            "adaptive_avg_pool:52x73->23x33",
+            "adaptive_avg_pool:67x53->31x24",
+            "adaptive_avg_pool:69x53->31x24",
+            "adaptive_avg_pool:73x52->33x23",
+            "adaptive_avg_pool:81x53->34x22",
+            "adaptive_avg_pool:98x53->38x20"
+          ],
+          "realized_tokens": {
+            "raw": [
+              744,
+              748,
+              759,
+              760,
+              777
+            ],
+            "median": 759
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.19345099860659545,
+              "ci95": [
+                0.1810196135256668,
+                0.20620827693831967
+              ],
+              "shuffled": 0.04110543427775198
+            },
+            "mlp": {
+              "accuracy": 0.19948908499767765,
+              "ci95": [
+                0.18669641841856202,
+                0.2127665402039425
+              ],
+              "shuffled": 0.046911286576869486
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=614656",
+          "realized_tokens": {
+            "raw": [
+              567,
+              570,
+              576,
+              580,
+              594
+            ],
+            "median": 576
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.15536460752438458,
+              "ci95": [
+                0.14497630610376094,
+                0.16611526246473374
+              ],
+              "shuffled": 0.035764050162563864
+            },
+            "mlp": {
+              "accuracy": 0.1683697166744078,
+              "ci95": [
+                0.1564233792532807,
+                0.18164993766347518
+              ],
+              "shuffled": 0.04505341384115188
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.038086391082210874,
+          "mlp": 0.031119368323269836
+        }
+      },
+      {
+        "rung": 1024,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->24x42",
+            "adaptive_avg_pool:52x73->27x37",
+            "adaptive_avg_pool:67x53->35x28",
+            "adaptive_avg_pool:69x53->36x28",
+            "adaptive_avg_pool:73x52->37x27",
+            "adaptive_avg_pool:81x53->39x25",
+            "adaptive_avg_pool:98x53->43x23"
+          ],
+          "realized_tokens": {
+            "raw": [
+              975,
+              980,
+              989,
+              999,
+              1008
+            ],
+            "median": 989
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.21249419414770088,
+              "ci95": [
+                0.2002763478621056,
+                0.22518729839838483
+              ],
+              "shuffled": 0.03402229447282861
+            },
+            "mlp": {
+              "accuracy": 0.23745935903390616,
+              "ci95": [
+                0.22319301188299817,
+                0.2529508419952294
+              ],
+              "shuffled": 0.04400836042731073
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=802816",
+          "realized_tokens": {
+            "raw": [
+              740,
+              744,
+              748,
+              759
+            ],
+            "median": 746.0
+          },
+          "n_samples": 41011,
+          "n_test": 8612,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.17916860195076637,
+              "ci95": [
+                0.167812933832391,
+                0.19126157364537155
+              ],
+              "shuffled": 0.03773803994426382
+            },
+            "mlp": {
+              "accuracy": 0.197282861124013,
+              "ci95": [
+                0.18348500268125903,
+                0.21035335023842694
+              ],
+              "shuffled": 0.046330701346957735
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.03332559219693451,
+          "mlp": 0.040176497909893166
+        }
+      }
+    ],
+    "cell_row": [
+      {
+        "rung": 64,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->6x10",
+            "adaptive_avg_pool:52x73->6x9",
+            "adaptive_avg_pool:67x53->8x7",
+            "adaptive_avg_pool:69x53->9x7",
+            "adaptive_avg_pool:73x52->9x6",
+            "adaptive_avg_pool:81x53->9x6",
+            "adaptive_avg_pool:98x53->10x5"
+          ],
+          "realized_tokens": {
+            "raw": [
+              50,
+              54,
+              56,
+              60,
+              63
+            ],
+            "median": 56
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.16899618805590852,
+              "ci95": [
+                0.14615924035690817,
+                0.19155188795704067
+              ],
+              "shuffled": 0.053367217280813214
+            },
+            "mlp": {
+              "accuracy": 0.20838627700127066,
+              "ci95": [
+                0.18133320392642832,
+                0.23806325543034823
+              ],
+              "shuffled": 0.05946632782719187
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=50176",
+          "realized_tokens": {
+            "raw": [
+              40,
+              42,
+              45
+            ],
+            "median": 42
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.10724269377382466,
+              "ci95": [
+                0.09344413907265144,
+                0.12277781356483808
+              ],
+              "shuffled": 0.048538754764930116
+            },
+            "mlp": {
+              "accuracy": 0.13824650571791613,
+              "ci95": [
+                0.12043207650431668,
+                0.1585160355181787
+              ],
+              "shuffled": 0.06632782719186785
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.06175349428208386,
+          "mlp": 0.07013977128335452
+        }
+      },
+      {
+        "rung": 100,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->7x13",
+            "adaptive_avg_pool:52x73->8x11",
+            "adaptive_avg_pool:67x53->11x8",
+            "adaptive_avg_pool:69x53->11x8",
+            "adaptive_avg_pool:73x52->11x8",
+            "adaptive_avg_pool:81x53->12x8",
+            "adaptive_avg_pool:98x53->13x7"
+          ],
+          "realized_tokens": {
+            "raw": [
+              88,
+              91,
+              96
+            ],
+            "median": 91
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.19161372299872936,
+              "ci95": [
+                0.16849150744032032,
+                0.21489702942541397
+              ],
+              "shuffled": 0.050571791613723
+            },
+            "mlp": {
+              "accuracy": 0.22947903430749683,
+              "ci95": [
+                0.19938942706064927,
+                0.2585304704662288
+              ],
+              "shuffled": 0.06302414231257941
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=78400",
+          "realized_tokens": {
+            "raw": [
+              63,
+              66,
+              70
+            ],
+            "median": 66
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.10724269377382466,
+              "ci95": [
+                0.0959341980378963,
+                0.11854557225922815
+              ],
+              "shuffled": 0.05108005082592122
+            },
+            "mlp": {
+              "accuracy": 0.13570520965692504,
+              "ci95": [
+                0.11749719352371125,
+                0.15271025536705402
+              ],
+              "shuffled": 0.0625158831003812
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.0843710292249047,
+          "mlp": 0.0937738246505718
+        }
+      },
+      {
+        "rung": 144,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->9x15",
+            "adaptive_avg_pool:52x73->10x14",
+            "adaptive_avg_pool:67x53->13x10",
+            "adaptive_avg_pool:69x53->13x10",
+            "adaptive_avg_pool:73x52->14x10",
+            "adaptive_avg_pool:81x53->14x9",
+            "adaptive_avg_pool:98x53->16x8"
+          ],
+          "realized_tokens": {
+            "raw": [
+              126,
+              128,
+              130,
+              135,
+              140
+            ],
+            "median": 130
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.19872935196950445,
+              "ci95": [
+                0.1734160041479433,
+                0.2230616776677888
+              ],
+              "shuffled": 0.054637865311308764
+            },
+            "mlp": {
+              "accuracy": 0.24421855146124524,
+              "ci95": [
+                0.2134067647744179,
+                0.27654211798486744
+              ],
+              "shuffled": 0.05133418043202033
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=112896",
+          "realized_tokens": {
+            "raw": [
+              96,
+              98,
+              99
+            ],
+            "median": 98
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.12249047013977128,
+              "ci95": [
+                0.10685671374133542,
+                0.14001291626669163
+              ],
+              "shuffled": 0.053367217280813214
+            },
+            "mlp": {
+              "accuracy": 0.14790343074968235,
+              "ci95": [
+                0.12401736911568353,
+                0.17076871027408985
+              ],
+              "shuffled": 0.061499364675984755
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.07623888182973317,
+          "mlp": 0.0963151207115629
+        }
+      },
+      {
+        "rung": 196,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->10x18",
+            "adaptive_avg_pool:52x73->11x16",
+            "adaptive_avg_pool:67x53->15x12",
+            "adaptive_avg_pool:69x53->15x12",
+            "adaptive_avg_pool:73x52->16x11",
+            "adaptive_avg_pool:81x53->17x11",
+            "adaptive_avg_pool:98x53->19x10"
+          ],
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187,
+              190
+            ],
+            "median": 183.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.20533672172808132,
+              "ci95": [
+                0.17877947130006822,
+                0.2330948209351733
+              ],
+              "shuffled": 0.05108005082592122
+            },
+            "mlp": {
+              "accuracy": 0.23989834815756036,
+              "ci95": [
+                0.21252273369787192,
+                0.26957812901895584
+              ],
+              "shuffled": 0.05438373570520966
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=153664",
+          "realized_tokens": {
+            "raw": [
+              130,
+              135,
+              140,
+              144
+            ],
+            "median": 137.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.13545108005082593,
+              "ci95": [
+                0.11620252916312894,
+                0.15557368861970058
+              ],
+              "shuffled": 0.05641677255400254
+            },
+            "mlp": {
+              "accuracy": 0.1618805590851334,
+              "ci95": [
+                0.13873685405700834,
+                0.1859440572611977
+              ],
+              "shuffled": 0.06632782719186785
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.06988564167725539,
+          "mlp": 0.07801778907242696
+        }
+      },
+      {
+        "rung": 256,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->12x21",
+            "adaptive_avg_pool:52x73->13x18",
+            "adaptive_avg_pool:67x53->17x14",
+            "adaptive_avg_pool:69x53->18x14",
+            "adaptive_avg_pool:73x52->18x13",
+            "adaptive_avg_pool:81x53->19x12",
+            "adaptive_avg_pool:98x53->21x11"
+          ],
+          "realized_tokens": {
+            "raw": [
+              228,
+              231,
+              234,
+              238,
+              252
+            ],
+            "median": 234
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.21778907242693774,
+              "ci95": [
+                0.19505237838045233,
+                0.2407899191980189
+              ],
+              "shuffled": 0.052096569250317665
+            },
+            "mlp": {
+              "accuracy": 0.24752223634053366,
+              "ci95": [
+                0.2164383496105791,
+                0.27844541018306934
+              ],
+              "shuffled": 0.0625158831003812
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=200704",
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187
+            ],
+            "median": 180
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.1420584498094028,
+              "ci95": [
+                0.12336633574791557,
+                0.16210271787232336
+              ],
+              "shuffled": 0.054637865311308764
+            },
+            "mlp": {
+              "accuracy": 0.1738246505717916,
+              "ci95": [
+                0.15080044467227735,
+                0.19594357134338883
+              ],
+              "shuffled": 0.06454891994917408
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.07573062261753494,
+          "mlp": 0.07369758576874205
+        }
+      },
+      {
+        "rung": 400,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->15x26",
+            "adaptive_avg_pool:52x73->16x23",
+            "adaptive_avg_pool:67x53->22x17",
+            "adaptive_avg_pool:69x53->22x17",
+            "adaptive_avg_pool:73x52->23x16",
+            "adaptive_avg_pool:81x53->24x16",
+            "adaptive_avg_pool:98x53->27x14"
+          ],
+          "realized_tokens": {
+            "raw": [
+              368,
+              374,
+              378,
+              384,
+              390
+            ],
+            "median": 378
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.2246505717916137,
+              "ci95": [
+                0.1970107442786797,
+                0.25270214655590467
+              ],
+              "shuffled": 0.053367217280813214
+            },
+            "mlp": {
+              "accuracy": 0.2546378653113088,
+              "ci95": [
+                0.22739550805395317,
+                0.284484499919613
+              ],
+              "shuffled": 0.06429479034307496
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=313600",
+          "realized_tokens": {
+            "raw": [
+              276,
+              280,
+              285,
+              294,
+              299
+            ],
+            "median": 285
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.15730622617534942,
+              "ci95": [
+                0.13842625145523657,
+                0.17947535384164778
+              ],
+              "shuffled": 0.05108005082592122
+            },
+            "mlp": {
+              "accuracy": 0.18373570520965693,
+              "ci95": [
+                0.1616362503514728,
+                0.20792649837128344
+              ],
+              "shuffled": 0.06175349428208386
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.06734434561626429,
+          "mlp": 0.07090216010165185
+        }
+      },
+      {
+        "rung": 576,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->18x31",
+            "adaptive_avg_pool:52x73->20x28",
+            "adaptive_avg_pool:67x53->26x21",
+            "adaptive_avg_pool:69x53->27x21",
+            "adaptive_avg_pool:73x52->28x20",
+            "adaptive_avg_pool:81x53->29x19",
+            "adaptive_avg_pool:98x53->32x17"
+          ],
+          "realized_tokens": {
+            "raw": [
+              544,
+              546,
+              551,
+              558,
+              560,
+              567
+            ],
+            "median": 554.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.21982210927573062,
+              "ci95": [
+                0.19613202988863207,
+                0.24443212145140075
+              ],
+              "shuffled": 0.05108005082592122
+            },
+            "mlp": {
+              "accuracy": 0.2434561626429479,
+              "ci95": [
+                0.21632688607959913,
+                0.2711012668559783
+              ],
+              "shuffled": 0.05844980940279543
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=451584",
+          "realized_tokens": {
+            "raw": [
+              408,
+              414,
+              420,
+              425
+            ],
+            "median": 417.0
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.17484116899618807,
+              "ci95": [
+                0.1545209212388211,
+                0.19685312002979624
+              ],
+              "shuffled": 0.05006353240152478
+            },
+            "mlp": {
+              "accuracy": 0.20914866581956798,
+              "ci95": [
+                0.18535750531405548,
+                0.23441110496819662
+              ],
+              "shuffled": 0.056925031766200763
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.04498094027954255,
+          "mlp": 0.03430749682337991
+        }
+      },
+      {
+        "rung": 784,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->21x37",
+            "adaptive_avg_pool:52x73->23x33",
+            "adaptive_avg_pool:67x53->31x24",
+            "adaptive_avg_pool:69x53->31x24",
+            "adaptive_avg_pool:73x52->33x23",
+            "adaptive_avg_pool:81x53->34x22",
+            "adaptive_avg_pool:98x53->38x20"
+          ],
+          "realized_tokens": {
+            "raw": [
+              744,
+              748,
+              759,
+              760,
+              777
+            ],
+            "median": 759
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.2246505717916137,
+              "ci95": [
+                0.199010962719776,
+                0.25129562214704565
+              ],
+              "shuffled": 0.05412960609911054
+            },
+            "mlp": {
+              "accuracy": 0.25412960609911056,
+              "ci95": [
+                0.2276848944233893,
+                0.28054079205418964
+              ],
+              "shuffled": 0.053875476493011436
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=614656",
+          "realized_tokens": {
+            "raw": [
+              567,
+              570,
+              576,
+              580,
+              594
+            ],
+            "median": 576
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.18144853875476494,
+              "ci95": [
+                0.15895614707622846,
+                0.20586327213381345
+              ],
+              "shuffled": 0.061499364675984755
+            },
+            "mlp": {
+              "accuracy": 0.21499364675984753,
+              "ci95": [
+                0.18941821689231755,
+                0.24111554734803695
+              ],
+              "shuffled": 0.06759847522236341
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.043202033036848775,
+          "mlp": 0.03913595933926303
+        }
+      },
+      {
+        "rung": 1024,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->24x42",
+            "adaptive_avg_pool:52x73->27x37",
+            "adaptive_avg_pool:67x53->35x28",
+            "adaptive_avg_pool:69x53->36x28",
+            "adaptive_avg_pool:73x52->37x27",
+            "adaptive_avg_pool:81x53->39x25",
+            "adaptive_avg_pool:98x53->43x23"
+          ],
+          "realized_tokens": {
+            "raw": [
+              975,
+              980,
+              989,
+              999,
+              1008
+            ],
+            "median": 989
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.23202033036848793,
+              "ci95": [
+                0.20658014883366113,
+                0.2590071471315542
+              ],
+              "shuffled": 0.053875476493011436
+            },
+            "mlp": {
+              "accuracy": 0.2546378653113088,
+              "ci95": [
+                0.22510403043443675,
+                0.2825265626161969
+              ],
+              "shuffled": 0.05412960609911054
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=802816",
+          "realized_tokens": {
+            "raw": [
+              740,
+              744,
+              748,
+              759
+            ],
+            "median": 746.0
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.1806861499364676,
+              "ci95": [
+                0.16123120242090605,
+                0.2009082296960555
+              ],
+              "shuffled": 0.05285895806861499
+            },
+            "mlp": {
+              "accuracy": 0.21601016518424396,
+              "ci95": [
+                0.19105156184657815,
+                0.24191485374838412
+              ],
+              "shuffled": 0.05641677255400254
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.05133418043202034,
+          "mlp": 0.03862770012706482
+        }
+      }
+    ],
+    "cell_col": [
+      {
+        "rung": 64,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->6x10",
+            "adaptive_avg_pool:52x73->6x9",
+            "adaptive_avg_pool:67x53->8x7",
+            "adaptive_avg_pool:69x53->9x7",
+            "adaptive_avg_pool:73x52->9x6",
+            "adaptive_avg_pool:81x53->9x6",
+            "adaptive_avg_pool:98x53->10x5"
+          ],
+          "realized_tokens": {
+            "raw": [
+              50,
+              54,
+              56,
+              60,
+              63
+            ],
+            "median": 56
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.4670902160101652,
+              "ci95": [
+                0.432834830344774,
+                0.5032167054527655
+              ],
+              "shuffled": 0.12299872935196951
+            },
+            "mlp": {
+              "accuracy": 0.5748411689961881,
+              "ci95": [
+                0.5250129528643196,
+                0.6221977588800038
+              ],
+              "shuffled": 0.18398983481575604
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=50176",
+          "realized_tokens": {
+            "raw": [
+              40,
+              42,
+              45
+            ],
+            "median": 42
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.3204574332909784,
+              "ci95": [
+                0.29208600612515984,
+                0.35216748895056016
+              ],
+              "shuffled": 0.11944091486658195
+            },
+            "mlp": {
+              "accuracy": 0.3916137229987294,
+              "ci95": [
+                0.34914618230774164,
+                0.43583708871648763
+              ],
+              "shuffled": 0.13646759847522236
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.14663278271918678,
+          "mlp": 0.18322744599745872
+        }
+      },
+      {
+        "rung": 100,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->7x13",
+            "adaptive_avg_pool:52x73->8x11",
+            "adaptive_avg_pool:67x53->11x8",
+            "adaptive_avg_pool:69x53->11x8",
+            "adaptive_avg_pool:73x52->11x8",
+            "adaptive_avg_pool:81x53->12x8",
+            "adaptive_avg_pool:98x53->13x7"
+          ],
+          "realized_tokens": {
+            "raw": [
+              88,
+              91,
+              96
+            ],
+            "median": 91
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.4866581956797967,
+              "ci95": [
+                0.4453896669018799,
+                0.5302561171864867
+              ],
+              "shuffled": 0.13468869123252858
+            },
+            "mlp": {
+              "accuracy": 0.5982210927573062,
+              "ci95": [
+                0.5535367082087409,
+                0.6463354417664214
+              ],
+              "shuffled": 0.14282083862770012
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=78400",
+          "realized_tokens": {
+            "raw": [
+              63,
+              66,
+              70
+            ],
+            "median": 66
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.34815756035578144,
+              "ci95": [
+                0.3180947558945838,
+                0.3816203065819788
+              ],
+              "shuffled": 0.12274459974587039
+            },
+            "mlp": {
+              "accuracy": 0.3916137229987294,
+              "ci95": [
+                0.36066937807373955,
+                0.4230638715465507
+              ],
+              "shuffled": 0.14129606099110548
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.13850063532401524,
+          "mlp": 0.2066073697585768
+        }
+      },
+      {
+        "rung": 144,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->9x15",
+            "adaptive_avg_pool:52x73->10x14",
+            "adaptive_avg_pool:67x53->13x10",
+            "adaptive_avg_pool:69x53->13x10",
+            "adaptive_avg_pool:73x52->14x10",
+            "adaptive_avg_pool:81x53->14x9",
+            "adaptive_avg_pool:98x53->16x8"
+          ],
+          "realized_tokens": {
+            "raw": [
+              126,
+              128,
+              130,
+              135,
+              140
+            ],
+            "median": 130
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5001270648030496,
+              "ci95": [
+                0.45731071694994624,
+                0.546792191025891
+              ],
+              "shuffled": 0.12833545108005082
+            },
+            "mlp": {
+              "accuracy": 0.6193138500635325,
+              "ci95": [
+                0.5746706313696351,
+                0.6649499700642405
+              ],
+              "shuffled": 0.1392630241423126
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=112896",
+          "realized_tokens": {
+            "raw": [
+              96,
+              98,
+              99
+            ],
+            "median": 98
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.3445997458703939,
+              "ci95": [
+                0.30990174000904336,
+                0.3768052176529064
+              ],
+              "shuffled": 0.1275730622617535
+            },
+            "mlp": {
+              "accuracy": 0.4038119440914867,
+              "ci95": [
+                0.35969257522767883,
+                0.4482427889001638
+              ],
+              "shuffled": 0.14104193138500634
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.1555273189326557,
+          "mlp": 0.21550190597204577
+        }
+      },
+      {
+        "rung": 196,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->10x18",
+            "adaptive_avg_pool:52x73->11x16",
+            "adaptive_avg_pool:67x53->15x12",
+            "adaptive_avg_pool:69x53->15x12",
+            "adaptive_avg_pool:73x52->16x11",
+            "adaptive_avg_pool:81x53->17x11",
+            "adaptive_avg_pool:98x53->19x10"
+          ],
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187,
+              190
+            ],
+            "median": 183.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5224904701397712,
+              "ci95": [
+                0.4821220957036673,
+                0.567316616766467
+              ],
+              "shuffled": 0.13545108005082593
+            },
+            "mlp": {
+              "accuracy": 0.6063532401524777,
+              "ci95": [
+                0.5623264870056655,
+                0.6518303066291938
+              ],
+              "shuffled": 0.15374841168996187
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=153664",
+          "realized_tokens": {
+            "raw": [
+              130,
+              135,
+              140,
+              144
+            ],
+            "median": 137.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.3527318932655654,
+              "ci95": [
+                0.3187506462072991,
+                0.38681348871606175
+              ],
+              "shuffled": 0.12858958068614992
+            },
+            "mlp": {
+              "accuracy": 0.44447268106734433,
+              "ci95": [
+                0.402842125917711,
+                0.4875722724987431
+              ],
+              "shuffled": 0.16543837357052096
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.1697585768742058,
+          "mlp": 0.16188055908513338
+        }
+      },
+      {
+        "rung": 256,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->12x21",
+            "adaptive_avg_pool:52x73->13x18",
+            "adaptive_avg_pool:67x53->17x14",
+            "adaptive_avg_pool:69x53->18x14",
+            "adaptive_avg_pool:73x52->18x13",
+            "adaptive_avg_pool:81x53->19x12",
+            "adaptive_avg_pool:98x53->21x11"
+          ],
+          "realized_tokens": {
+            "raw": [
+              228,
+              231,
+              234,
+              238,
+              252
+            ],
+            "median": 234
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5186785260482846,
+              "ci95": [
+                0.4809981831454846,
+                0.5628141986746809
+              ],
+              "shuffled": 0.13138500635324016
+            },
+            "mlp": {
+              "accuracy": 0.5959339263024143,
+              "ci95": [
+                0.5493369280876553,
+                0.6491671716208188
+              ],
+              "shuffled": 0.154002541296061
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=200704",
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187
+            ],
+            "median": 180
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.3684879288437103,
+              "ci95": [
+                0.3345025862583301,
+                0.4072258291111119
+              ],
+              "shuffled": 0.11385006353240153
+            },
+            "mlp": {
+              "accuracy": 0.44675984752223635,
+              "ci95": [
+                0.3944136435783692,
+                0.4978820706515143
+              ],
+              "shuffled": 0.15374841168996187
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.15019059720457428,
+          "mlp": 0.1491740787801779
+        }
+      },
+      {
+        "rung": 400,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->15x26",
+            "adaptive_avg_pool:52x73->16x23",
+            "adaptive_avg_pool:67x53->22x17",
+            "adaptive_avg_pool:69x53->22x17",
+            "adaptive_avg_pool:73x52->23x16",
+            "adaptive_avg_pool:81x53->24x16",
+            "adaptive_avg_pool:98x53->27x14"
+          ],
+          "realized_tokens": {
+            "raw": [
+              368,
+              374,
+              378,
+              384,
+              390
+            ],
+            "median": 378
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5257941550190597,
+              "ci95": [
+                0.47915513989784586,
+                0.5750951757320287
+              ],
+              "shuffled": 0.13519695044472682
+            },
+            "mlp": {
+              "accuracy": 0.5806861499364676,
+              "ci95": [
+                0.5335070749291309,
+                0.632104225015104
+              ],
+              "shuffled": 0.12198221092757307
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=313600",
+          "realized_tokens": {
+            "raw": [
+              276,
+              280,
+              285,
+              294,
+              299
+            ],
+            "median": 285
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.37789072426937736,
+              "ci95": [
+                0.33752411509570784,
+                0.4168211742005051
+              ],
+              "shuffled": 0.10825921219822109
+            },
+            "mlp": {
+              "accuracy": 0.45412960609911057,
+              "ci95": [
+                0.40911606261308675,
+                0.5008015463837817
+              ],
+              "shuffled": 0.1392630241423126
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.14790343074968232,
+          "mlp": 0.12655654383735704
+        }
+      },
+      {
+        "rung": 576,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->18x31",
+            "adaptive_avg_pool:52x73->20x28",
+            "adaptive_avg_pool:67x53->26x21",
+            "adaptive_avg_pool:69x53->27x21",
+            "adaptive_avg_pool:73x52->28x20",
+            "adaptive_avg_pool:81x53->29x19",
+            "adaptive_avg_pool:98x53->32x17"
+          ],
+          "realized_tokens": {
+            "raw": [
+              544,
+              546,
+              551,
+              558,
+              560,
+              567
+            ],
+            "median": 554.5
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5359593392630242,
+              "ci95": [
+                0.48954961386968987,
+                0.5864975965920812
+              ],
+              "shuffled": 0.1303684879288437
+            },
+            "mlp": {
+              "accuracy": 0.6076238881829733,
+              "ci95": [
+                0.565039558742346,
+                0.6516282110925253
+              ],
+              "shuffled": 0.1255400254129606
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=451584",
+          "realized_tokens": {
+            "raw": [
+              408,
+              414,
+              420,
+              425
+            ],
+            "median": 417.0
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.4152477763659466,
+              "ci95": [
+                0.3838721845903816,
+                0.44868970677563047
+              ],
+              "shuffled": 0.13646759847522236
+            },
+            "mlp": {
+              "accuracy": 0.49580686149936465,
+              "ci95": [
+                0.45648597498508375,
+                0.5403362465102526
+              ],
+              "shuffled": 0.1468869123252859
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.12071156289707757,
+          "mlp": 0.11181702668360866
+        }
+      },
+      {
+        "rung": 784,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->21x37",
+            "adaptive_avg_pool:52x73->23x33",
+            "adaptive_avg_pool:67x53->31x24",
+            "adaptive_avg_pool:69x53->31x24",
+            "adaptive_avg_pool:73x52->33x23",
+            "adaptive_avg_pool:81x53->34x22",
+            "adaptive_avg_pool:98x53->38x20"
+          ],
+          "realized_tokens": {
+            "raw": [
+              744,
+              748,
+              759,
+              760,
+              777
+            ],
+            "median": 759
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5229987293519694,
+              "ci95": [
+                0.47758786048950946,
+                0.5738924800673646
+              ],
+              "shuffled": 0.1306226175349428
+            },
+            "mlp": {
+              "accuracy": 0.5982210927573062,
+              "ci95": [
+                0.5514451238150652,
+                0.6505017263362073
+              ],
+              "shuffled": 0.13468869123252858
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=614656",
+          "realized_tokens": {
+            "raw": [
+              567,
+              570,
+              576,
+              580,
+              594
+            ],
+            "median": 576
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.43024142312579416,
+              "ci95": [
+                0.39555122234835993,
+                0.46592079887456994
+              ],
+              "shuffled": 0.12477763659466327
+            },
+            "mlp": {
+              "accuracy": 0.5280813214739517,
+              "ci95": [
+                0.4853834448301754,
+                0.5778861579456237
+              ],
+              "shuffled": 0.13799237611181703
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.09275730622617528,
+          "mlp": 0.07013977128335447
+        }
+      },
+      {
+        "rung": 1024,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->24x42",
+            "adaptive_avg_pool:52x73->27x37",
+            "adaptive_avg_pool:67x53->35x28",
+            "adaptive_avg_pool:69x53->36x28",
+            "adaptive_avg_pool:73x52->37x27",
+            "adaptive_avg_pool:81x53->39x25",
+            "adaptive_avg_pool:98x53->43x23"
+          ],
+          "realized_tokens": {
+            "raw": [
+              975,
+              980,
+              989,
+              999,
+              1008
+            ],
+            "median": 989
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.5179161372299873,
+              "ci95": [
+                0.47339295535638004,
+                0.5638893394612702
+              ],
+              "shuffled": 0.1303684879288437
+            },
+            "mlp": {
+              "accuracy": 0.6071156289707751,
+              "ci95": [
+                0.5626403843790005,
+                0.6534673911997614
+              ],
+              "shuffled": 0.12579415501905972
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=802816",
+          "realized_tokens": {
+            "raw": [
+              740,
+              744,
+              748,
+              759
+            ],
+            "median": 746.0
+          },
+          "n_samples": 20592,
+          "n_test": 3935,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.4508259212198221,
+              "ci95": [
+                0.4109060594006617,
+                0.48927720640620603
+              ],
+              "shuffled": 0.14104193138500634
+            },
+            "mlp": {
+              "accuracy": 0.5372299872935197,
+              "ci95": [
+                0.49440478681072375,
+                0.5840060801782404
+              ],
+              "shuffled": 0.1395171537484117
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.06709021601016518,
+          "mlp": 0.06988564167725542
+        }
+      }
+    ],
+    "pl1_class": [
+      {
+        "rung": 64,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->6x10",
+            "adaptive_avg_pool:52x73->6x9",
+            "adaptive_avg_pool:67x53->8x7",
+            "adaptive_avg_pool:69x53->9x7",
+            "adaptive_avg_pool:73x52->9x6",
+            "adaptive_avg_pool:81x53->9x6",
+            "adaptive_avg_pool:98x53->10x5"
+          ],
+          "realized_tokens": {
+            "raw": [
+              50,
+              54,
+              56,
+              60,
+              63
+            ],
+            "median": 56
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7737651766004415,
+              "ci95": [
+                0.7644279396988203,
+                0.783648290786385
+              ],
+              "shuffled": 0.5655008278145696
+            },
+            "mlp": {
+              "accuracy": 0.7848371964679912,
+              "ci95": [
+                0.7746294929416779,
+                0.7955439243253931
+              ],
+              "shuffled": 0.5662596578366446
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=50176",
+          "realized_tokens": {
+            "raw": [
+              40,
+              42,
+              45
+            ],
+            "median": 42
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.6939845474613686,
+              "ci95": [
+                0.6828967119957956,
+                0.7052192293564904
+              ],
+              "shuffled": 0.5487375827814569
+            },
+            "mlp": {
+              "accuracy": 0.7152662803532008,
+              "ci95": [
+                0.7050484390099985,
+                0.7266024642664509
+              ],
+              "shuffled": 0.522075055187638
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.07978062913907291,
+          "mlp": 0.06957091611479038
+        }
+      },
+      {
+        "rung": 100,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->7x13",
+            "adaptive_avg_pool:52x73->8x11",
+            "adaptive_avg_pool:67x53->11x8",
+            "adaptive_avg_pool:69x53->11x8",
+            "adaptive_avg_pool:73x52->11x8",
+            "adaptive_avg_pool:81x53->12x8",
+            "adaptive_avg_pool:98x53->13x7"
+          ],
+          "realized_tokens": {
+            "raw": [
+              88,
+              91,
+              96
+            ],
+            "median": 91
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7846302428256071,
+              "ci95": [
+                0.7755775061314617,
+                0.7946211658523344
+              ],
+              "shuffled": 0.5646385209713024
+            },
+            "mlp": {
+              "accuracy": 0.8016694260485652,
+              "ci95": [
+                0.7921542824407333,
+                0.8112635470076185
+              ],
+              "shuffled": 0.5438396799116998
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=78400",
+          "realized_tokens": {
+            "raw": [
+              63,
+              66,
+              70
+            ],
+            "median": 66
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7048151214128036,
+              "ci95": [
+                0.6940767881819274,
+                0.7163490024717514
+              ],
+              "shuffled": 0.5561189293598234
+            },
+            "mlp": {
+              "accuracy": 0.7214748896247241,
+              "ci95": [
+                0.7113901754758809,
+                0.7325508131851542
+              ],
+              "shuffled": 0.4925496688741722
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.07981512141280356,
+          "mlp": 0.08019453642384111
+        }
+      },
+      {
+        "rung": 144,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->9x15",
+            "adaptive_avg_pool:52x73->10x14",
+            "adaptive_avg_pool:67x53->13x10",
+            "adaptive_avg_pool:69x53->13x10",
+            "adaptive_avg_pool:73x52->14x10",
+            "adaptive_avg_pool:81x53->14x9",
+            "adaptive_avg_pool:98x53->16x8"
+          ],
+          "realized_tokens": {
+            "raw": [
+              126,
+              128,
+              130,
+              135,
+              140
+            ],
+            "median": 130
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7956332781456954,
+              "ci95": [
+                0.7869341082920654,
+                0.8047660267648434
+              ],
+              "shuffled": 0.561189293598234
+            },
+            "mlp": {
+              "accuracy": 0.8083264348785872,
+              "ci95": [
+                0.7998459394254273,
+                0.8174669663211127
+              ],
+              "shuffled": 0.5123137417218543
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=112896",
+          "realized_tokens": {
+            "raw": [
+              96,
+              98,
+              99
+            ],
+            "median": 98
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7173013245033113,
+              "ci95": [
+                0.7071753293241695,
+                0.7275674412393162
+              ],
+              "shuffled": 0.5587403421633554
+            },
+            "mlp": {
+              "accuracy": 0.7253725165562914,
+              "ci95": [
+                0.7143941423885154,
+                0.7353170893940245
+              ],
+              "shuffled": 0.4775800220750552
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.0783319536423841,
+          "mlp": 0.08295391832229582
+        }
+      },
+      {
+        "rung": 196,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->10x18",
+            "adaptive_avg_pool:52x73->11x16",
+            "adaptive_avg_pool:67x53->15x12",
+            "adaptive_avg_pool:69x53->15x12",
+            "adaptive_avg_pool:73x52->16x11",
+            "adaptive_avg_pool:81x53->17x11",
+            "adaptive_avg_pool:98x53->19x10"
+          ],
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187,
+              190
+            ],
+            "median": 183.5
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8107064017660044,
+              "ci95": [
+                0.8018355953915492,
+                0.8192370472566566
+              ],
+              "shuffled": 0.5625
+            },
+            "mlp": {
+              "accuracy": 0.8147075055187638,
+              "ci95": [
+                0.8064987982460413,
+                0.8235585682777138
+              ],
+              "shuffled": 0.4867894591611479
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=153664",
+          "realized_tokens": {
+            "raw": [
+              130,
+              135,
+              140,
+              144
+            ],
+            "median": 137.5
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7226131346578366,
+              "ci95": [
+                0.7118850295608109,
+                0.7326305448532761
+              ],
+              "shuffled": 0.5589817880794702
+            },
+            "mlp": {
+              "accuracy": 0.7235099337748344,
+              "ci95": [
+                0.7139550364862106,
+                0.7330342805971203
+              ],
+              "shuffled": 0.4398799668874172
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.08809326710816778,
+          "mlp": 0.0911975717439294
+        }
+      },
+      {
+        "rung": 256,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->12x21",
+            "adaptive_avg_pool:52x73->13x18",
+            "adaptive_avg_pool:67x53->17x14",
+            "adaptive_avg_pool:69x53->18x14",
+            "adaptive_avg_pool:73x52->18x13",
+            "adaptive_avg_pool:81x53->19x12",
+            "adaptive_avg_pool:98x53->21x11"
+          ],
+          "realized_tokens": {
+            "raw": [
+              228,
+              231,
+              234,
+              238,
+              252
+            ],
+            "median": 234
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8148109823399559,
+              "ci95": [
+                0.8062004368094682,
+                0.8228813848754283
+              ],
+              "shuffled": 0.5653628587196468
+            },
+            "mlp": {
+              "accuracy": 0.8243998344370861,
+              "ci95": [
+                0.8162427552113773,
+                0.8326760749859708
+              ],
+              "shuffled": 0.4468129139072848
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=200704",
+          "realized_tokens": {
+            "raw": [
+              176,
+              180,
+              187
+            ],
+            "median": 180
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7330298013245033,
+              "ci95": [
+                0.7231925643544075,
+                0.7429043186559701
+              ],
+              "shuffled": 0.5629483995584988
+            },
+            "mlp": {
+              "accuracy": 0.7370653973509934,
+              "ci95": [
+                0.7278852385471607,
+                0.7469345897305377
+              ],
+              "shuffled": 0.4502966335540839
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.08178118101545251,
+          "mlp": 0.08733443708609268
+        }
+      },
+      {
+        "rung": 400,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->15x26",
+            "adaptive_avg_pool:52x73->16x23",
+            "adaptive_avg_pool:67x53->22x17",
+            "adaptive_avg_pool:69x53->22x17",
+            "adaptive_avg_pool:73x52->23x16",
+            "adaptive_avg_pool:81x53->24x16",
+            "adaptive_avg_pool:98x53->27x14"
+          ],
+          "realized_tokens": {
+            "raw": [
+              368,
+              374,
+              378,
+              384,
+              390
+            ],
+            "median": 378
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8277455849889624,
+              "ci95": [
+                0.8198188088949172,
+                0.8355153434684685
+              ],
+              "shuffled": 0.5618101545253863
+            },
+            "mlp": {
+              "accuracy": 0.8374034216335541,
+              "ci95": [
+                0.8293330996184711,
+                0.8454804874953858
+              ],
+              "shuffled": 0.4548496136865342
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=313600",
+          "realized_tokens": {
+            "raw": [
+              276,
+              280,
+              285,
+              294,
+              299
+            ],
+            "median": 285
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7494136313465783,
+              "ci95": [
+                0.7394272407687292,
+                0.7594820205479452
+              ],
+              "shuffled": 0.562396523178808
+            },
+            "mlp": {
+              "accuracy": 0.751207229580574,
+              "ci95": [
+                0.7414232616341991,
+                0.7605520498523216
+              ],
+              "shuffled": 0.43301600441501104
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.0783319536423841,
+          "mlp": 0.08619619205298013
+        }
+      },
+      {
+        "rung": 576,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->18x31",
+            "adaptive_avg_pool:52x73->20x28",
+            "adaptive_avg_pool:67x53->26x21",
+            "adaptive_avg_pool:69x53->27x21",
+            "adaptive_avg_pool:73x52->28x20",
+            "adaptive_avg_pool:81x53->29x19",
+            "adaptive_avg_pool:98x53->32x17"
+          ],
+          "realized_tokens": {
+            "raw": [
+              544,
+              546,
+              551,
+              558,
+              560,
+              567
+            ],
+            "median": 554.5
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8315052428256071,
+              "ci95": [
+                0.823471896701389,
+                0.8393917089047903
+              ],
+              "shuffled": 0.5625344922737306
+            },
+            "mlp": {
+              "accuracy": 0.8367135761589404,
+              "ci95": [
+                0.8281774985829244,
+                0.8450586348957756
+              ],
+              "shuffled": 0.4293253311258278
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=451584",
+          "realized_tokens": {
+            "raw": [
+              408,
+              414,
+              420,
+              425
+            ],
+            "median": 417.0
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7649696467991169,
+              "ci95": [
+                0.7546539226484453,
+                0.7746942329950143
+              ],
+              "shuffled": 0.5581539735099338
+            },
+            "mlp": {
+              "accuracy": 0.7681774282560706,
+              "ci95": [
+                0.7592343176222089,
+                0.7774113630235444
+              ],
+              "shuffled": 0.4350510485651214
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.06653559602649017,
+          "mlp": 0.06853614790286977
+        }
+      },
+      {
+        "rung": 784,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->21x37",
+            "adaptive_avg_pool:52x73->23x33",
+            "adaptive_avg_pool:67x53->31x24",
+            "adaptive_avg_pool:69x53->31x24",
+            "adaptive_avg_pool:73x52->33x23",
+            "adaptive_avg_pool:81x53->34x22",
+            "adaptive_avg_pool:98x53->38x20"
+          ],
+          "realized_tokens": {
+            "raw": [
+              744,
+              748,
+              759,
+              760,
+              777
+            ],
+            "median": 759
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8369205298013245,
+              "ci95": [
+                0.8285776380391896,
+                0.8450042414308718
+              ],
+              "shuffled": 0.5616376931567328
+            },
+            "mlp": {
+              "accuracy": 0.8379552980132451,
+              "ci95": [
+                0.8299079008368884,
+                0.8460950004465881
+              ],
+              "shuffled": 0.4559878587196468
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=614656",
+          "realized_tokens": {
+            "raw": [
+              567,
+              570,
+              576,
+              580,
+              594
+            ],
+            "median": 576
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7838369205298014,
+              "ci95": [
+                0.7739325700464136,
+                0.7931843709428757
+              ],
+              "shuffled": 0.5583609271523179
+            },
+            "mlp": {
+              "accuracy": 0.7885623620309051,
+              "ci95": [
+                0.7795770079354352,
+                0.7971020681881728
+              ],
+              "shuffled": 0.4709575055187638
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.05308360927152311,
+          "mlp": 0.04939293598233996
+        }
+      },
+      {
+        "rung": 1024,
+        "pooled_native": {
+          "mechanism": "merge",
+          "knob": [
+            "adaptive_avg_pool:47x83->24x42",
+            "adaptive_avg_pool:52x73->27x37",
+            "adaptive_avg_pool:67x53->35x28",
+            "adaptive_avg_pool:69x53->36x28",
+            "adaptive_avg_pool:73x52->37x27",
+            "adaptive_avg_pool:81x53->39x25",
+            "adaptive_avg_pool:98x53->43x23"
+          ],
+          "realized_tokens": {
+            "raw": [
+              975,
+              980,
+              989,
+              999,
+              1008
+            ],
+            "median": 989
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.8419219094922737,
+              "ci95": [
+                0.8335362257488554,
+                0.85019271944642
+              ],
+              "shuffled": 0.5608788631346578
+            },
+            "mlp": {
+              "accuracy": 0.8504415011037527,
+              "ci95": [
+                0.84246989104231,
+                0.8582288177345778
+              ],
+              "shuffled": 0.45584988962472406
+            }
+          }
+        },
+        "resolution": {
+          "mechanism": "resolution",
+          "knob": "max_pixels=802816",
+          "realized_tokens": {
+            "raw": [
+              740,
+              744,
+              748,
+              759
+            ],
+            "median": 746.0
+          },
+          "n_samples": 136320,
+          "n_test": 28992,
+          "n_missing_features": 0,
+          "primary_metric": "accuracy",
+          "heads": {
+            "linear": {
+              "accuracy": 0.7948399558498896,
+              "ci95": [
+                0.784391695213332,
+                0.8044462876225171
+              ],
+              "shuffled": 0.5588783112582781
+            },
+            "mlp": {
+              "accuracy": 0.8048082229580574,
+              "ci95": [
+                0.7957653976549196,
+                0.8137205356859363
+              ],
+              "shuffled": 0.47209575055187636
+            }
+          }
+        },
+        "delta": {
+          "linear": 0.0470819536423841,
+          "mlp": 0.04563327814569529
+        }
+      }
+    ]
+  }
+}

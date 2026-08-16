@@ -15,49 +15,75 @@ on image_id (features/<encoder>/<image_id>.safetensors from extract.py):
      "meta": {"scan_severity": 2, "difficulty": "hard"}}
 
 Conventions:
-  - point_xy is (x, y) normalized to [0, 1] over the image (sites.py convention);
-    the site feature is sites.features_at(tokens, grid, point_xy). Probes whose
-    family name starts with "pl3" (or with site == "pooled") read the pooled
-    vector instead and need no point.
-  - task_type inference: probe name starting with "pl2" -> bbox (label is
-    [x, y, w, h], IoU-scored); float labels (or float lists, e.g.
-    pl3_summary's presence+n_boxes vector) -> regression; int/str/bool labels
-    -> classification (e.g. the cell_row / cell_col sub-probes, whose int
-    labels are fitted independently and reported side by side).
-  - dict labels are NOT part of the contract and are rejected with a hard
-    error: multi-target probes must be split into one sub-probe per target
-    (cell_rc -> cell_row + cell_col) or flattened to a vector (pl3_summary)
-    at the sampler level.
-  - doc_id: the row's own doc_id wins (probe_sampler copies it from the
-    manifest). The derive fallback strips a trailing degrade suffix
-    (__sev<key>, e.g. __sev2b), a page suffix (__p<N>) and a seed suffix
-    (_s<NNN>) from image_id, so severity variants of one document never
-    straddle the train/test split; a hard assert after splitting certifies no
-    doc_id appears on both sides. Emit doc_id explicitly when ids don't
-    follow that shape.
+  - point_xy is (x, y) normalized to [0, 1] over the image (sites.py
+    convention); the site feature is sites.features_at(tokens, grid,
+    point_xy). "pl3*" families (or site == "pooled") read the pooled vector
+    instead and need no point.
+  - task_type inference: "pl2*" -> bbox (label is [x, y, w, h], IoU-scored);
+    float labels or float lists -> regression; int/str/bool labels ->
+    classification. dict labels are rejected with a hard error: split
+    multi-target probes into one sub-probe per target (cell_rc -> cell_row +
+    cell_col) or flatten to a vector (pl3_summary) at the sampler level.
+  - doc_id: the row's own doc_id wins. The derive fallback strips trailing
+    __sev<key> (e.g. __sev2b), __p<N> and _s<NNN> suffixes from image_id, so
+    severity/page variants of one document never straddle the train/test
+    split; a hard assert after splitting certifies no doc_id appears on both
+    sides. Emit doc_id explicitly when ids don't follow that shape.
   - error isolation: a (probe family x encoder) pair that raises records the
-    error in its results JSON (results/<probe>__<encoder>.json with an
-    "error" field) and the run continues; summary.md is always written with
-    the successful families plus an errors section.
+    error in its results JSON and the run continues; summary.md is always
+    written with the successful families plus an errors section.
 
-Feature layouts (read transparently, per image — downstream code paths are
-identical): full-grid <image_id>.safetensors (tokens + pooled; site vectors
-sampled here via sites.features_at) OR site-mode <image_id>.sites.safetensors
-from extract.py --sites-from (pre-sampled sites [K, D] + points [K, 2] +
-pooled; a row's point_xy is matched against `points` by EXACT 6dp equality —
+Feature layouts, read transparently per image: full-grid <id>.safetensors
+(tokens + pooled; sites sampled here via sites.features_at) OR site-mode
+<id>.sites.safetensors from extract.py --sites-from (pre-sampled sites +
+points + pooled; a row's point_xy must match a stored point EXACTLY at 6dp —
 a miss is a hard error naming the nearest stored point, because it means the
 sites cache was built from a different probes.jsonl). The budget-sweep
 metadata fields {budget_tokens, mechanism, knob} are copied from the feature
 files into every results JSON.
 
-Per (probe family x encoder) it fits linear + 2-layer-MLP heads on a fixed
-document-level train/test split (never samples of one doc on both sides), runs
-a shuffled-train-label control per head, bootstraps CIs over test documents,
-and slices test metrics by meta.scan_severity, meta.difficulty, and per-class
-for pl1. Feature files are opened lazily one image at a time via safetensors —
-only the sampled site vectors are kept, never all grids at once.
+Per (probe family x encoder): linear + 2-layer-MLP heads on a fixed
+document-level train/test split, a shuffled-train-label control per head,
+bootstrap CIs over test documents, and test metrics sliced by
+meta.scan_severity, meta.difficulty, and per-class for pl1. Feature files
+are opened lazily one image at a time — never all grids at once.
 
-Outputs: results/<probe>__<encoder>.json + consolidated results/summary.md.
+--capacity-match D: every X (train+test, every arm) passes through a seeded
+Gaussian random projection to common dim D (orthonormalized, norm-preserving;
+one matrix per (seed, raw_dim)) BEFORE standardize+heads — with MLP hidden
+fixed, total head params are equal across arms by construction. Results
+record {capacity_match: D, raw_dim}. Default off; cross-dim arm comparisons
+(e.g. concat4 vs mean4) are confounded without it.
+
+--readout {point,concat4,mean4}: site readout, part of the arm identity
+(encoder@budget#site/readout, the `arm` field). point = bilinear features_at;
+concat4/mean4 read the 4 children (raster order) of the merged cell containing
+the probe point — site=premerge features only.
+
+--append-coords / --coords-only (mutually exclusive; point probes only —
+pooled rows hard-error): append raw (x, y) to every assembled X, or replace X
+with (x, y) alone — the coordinate-shortcut baseline arm, on the same
+split/CI machinery as the feature arms. Under --capacity-match the projection
+applies to the FEATURE block only; the 2 raw coord dims are appended after it
+(results record coords_appended_after_projection: true); --coords-only skips
+the projection. The arm gains suffix +coords / coordsonly and result files
+gain __coords / __coordsonly.
+
+--meta-filter 'KEY OP VALUE' (repeatable, ANDed; OP in ==,!=,>,<,>=,<=;
+optional meta. prefix on KEY): rows whose meta fails the comparison are
+dropped before splitting; both sides compare as floats when both parse as
+float, else as strings; a missing key fails. Results record meta_filter +
+n_filter_dropped.
+
+--split-by META_KEY (optional meta. prefix): replaces the doc-hash split with
+a group split on that key — groups hash to sides exactly like documents, a
+doc whose rows straddle groups goes wholly to its majority group's side, and
+rows whose own group hashed to the other side are dropped, so group- AND
+doc-disjointness both hold and are both hard-asserted. Results record
+n_groups_train / n_groups_test / n_split_dropped.
+
+Outputs: results/<probe>__<encoder>[__<readout>][__coords|__coordsonly].json
++ consolidated results/summary.md.
 """
 
 from __future__ import annotations
@@ -65,10 +91,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import operator
 import re
 import sys
 import traceback
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -78,10 +105,10 @@ import torch
 from safetensors import safe_open
 
 from .extract import safe_image_id
-from .heads import fit_predict_linear, fit_predict_mlp
+from .heads import fit_predict_linear, fit_predict_mlp, project_features
 from .probe_metrics import PRIMARY_METRIC, bootstrap_ci, compute_metrics
 from .site_store import SITES_SUFFIX, SWEEP_META_FIELDS, round6
-from .sites import features_at
+from .sites import READOUTS, children_at, combine_children, features_at
 
 TASK_TYPES = {"classification", "regression", "bbox"}
 
@@ -105,10 +132,10 @@ class ProbeRow:
 def derive_doc_id(image_id: str) -> str:
     """Fallback when a probe row carries no doc_id (prefer the row's own).
 
-    Strips, in order: a trailing degrade suffix (__sev<key>, e.g. __sev3 /
-    __sev2b — without this, clean and degraded variants of ONE document get
-    different doc_ids and can straddle the train/test split), a page suffix
-    (__p<N>), and a generator seed suffix (_s<NNN>).
+    Strips, in order: a degrade suffix (__sev<key>, e.g. __sev2b), a page
+    suffix (__p<N>), and a generator seed suffix (_s<NNN>) — without the
+    __sev strip, clean and degraded variants of one document would get
+    different doc_ids and could straddle the train/test split.
     """
     stem = re.sub(r"__sev\d+b?$", "", image_id)
     stem = re.sub(r"__p\d+$", "", stem)
@@ -194,7 +221,7 @@ def encode_labels(task_type: str, rows: list[ProbeRow]) -> tuple[np.ndarray, lis
 # --------------------------------------------------------------------------- #
 
 def _lookup_site_vectors(
-    f, path: Path, rows: list[ProbeRow], site_idxs: list[int]
+    f, path: Path, rows: list[ProbeRow], site_idxs: list[int], readout: str = "point"
 ) -> dict[int, np.ndarray]:
     """Read pre-sampled site vectors from a .sites.safetensors file.
 
@@ -203,12 +230,25 @@ def _lookup_site_vectors(
     [0, 1] exactly). A miss means the sites cache was built from a different
     probes.jsonl: hard error listing the nearest stored point, never a silent
     nearest-neighbor substitution.
+
+    readout "point" serves the `sites` tensor; "concat4"/"mean4" combine the
+    stored `children` tensor (pre-merge caches only — absent children is a
+    hard error, never a silent fallback to the bilinear vector).
     """
     points = f.get_tensor("points")  # [K, 2] fp32, manifest order
     key_to_idx = {
         (round6(x), round6(y)): k for k, (x, y) in enumerate(points.tolist())
     }
-    sites = f.get_tensor("sites").float().numpy()  # [K, D]
+    if readout == "point":
+        sites = f.get_tensor("sites").float().numpy()  # [K, D]
+    else:
+        if "children" not in f.keys():
+            raise ValueError(
+                f"{path}: readout {readout!r} needs stored child vectors but the "
+                "file has none — re-extract this cache from a site=premerge tower"
+            )
+        children = f.get_tensor("children").float()  # [K, 4, D]
+        sites = combine_children(children, readout).numpy()
     out: dict[int, np.ndarray] = {}
     for i in site_idxs:
         x, y = rows[i].point_xy
@@ -237,31 +277,38 @@ def _lookup_site_vectors(
 
 
 def assemble_features(
-    rows: list[ProbeRow], enc_dir: Path
+    rows: list[ProbeRow], enc_dir: Path, readout: str = "point"
 ) -> tuple[np.ndarray, list[ProbeRow], int, dict]:
     """-> (X [n_kept, D] float32, kept rows in original order, n_missing,
     sweep_meta).
 
-    Opens each image's safetensors lazily (safe_open), reads only the tensor it
-    needs, samples every site of that image in one features_at call, and drops
-    the grid before moving on — full grids are never held for more than one
-    image. Reads full-grid <id>.safetensors and site-mode <id>.sites.safetensors
-    transparently (per image; full grid wins when both exist): site vectors in
-    a sites file were pre-sampled through the identical fp16 rounding path, so
-    downstream code cannot tell the layouts apart.
+    Opens each image's safetensors lazily, reads only the tensors it needs,
+    samples every site of that image in one features_at call, and drops the
+    grid before moving on — full grids are never held for more than one image.
+    Reads full-grid <id>.safetensors and site-mode <id>.sites.safetensors
+    transparently (per image; full grid wins when both exist): sites files
+    were pre-sampled through the identical fp16 rounding path (extract.
+    save_sites), so downstream code cannot tell the layouts apart.
 
-    sweep_meta collects the budget-sweep contract fields
-    {budget_tokens, mechanism, knob} from the opened files' metadata: the
-    unique value per field, a sorted list when files disagree, None when absent
-    (pre-contract caches).
+    readout: "point" (bilinear features_at / stored sites) or, on features
+    tagged site=premerge, "concat4"/"mean4" over the children of the merged
+    cell containing each point (sites.children_at; stored `children` in the
+    sites layout). A non-point readout against a file not tagged
+    site=premerge is a hard error. Pooled rows are readout-independent.
+
+    sweep_meta collects {budget_tokens, mechanism, knob, site} from the
+    opened files' metadata: the unique value per field, a sorted list when
+    files disagree, None when absent (pre-contract caches / default site).
     """
+    if readout not in READOUTS:
+        raise ValueError(f"unknown readout {readout!r}; expected one of {READOUTS}")
     by_image: dict[str, list[int]] = defaultdict(list)
     for i, r in enumerate(rows):
         by_image[r.image_id].append(i)
 
     feats: dict[int, np.ndarray] = {}
     n_missing = 0
-    sweep_vals: dict[str, set] = {k: set() for k in SWEEP_META_FIELDS}
+    sweep_vals: dict[str, set] = {k: set() for k in (*SWEEP_META_FIELDS, "site")}
     for image_id, idxs in by_image.items():
         stem = safe_image_id(image_id)
         path = enc_dir / f"{stem}.safetensors"
@@ -274,19 +321,26 @@ def assemble_features(
                 continue
         with safe_open(path, framework="pt", device="cpu") as f:
             meta = f.metadata() or {}
-            for key in SWEEP_META_FIELDS:
+            for key in (*SWEEP_META_FIELDS, "site"):
                 if key in meta:
                     val = int(meta[key]) if key == "budget_tokens" else meta[key]
                     sweep_vals[key].add(val)
             pooled_idxs = [i for i in idxs if rows[i].pooled]
             site_idxs = [i for i in idxs if not rows[i].pooled]
+            if site_idxs and readout != "point" and meta.get("site") != "premerge":
+                raise ValueError(
+                    f"{path}: readout {readout!r} needs features tagged "
+                    f"site=premerge (file has site={meta.get('site')!r})"
+                )
             if pooled_idxs:
                 vec = f.get_tensor("pooled").float().numpy()
                 for i in pooled_idxs:
                     feats[i] = vec
             if site_idxs:
                 if is_sites:
-                    feats.update(_lookup_site_vectors(f, path, rows, site_idxs))
+                    feats.update(
+                        _lookup_site_vectors(f, path, rows, site_idxs, readout)
+                    )
                 else:
                     grid_hw = (int(meta["grid_h"]), int(meta["grid_w"]))
                     if grid_hw[0] <= 0:
@@ -297,7 +351,13 @@ def assemble_features(
                     pts = torch.tensor(
                         [rows[i].point_xy for i in site_idxs], dtype=torch.float32
                     )
-                    sampled = features_at(tokens, grid_hw, pts).numpy()  # [K, D] float32
+                    if readout == "point":
+                        sampled = features_at(tokens, grid_hw, pts).numpy()
+                    else:
+                        merge = int(meta.get("child_merge", 2))
+                        sampled = combine_children(
+                            children_at(tokens, grid_hw, pts, merge=merge), readout
+                        ).numpy()
                     for k, i in enumerate(site_idxs):
                         feats[i] = sampled[k]
 
@@ -313,6 +373,42 @@ def assemble_features(
 
 
 # --------------------------------------------------------------------------- #
+# meta filters
+# --------------------------------------------------------------------------- #
+
+_FILTER_OPS = {
+    "==": operator.eq, "!=": operator.ne,
+    ">=": operator.ge, "<=": operator.le,
+    ">": operator.gt, "<": operator.lt,
+}
+_FILTER_RE = re.compile(r"^\s*(\S+?)\s*(==|!=|>=|<=|>|<)\s*(.+?)\s*$")
+
+
+def parse_meta_filter(expr: str) -> tuple[str, str, str]:
+    """'KEY OP VALUE' -> (meta key sans optional 'meta.' prefix, op, value)."""
+    m = _FILTER_RE.match(expr)
+    if not m:
+        raise ValueError(
+            f"--meta-filter {expr!r}: expected 'KEY OP VALUE' with OP in "
+            f"{sorted(_FILTER_OPS)}"
+        )
+    key, op, value = m.groups()
+    return key.removeprefix("meta."), op, value
+
+
+def meta_passes(meta: dict, key: str, op: str, value: str) -> bool:
+    """Float comparison when BOTH sides parse as float, else string; a row
+    missing the key fails the filter (no op, != included, can pass on absence)."""
+    if key not in meta:
+        return False
+    left = meta[key]
+    try:
+        return _FILTER_OPS[op](float(left), float(value))
+    except (TypeError, ValueError):
+        return _FILTER_OPS[op](str(left), value)
+
+
+# --------------------------------------------------------------------------- #
 # document-level split
 # --------------------------------------------------------------------------- #
 
@@ -320,6 +416,31 @@ def doc_is_train(doc_id: str, train_frac: float, split_seed: int) -> bool:
     """Deterministic hash split: a document lands on exactly one side, always."""
     h = hashlib.sha1(f"{split_seed}:{doc_id}".encode()).digest()
     return int.from_bytes(h[:8], "big") / 2**64 < train_frac
+
+
+def group_split(
+    docs: np.ndarray, groups: np.ndarray, train_frac: float, split_seed: int
+) -> tuple[np.ndarray, np.ndarray]:
+    """--split-by assignment -> (train mask, keep mask) over the input rows.
+
+    Groups hash to sides exactly like documents; every doc goes WHOLLY to the
+    side of its majority group (ties -> lexicographically first), and rows
+    whose own group hashed to the other side are dropped — the only assignment
+    under which group-disjointness and doc-disjointness can both hold exactly.
+    """
+    group_side = {g: doc_is_train(g, train_frac, split_seed) for g in set(groups)}
+    per_doc: dict[str, Counter] = defaultdict(Counter)
+    for d, g in zip(docs, groups):
+        per_doc[d][g] += 1
+    doc_side = {
+        d: group_side[min(cnt, key=lambda g: (-cnt[g], g))]
+        for d, cnt in per_doc.items()
+    }
+    train = np.array([doc_side[d] for d in docs], dtype=bool)
+    keep = np.array(
+        [group_side[g] == doc_side[d] for d, g in zip(docs, groups)], dtype=bool
+    )
+    return train, keep
 
 
 # --------------------------------------------------------------------------- #
@@ -384,6 +505,13 @@ class FitConfig:
     mlp_batch: int = 256
     device: str = "cpu"
     min_samples: int = 10
+    capacity_match: int | None = None  # project every X to this dim before heads
+    readout: str = "point"  # site readout: point | concat4 | mean4
+    append_coords: bool = False  # X -> [X ⊕ point_xy]
+    coords_only: bool = False  # X -> point_xy alone (shortcut baseline arm)
+    meta_filters: tuple[str, ...] = ()  # 'KEY OP VALUE' exprs, ANDed
+    split_by: str | None = None  # meta key replacing the doc-hash split
+    mlp_early_stop: bool = False
 
 
 def _fit_predict(
@@ -398,39 +526,92 @@ def _fit_predict(
     if head == "linear":
         return fit_predict_linear(task_type, X_train, y_train, X_test, seed=cfg.seed)
     if head == "mlp":
+        # early_stop is omitted entirely when off, so the call stays valid
+        # against heads builds that predate the kwarg
+        extra = {"early_stop": True} if cfg.mlp_early_stop else {}
         return fit_predict_mlp(
             task_type, X_train, y_train, X_test,
             n_classes=n_classes, hidden=cfg.mlp_hidden, epochs=cfg.mlp_epochs,
             lr=cfg.mlp_lr, batch_size=cfg.mlp_batch, seed=cfg.seed, device=cfg.device,
+            **extra,
         )
     raise ValueError(f"unknown head {head!r}")
 
 
 def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) -> dict | None:
-    X, kept, n_missing, sweep_meta = assemble_features(rows, enc_dir)
+    filters = [parse_meta_filter(f) for f in cfg.meta_filters]
+    if filters:
+        n_before = len(rows)
+        rows = [r for r in rows if all(meta_passes(r.meta, *f) for f in filters)]
+        n_filter_dropped = n_before - len(rows)
+    else:
+        n_filter_dropped = 0
+
+    X, kept, n_missing, sweep_meta = assemble_features(rows, enc_dir, readout=cfg.readout)
     if len(kept) < cfg.min_samples:
         print(
             f"[probe_fit] SKIP {probe} x {enc_dir.name}: only {len(kept)} samples "
-            f"with features ({n_missing} missing)",
+            f"with features ({n_missing} missing, {n_filter_dropped} filtered)",
             file=sys.stderr,
         )
         return None
 
+    coords = None
+    if cfg.append_coords or cfg.coords_only:
+        n_pooled = sum(r.pooled for r in kept)
+        if n_pooled:
+            flag = "--coords-only" if cfg.coords_only else "--append-coords"
+            raise ValueError(
+                f"{probe} x {enc_dir.name}: {flag} needs point_xy on every row "
+                f"but {n_pooled}/{len(kept)} rows are pooled"
+            )
+        coords = np.asarray([r.point_xy for r in kept], dtype=np.float32)
+
+    if cfg.coords_only:
+        X = coords  # the shortcut arm: capacity-match projection does not apply
+        raw_dim = 2
+    else:
+        raw_dim = int(X.shape[1])
+        if cfg.capacity_match is not None:
+            # one seeded matrix per (seed, raw_dim, D): every arm reaches the heads
+            # at the same dim, so head capacity is equal across arms by construction
+            X = project_features(X, cfg.capacity_match, cfg.seed)
+        if coords is not None:
+            # capacity-match projects the FEATURE block only; the 2 raw coord
+            # dims ride outside the projection
+            X = np.concatenate([X, coords], axis=1)
+
     task_type = infer_task_type(probe, kept)
-    y, class_names = encode_labels(task_type, kept)
     docs = np.array([r.doc_id for r in kept])
-    train_mask = np.array(
-        [doc_is_train(d, cfg.train_frac, cfg.split_seed) for d in docs], dtype=bool
-    )
+    groups = None
+    n_split_dropped = 0
+    if cfg.split_by is not None:
+        n_no_key = sum(cfg.split_by not in r.meta for r in kept)
+        if n_no_key:
+            raise ValueError(
+                f"{probe} x {enc_dir.name}: --split-by needs meta[{cfg.split_by!r}] "
+                f"on every row but {n_no_key}/{len(kept)} rows lack it"
+            )
+        groups = np.array([str(r.meta[cfg.split_by]) for r in kept])
+        train_mask, keep_mask = group_split(docs, groups, cfg.train_frac, cfg.split_seed)
+        n_split_dropped = int((~keep_mask).sum())
+        kept = [r for r, k in zip(kept, keep_mask) if k]
+        X, docs = X[keep_mask], docs[keep_mask]
+        groups, train_mask = groups[keep_mask], train_mask[keep_mask]
+    else:
+        train_mask = np.array(
+            [doc_is_train(d, cfg.train_frac, cfg.split_seed) for d in docs], dtype=bool
+        )
+    y, class_names = encode_labels(task_type, kept)
     if train_mask.all() or not train_mask.any():
         raise RuntimeError(
-            f"{probe} x {enc_dir.name}: document split left one side empty "
-            f"({len(set(docs))} docs, train_frac={cfg.train_frac}); "
+            f"{probe} x {enc_dir.name}: {cfg.split_by or 'document'} split left "
+            f"one side empty ({len(set(docs))} docs, train_frac={cfg.train_frac}); "
             "adjust --train-frac / --split-seed or add documents"
         )
     test_mask = ~train_mask
-    # doc lists derived from the actual per-sample assignment, so the output
-    # itself certifies no document straddles the split
+    # doc lists come from the per-sample assignment, so the output itself
+    # certifies no document straddles the split
     train_docs = sorted(set(docs[train_mask]))
     test_docs = sorted(set(docs[test_mask]))
     straddlers = set(train_docs) & set(test_docs)
@@ -439,6 +620,17 @@ def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) ->
             f"{probe} x {enc_dir.name}: doc_id(s) on BOTH split sides: "
             f"{sorted(straddlers)[:10]}"
         )
+    n_groups_train = n_groups_test = None
+    if groups is not None:
+        groups_train = set(groups[train_mask])
+        groups_test = set(groups[test_mask])
+        overlap = groups_train & groups_test
+        if overlap:  # second hard invariant under --split-by
+            raise AssertionError(
+                f"{probe} x {enc_dir.name}: --split-by group(s) on BOTH split "
+                f"sides: {sorted(overlap)[:10]}"
+            )
+        n_groups_train, n_groups_test = len(groups_train), len(groups_test)
 
     n_classes = len(class_names) if class_names is not None else None
     axes = _slice_axes(probe, task_type, kept, class_names)
@@ -464,14 +656,27 @@ def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) ->
             "slices": slice_metrics(task_type, y_test, pred, axes, test_mask),
         }
 
-    return {
+    site = sweep_meta.get("site") or "default"
+    budget = sweep_meta["budget_tokens"]
+    coords_suffix = "+coords" if cfg.append_coords else "coordsonly" if cfg.coords_only else ""
+    result = {
         "probe": probe,
         "encoder": enc_dir.name,
         # sweep contract, copied verbatim from the feature files' metadata
         # (None on pre-contract caches; a sorted list if files disagree)
-        "budget_tokens": sweep_meta["budget_tokens"],
+        "budget_tokens": budget,
         "mechanism": sweep_meta["mechanism"],
         "knob": sweep_meta["knob"],
+        "site": sweep_meta.get("site"),
+        "readout": cfg.readout,
+        "arm": f"{enc_dir.name}@{budget if budget is not None else 'na'}"
+               f"#{site}/{cfg.readout}{coords_suffix}",
+        "capacity_match": cfg.capacity_match,
+        "raw_dim": raw_dim,
+        "append_coords": cfg.append_coords,
+        "coords_only": cfg.coords_only,
+        "meta_filter": list(cfg.meta_filters),
+        "n_filter_dropped": n_filter_dropped,
         "task_type": task_type,
         "primary_metric": PRIMARY_METRIC[task_type],
         "n_samples": int(len(kept)),
@@ -482,10 +687,22 @@ def run_pair(probe: str, rows: list[ProbeRow], enc_dir: Path, cfg: FitConfig) ->
         "train_docs": train_docs,
         "test_docs": test_docs,
         "class_names": class_names,
-        "split": {"by": "document", "train_frac": cfg.train_frac, "seed": cfg.split_seed},
+        "split": {
+            "by": cfg.split_by or "document",
+            "train_frac": cfg.train_frac,
+            "seed": cfg.split_seed,
+        },
+        "mlp": {"epochs": cfg.mlp_epochs, "lr": cfg.mlp_lr, "early_stop": cfg.mlp_early_stop},
         "bootstrap": {"n_resamples": cfg.n_boot, "unit": "document"},
         "heads": heads_out,
     }
+    if cfg.append_coords and cfg.capacity_match is not None:
+        result["coords_appended_after_projection"] = True
+    if cfg.split_by is not None:
+        result["n_groups_train"] = n_groups_train
+        result["n_groups_test"] = n_groups_test
+        result["n_split_dropped"] = n_split_dropped
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -583,17 +800,67 @@ def main(argv: list[str] | None = None) -> int:
         "--min-samples", type=int, default=FitConfig.min_samples,
         help="skip a (probe x encoder) pair with fewer joined samples than this",
     )
+    ap.add_argument(
+        "--capacity-match", type=int, default=None, metavar="D",
+        help="project every X (train+test, every arm) through a seeded Gaussian "
+             "random projection to dim D before standardize+heads, so head "
+             "capacity is equal across arms; results record {capacity_match, raw_dim}",
+    )
+    ap.add_argument(
+        "--readout", default="point", choices=list(READOUTS),
+        help="site readout: point (bilinear) | concat4 | mean4 (children of the "
+             "containing merged cell; site=premerge features only)",
+    )
+    coords_group = ap.add_mutually_exclusive_group()
+    coords_group.add_argument(
+        "--append-coords", action="store_true",
+        help="append raw (x, y) to every assembled X; under --capacity-match "
+             "only the feature block is projected, coords are appended after it",
+    )
+    coords_group.add_argument(
+        "--coords-only", action="store_true",
+        help="fit on (x, y) alone — the coordinate-shortcut baseline arm on "
+             "the same split/CI machinery as the feature arms",
+    )
+    ap.add_argument(
+        "--meta-filter", action="append", default=[], metavar="'KEY OP VALUE'",
+        help="drop rows whose meta fails the comparison, before splitting "
+             "(repeatable, ANDed; OP in ==,!=,>,<,>=,<=; float compare when "
+             "both sides parse as float; a missing key fails)",
+    )
+    ap.add_argument(
+        "--split-by", default=None, metavar="META_KEY",
+        help="replace the doc-hash split with a group split on this meta key "
+             "(a doc straddling groups goes wholly to its majority group's "
+             "side; minority-group rows are dropped; group- and doc-"
+             "disjointness both hard-asserted)",
+    )
+    ap.add_argument(
+        "--mlp-early-stop", action="store_true",
+        help="forward early_stop=True to the MLP head (validation-split early "
+             "stopping; off = the fixed-epoch budget, bit-for-bit unchanged)",
+    )
     args = ap.parse_args(argv)
 
     heads = [h.strip() for h in args.heads.split(",") if h.strip()]
     for h in heads:
         if h not in ("linear", "mlp"):
             ap.error(f"unknown head {h!r} (choose from linear, mlp)")
+    for expr in args.meta_filter:
+        try:
+            parse_meta_filter(expr)
+        except ValueError as exc:
+            ap.error(str(exc))
     cfg = FitConfig(
         heads=heads, train_frac=args.train_frac, split_seed=args.split_seed,
         seed=args.seed, n_boot=args.bootstrap, mlp_hidden=args.mlp_hidden,
         mlp_epochs=args.mlp_epochs, mlp_lr=args.mlp_lr, mlp_batch=args.mlp_batch,
         device=args.device, min_samples=args.min_samples,
+        capacity_match=args.capacity_match, readout=args.readout,
+        append_coords=args.append_coords, coords_only=args.coords_only,
+        meta_filters=tuple(args.meta_filter),
+        split_by=args.split_by.removeprefix("meta.") if args.split_by else None,
+        mlp_early_stop=args.mlp_early_stop,
     )
 
     families = load_probes(args.probes)
@@ -613,8 +880,17 @@ def main(argv: list[str] | None = None) -> int:
         if not enc_dir.is_dir():
             print(f"[probe_fit] SKIP encoder {encoder}: {enc_dir} not found", file=sys.stderr)
             continue
+        # readout and the coords flags are part of the arm identity, so those
+        # arms get their own result files instead of clobbering the plain arm's
+        readout_tag = "" if cfg.readout == "point" else f"__{cfg.readout}"
+        coords_tag = (
+            "__coords" if cfg.append_coords
+            else "__coordsonly" if cfg.coords_only else ""
+        )
         for probe in sorted(families):
-            out_path = args.out / f"{safe_image_id(probe)}__{encoder}.json"
+            out_path = args.out / (
+                f"{safe_image_id(probe)}__{encoder}{readout_tag}{coords_tag}.json"
+            )
             try:
                 res = run_pair(probe, families[probe], enc_dir, cfg)
             except Exception as exc:  # noqa: BLE001 — per-(probe x encoder) isolation

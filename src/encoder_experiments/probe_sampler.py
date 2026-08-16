@@ -157,9 +157,7 @@ GLYPH_ALPHABET: tuple[str, ...] = tuple(
 _GLYPH_INDEX = {ch: i for i, ch in enumerate(GLYPH_ALPHABET)}
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 def _rng(image_id: str, probe: str) -> random.Random:
     """Deterministic per-(image_id, probe) RNG — no global state, no clock."""
@@ -177,8 +175,8 @@ def normalize_severity(value: Any) -> tuple[str, int]:
     book-variant string keys ('1b'/'2b'/'3b'); degrade.py manifests also carry
     a separate ``severity_key``. Accepts ints, numeric strings and '<n>b'
     keys; returns the severity KEY as a string (e.g. '2b') plus the int base
-    level (e.g. 2). Never int()-crashes on a book key; anything else raises a
-    ValueError naming the value (caught by per-image error isolation).
+    level (e.g. 2). Anything else raises ValueError (caught by per-image
+    error isolation).
     """
     if isinstance(value, bool):
         raise ValueError(f"scan_severity must be an int or severity key, got {value!r}")
@@ -243,9 +241,7 @@ def _mark_point(mark: dict) -> tuple[float, float] | None:
     return float(x) + float(w) / 2.0, float(y) + float(h) / 2.0
 
 
-# ---------------------------------------------------------------------------
 # Content probes
-# ---------------------------------------------------------------------------
 
 def _chart_series(chart: dict) -> list[str]:
     series: list[str] = []
@@ -432,9 +428,7 @@ def sample_glyph_id(
     return _cap(candidates, cap, _rng(image_id, "glyph_id"))
 
 
-# ---------------------------------------------------------------------------
 # Layout probes (P-L1 / P-L2 / P-L3)
-# ---------------------------------------------------------------------------
 
 def _class_at_point(x: float, y: float, items: list[dict]) -> str:
     """Canonical17 class of the smallest-area item containing (x, y), else
@@ -521,9 +515,7 @@ def sample_pl3_summary(image_id: str, layout: dict, severity: tuple[str, int]) -
     ]
 
 
-# ---------------------------------------------------------------------------
 # Per-image / corpus drivers
-# ---------------------------------------------------------------------------
 
 def _load_sidecar(path_str: str | None, root: Path | None) -> dict | None:
     if not path_str:
@@ -539,8 +531,7 @@ def sample_image(row: dict, *, root: Path | None = None, caps: dict | None = Non
     """All probe rows for one corpus row. Deterministic in (image_id, probe)."""
     caps = {**DEFAULT_CAPS, **(caps or {})}
     image_id = row["image_id"]
-    # scan_severity is normalized to (key, level): the corpus writes ints AND
-    # book-variant keys ('2b'/'3b'); degrade.py manifests carry severity_key.
+    # severity_key (degrade.py manifests) wins over scan_severity
     severity = normalize_severity(
         row.get("severity_key", row.get("scan_severity", 0))
     )
@@ -569,9 +560,8 @@ def sample_image(row: dict, *, root: Path | None = None, caps: dict | None = Non
     if generator is not None:
         for r in rows:
             r["meta"]["generator"] = generator
-    # doc_id from the manifest rides on EVERY probe row, so probe_fit's
-    # document-level split never has to derive it from image_id (the derive
-    # fallback cannot know every producer's id shape).
+    # manifest doc_id rides on every probe row so probe_fit's document split
+    # never has to derive it from image_id
     doc_id = row.get("doc_id")
     if doc_id is not None:
         for r in rows:

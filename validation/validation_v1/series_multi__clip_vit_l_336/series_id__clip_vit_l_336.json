@@ -1,0 +1,190 @@
+{
+  "probe": "series_id",
+  "encoder": "clip_vit_l_336",
+  "budget_tokens": null,
+  "mechanism": null,
+  "knob": null,
+  "site": null,
+  "readout": "point",
+  "arm": "clip_vit_l_336@na#default/point",
+  "capacity_match": null,
+  "raw_dim": 1024,
+  "append_coords": false,
+  "coords_only": false,
+  "meta_filter": [
+    "n_series > 1"
+  ],
+  "n_filter_dropped": 1740,
+  "task_type": "classification",
+  "primary_metric": "accuracy",
+  "n_samples": 5197,
+  "n_train": 3763,
+  "n_test": 1434,
+  "n_missing_features": 0,
+  "n_docs": 150,
+  "class_names": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6"
+  ],
+  "split": {
+    "by": "document",
+    "train_frac": 0.8,
+    "seed": 0
+  },
+  "mlp": {
+    "epochs": 30,
+    "lr": 0.001,
+    "early_stop": false
+  },
+  "bootstrap": {
+    "n_resamples": 1000,
+    "unit": "document"
+  },
+  "heads": {
+    "linear": {
+      "real": {
+        "metrics": {
+          "accuracy": 0.2900976290097629,
+          "macro_f1": 0.21917123481361486
+        },
+        "ci95": {
+          "accuracy": [
+            0.2552534823726885,
+            0.3292505466772942
+          ],
+          "macro_f1": [
+            0.19505540207665661,
+            0.24321057148852848
+          ]
+        }
+      },
+      "shuffled": {
+        "metrics": {
+          "accuracy": 0.22873082287308227,
+          "macro_f1": 0.1973501205422311
+        }
+      },
+      "slices": {
+        "scan_severity": {
+          "0": {
+            "n": 1035,
+            "accuracy": 0.2811594202898551,
+            "macro_f1": 0.21728580387914992
+          },
+          "1": {
+            "n": 106,
+            "accuracy": 0.27358490566037735,
+            "macro_f1": 0.15038961038961038
+          },
+          "2": {
+            "n": 111,
+            "accuracy": 0.2882882882882883,
+            "macro_f1": 0.2189166666666667
+          },
+          "2b": {
+            "n": 54,
+            "accuracy": 0.4444444444444444,
+            "macro_f1": 0.23847780126849893
+          },
+          "3": {
+            "n": 86,
+            "accuracy": 0.32558139534883723,
+            "macro_f1": 0.26392580287929124
+          },
+          "3b": {
+            "n": 42,
+            "accuracy": 0.2857142857142857,
+            "macro_f1": 0.1582795698924731
+          }
+        },
+        "difficulty": {
+          "hard": {
+            "n": 800,
+            "accuracy": 0.25125,
+            "macro_f1": 0.20940358332564646
+          },
+          "medium": {
+            "n": 634,
+            "accuracy": 0.3391167192429022,
+            "macro_f1": 0.20447011932248355
+          }
+        }
+      }
+    },
+    "mlp": {
+      "real": {
+        "metrics": {
+          "accuracy": 0.300557880055788,
+          "macro_f1": 0.20981141235850478
+        },
+        "ci95": {
+          "accuracy": [
+            0.2608339361995315,
+            0.34365186561604333
+          ],
+          "macro_f1": [
+            0.18004804471138725,
+            0.23459614555599273
+          ]
+        }
+      },
+      "shuffled": {
+        "metrics": {
+          "accuracy": 0.25453277545327757,
+          "macro_f1": 0.16528946857213747
+        }
+      },
+      "slices": {
+        "scan_severity": {
+          "0": {
+            "n": 1035,
+            "accuracy": 0.2946859903381642,
+            "macro_f1": 0.21346671103360526
+          },
+          "1": {
+            "n": 106,
+            "accuracy": 0.3113207547169811,
+            "macro_f1": 0.2203846153846154
+          },
+          "2": {
+            "n": 111,
+            "accuracy": 0.3063063063063063,
+            "macro_f1": 0.1809798534798535
+          },
+          "2b": {
+            "n": 54,
+            "accuracy": 0.48148148148148145,
+            "macro_f1": 0.2930928720402405
+          },
+          "3": {
+            "n": 86,
+            "accuracy": 0.27906976744186046,
+            "macro_f1": 0.1391561181434599
+          },
+          "3b": {
+            "n": 42,
+            "accuracy": 0.21428571428571427,
+            "macro_f1": 0.11217391304347826
+          }
+        },
+        "difficulty": {
+          "hard": {
+            "n": 800,
+            "accuracy": 0.23625,
+            "macro_f1": 0.17526749371797667
+          },
+          "medium": {
+            "n": 634,
+            "accuracy": 0.38170347003154576,
+            "macro_f1": 0.23035200512719198
+          }
+        }
+      }
+    }
+  }
+}

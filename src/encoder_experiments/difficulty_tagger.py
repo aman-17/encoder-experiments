@@ -42,10 +42,8 @@ MEDIUM = "medium"
 HARD = "hard"
 LEVELS = (EASY, MEDIUM, HARD)  # ordered: easy < medium < hard
 
-# ---------------------------------------------------------------------------
 # Rule constants — verbatim from Data.md (v1). Do not edit without a version
 # bump.
-# ---------------------------------------------------------------------------
 
 # Tables
 TABLE_HARD_MAX_RC = 10          # hard if max(R, C) >= 10  (easy side is <= 9)
@@ -106,15 +104,11 @@ def _is_blank(text: Any) -> bool:
     return text is None or (isinstance(text, str) and not text.strip())
 
 
-# ---------------------------------------------------------------------------
 # Tables — per table, from a `tables[i]` entry of <id>.cells.json
-# ---------------------------------------------------------------------------
 
 def normalize_table(table: dict) -> dict:
     """Adapt a `tables[i]` entry to the covariate contract. Pure schema shim —
-    no rule content lives here (Data.md names the features abstractly:
-    R = n_rows, merged = any span > 1, header rows; both producer spellings
-    carry the same features).
+    no rule content lives here.
 
     Two producers exist:
 
@@ -242,9 +236,7 @@ def tag_table(
     return EASY, cov
 
 
-# ---------------------------------------------------------------------------
 # Charts — per chart, from a `charts[i]` entry of <id>.pixels.json
-# ---------------------------------------------------------------------------
 
 def chart_covariates(chart: dict) -> dict:
     marks = chart.get("marks") or []
@@ -302,9 +294,7 @@ def tag_chart(chart: dict) -> tuple[str, dict]:
     return EASY, cov
 
 
-# ---------------------------------------------------------------------------
 # Bboxes — per page, from <id>.layout.json (Canonical17 items)
-# ---------------------------------------------------------------------------
 
 def layout_items_normalized(layout: dict) -> list[dict]:
     """Layout items with bbox=[x, y, w, h] as normalized floats.
@@ -361,9 +351,7 @@ def tag_bboxes(layout: dict) -> tuple[str, dict]:
     return EASY, cov
 
 
-# ---------------------------------------------------------------------------
 # Text & math — per page, from glyph sidecars + generator metadata covariates
-# ---------------------------------------------------------------------------
 
 TEXT_COVARIATE_KEYS = (
     "n_equations",
@@ -420,9 +408,7 @@ def tag_text(covariates: dict | None = None, glyphs: dict | None = None) -> tupl
     return EASY, cov
 
 
-# ---------------------------------------------------------------------------
 # Page-level entry point
-# ---------------------------------------------------------------------------
 
 def tag_page(
     *,

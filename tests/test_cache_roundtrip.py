@@ -55,8 +55,7 @@ def test_manifest_validation(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# finiteness guard (regression: MPS produced NaN CLIP grids while extract
-# reported done, silently caching corrupt fp16 features)
+# finiteness guard: non-finite / fp16-overflowing features must never cache
 # ---------------------------------------------------------------------------
 
 def test_nan_tokens_refuse_to_cache(tmp_path):
@@ -100,13 +99,13 @@ def test_fp16_overflow_is_caught_at_storage_cast(tmp_path):
     assert not path.exists()
 
 
-def test_saturating_cast_overflow_still_caught(tmp_path, monkeypatch):
+def test_saturating_cast_overflow_still_caught():
     """MPS saturates fp32->fp16 to +-65504 (no Inf, no NaN): a clamped cast
     with a huge source absmax must STILL refuse to cache."""
     from encoder_experiments.extract import NonFiniteFeaturesError, _check_finite
 
     tokens = torch.randn(4, 8)
-    tokens[0, 0] = 4.5e9  # what the MPS CLIP forward actually produced
+    tokens[0, 0] = 4.5e9
     feats = EncoderFeatures(tokens=tokens, grid_hw=(2, 2), pooled=torch.randn(8))
     saturated = {
         "tokens": tokens.clamp(-65504.0, 65504.0).to(torch.float16),
@@ -136,8 +135,10 @@ def test_extract_main_logs_nonfinite_to_errors_jsonl(tmp_path, monkeypatch):
 
     class NaNAdapter:
         name = "clip_vit_l_336"
+        cache_tag = "clip_vit_l_336"
         checkpoint = "fake"
         pooled_kind = "cls"
+        extra_meta: dict[str, str] = {}
 
         def load(self):
             pass

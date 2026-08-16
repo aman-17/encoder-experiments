@@ -1,9 +1,9 @@
 """Per-page probe sidecars from existing PDFs, via pymupdf.
 
 Emits pixel-space ground truth for the glyph/bbox probe families WITHOUT
-regenerating any documents: for every page of every input PDF, a NEW
-sidecar file `<stem>.p<page>.sidecar.json` is written next to nothing —
-into --out — so existing test.json / layout-rule schemas stay untouched.
+regenerating any documents: one `<stem>.p<page>.sidecar.json` per page of
+every input PDF, written into --out. Existing test.json / layout-rule
+schemas stay untouched.
 
 Sidecar schema:
   {

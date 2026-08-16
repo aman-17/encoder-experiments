@@ -127,11 +127,11 @@ def test_glyph_id_cap_alphabet_and_meta(probes):
 
 
 # ---------------------------------------------------------------------------
-# table-generator sidecar schema (regression: the real corpus shape)
+# table-generator sidecar schema
 # ---------------------------------------------------------------------------
 
 def _cells_tablegen():
-    """Exact shape of a real table-generator cells.json (synth_70t_0001):
+    """Exact shape of a real table-generator cells.json:
     grid_rows/grid_cols, cells with rowspan/colspan/tag ("th"/"td"), and
     [x, y, w, h] bboxes — NOT the replicator contract schema."""
     cells = []
@@ -168,9 +168,8 @@ def _cells_tablegen():
 
 
 def test_table_generator_schema_produces_cell_probes():
-    # regression for the E2E failure: this shape used to raise Unclassifiable
-    # ("n_rows must be a positive int, got None") and, past that, the xywh
-    # bboxes were misread as corners and every cell was silently dropped
+    # the shape must normalize (no Unclassifiable) and its xywh bboxes must
+    # not be misread as corners (which silently drops every cell)
     rows = sample_cell_row_col("tables/tg1", _cells_tablegen(), ("0", 0), DEFAULT_CAPS["cell_rc"])
     rows_r = [r for r in rows if r["probe"] == "cell_row"]
     rows_c = [r for r in rows if r["probe"] == "cell_col"]
@@ -310,8 +309,7 @@ def test_exit_nonzero_only_above_failure_threshold(corpus, tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# severity normalization + doc_id carry (regression: book-key '2b' crash and
-# manifest doc_id dropped on the floor)
+# severity normalization + doc_id carry
 # ---------------------------------------------------------------------------
 
 def test_normalize_severity_accepts_corpus_conventions():
@@ -320,7 +318,7 @@ def test_normalize_severity_accepts_corpus_conventions():
     assert normalize_severity(0) == ("0", 0)
     assert normalize_severity(3) == ("3", 3)
     assert normalize_severity("2") == ("2", 2)
-    assert normalize_severity("2b") == ("2b", 2)  # used to int()-crash
+    assert normalize_severity("2b") == ("2b", 2)
     assert normalize_severity("3b") == ("3b", 3)
     assert normalize_severity(" 1b ") == ("1b", 1)
     assert normalize_severity(None) == ("0", 0)
@@ -341,7 +339,7 @@ def test_book_severity_rows_sample_and_carry_doc_id(corpus, tmp_path):
     images.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
     out = tmp_path / "probes.jsonl"
     counts = build_probes(images, out)
-    assert counts["images_failed"] == 0  # '2b' used to fail every row
+    assert counts["images_failed"] == 0
     produced = [json.loads(line) for line in out.read_text().splitlines()]
     assert produced
     for r in produced:

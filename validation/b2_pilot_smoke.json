@@ -1,0 +1,263 @@
+{
+  "arms": {
+    "A": {
+      "summary": {
+        "families": {
+          "charts": {
+            "ci95_hi": 0.140952,
+            "ci95_lo": -0.045714,
+            "edit_sim": {
+              "ci95_hi": 0.039144,
+              "ci95_lo": 0.018453,
+              "mean": 0.028799,
+              "n": 5
+            },
+            "mean": 0.047619,
+            "n": 5
+          }
+        },
+        "n_docs": 5,
+        "n_missing_pred": 0,
+        "n_skipped_no_gold": 0,
+        "overall": {
+          "ci95_hi": 0.140952,
+          "ci95_lo": -0.045714,
+          "mean": 0.047619,
+          "n": 5
+        },
+        "pred_dir": "/Users/aman/programs/experimental/encoder-experiments/validation/phaseb_eval_smoke/A"
+      },
+      "train_stats": [
+        {
+          "arm": "A",
+          "best_val_loss": 1.332768,
+          "bridge_params": 27271680,
+          "checkpoint": "Qwen/Qwen3.5-4B",
+          "dropped_overlong": [],
+          "epochs": 2,
+          "frozen_check": "pass",
+          "grad_accum": 8,
+          "load_s": 11.1,
+          "lora_rank": null,
+          "lr": 0.0001,
+          "match_ratio": 1.0,
+          "micro_steps": 30,
+          "n_dropped_overlong": 0,
+          "n_train": 20,
+          "n_val": 5,
+          "optim_steps": 4,
+          "peak_gpu_mem_gib": 13.67,
+          "seq_cap": 12288,
+          "smoke": true,
+          "train_s": 191.8,
+          "trainable_params": 27271680,
+          "val_curve": [
+            {
+              "epoch": 1,
+              "optim_step": 2,
+              "val_loss": 1.410594
+            },
+            {
+              "epoch": 2,
+              "optim_step": 4,
+              "val_loss": 1.332768
+            }
+          ],
+          "warmup_steps": 1
+        }
+      ]
+    },
+    "B": {
+      "summary": {
+        "families": {
+          "charts": {
+            "ci95_hi": 0.144711,
+            "ci95_lo": -0.046933,
+            "edit_sim": {
+              "ci95_hi": 0.684735,
+              "ci95_lo": 0.093199,
+              "mean": 0.388967,
+              "n": 5
+            },
+            "mean": 0.048889,
+            "n": 5
+          }
+        },
+        "n_docs": 5,
+        "n_missing_pred": 0,
+        "n_skipped_no_gold": 0,
+        "overall": {
+          "ci95_hi": 0.144711,
+          "ci95_lo": -0.046933,
+          "mean": 0.048889,
+          "n": 5
+        },
+        "pred_dir": "/Users/aman/programs/experimental/encoder-experiments/validation/phaseb_eval_smoke/B"
+      },
+      "train_stats": [
+        {
+          "arm": "B",
+          "best_val_loss": 0.904883,
+          "bridge_params": 27271680,
+          "checkpoint": "Qwen/Qwen3.5-4B",
+          "dropped_overlong": [],
+          "epochs": 2,
+          "frozen_check": "pass",
+          "grad_accum": 8,
+          "load_s": 26.8,
+          "lora_rank": 16,
+          "lr": 0.0003,
+          "match_ratio": 1.2844,
+          "micro_steps": 30,
+          "n_dropped_overlong": 0,
+          "n_train": 20,
+          "n_val": 5,
+          "optim_steps": 4,
+          "peak_gpu_mem_gib": 13.72,
+          "seq_cap": 12288,
+          "smoke": true,
+          "train_s": 253.2,
+          "trainable_params": 21233664,
+          "val_curve": [
+            {
+              "epoch": 1,
+              "optim_step": 2,
+              "val_loss": 1.094273
+            },
+            {
+              "epoch": 2,
+              "optim_step": 4,
+              "val_loss": 0.904883
+            }
+          ],
+          "warmup_steps": 1
+        }
+      ]
+    },
+    "C": {
+      "summary": {
+        "families": {
+          "charts": {
+            "ci95_hi": 0.084571,
+            "ci95_lo": -0.027429,
+            "edit_sim": {
+              "ci95_hi": 0.042335,
+              "ci95_lo": 0.017422,
+              "mean": 0.029879,
+              "n": 5
+            },
+            "mean": 0.028571,
+            "n": 5
+          }
+        },
+        "n_docs": 5,
+        "n_missing_pred": 0,
+        "n_skipped_no_gold": 0,
+        "overall": {
+          "ci95_hi": 0.084571,
+          "ci95_lo": -0.027429,
+          "mean": 0.028571,
+          "n": 5
+        },
+        "pred_dir": "/Users/aman/programs/experimental/encoder-experiments/validation/phaseb_eval_smoke/C"
+      },
+      "train_stats": null
+    }
+  },
+  "bootstrap": {
+    "n_resamples": 2000,
+    "seed": 0,
+    "unit": "document"
+  },
+  "checkpoint": "Qwen/Qwen3.5-4B",
+  "contrasts": {
+    "A-B": {
+      "families": {
+        "charts": {
+          "ci95_hi": 0.142857,
+          "ci95_lo": -0.146666,
+          "mean_diff": -0.00127,
+          "n_docs": 5
+        }
+      },
+      "overall": {
+        "ci95_hi": 0.142857,
+        "ci95_lo": -0.146666,
+        "mean_diff": -0.00127,
+        "n_docs": 5
+      }
+    },
+    "A-C": {
+      "families": {
+        "charts": {
+          "ci95_hi": 0.057143,
+          "ci95_lo": 0.0,
+          "mean_diff": 0.019048,
+          "n_docs": 5
+        }
+      },
+      "overall": {
+        "ci95_hi": 0.057143,
+        "ci95_lo": 0.0,
+        "mean_diff": 0.019048,
+        "n_docs": 5
+      }
+    },
+    "B-C": {
+      "families": {
+        "charts": {
+          "ci95_hi": 0.146666,
+          "ci95_lo": -0.085714,
+          "mean_diff": 0.020317,
+          "n_docs": 5
+        }
+      },
+      "overall": {
+        "ci95_hi": 0.146666,
+        "ci95_lo": -0.085714,
+        "mean_diff": 0.020317,
+        "n_docs": 5
+      }
+    }
+  },
+  "counts": {
+    "n_clean_docs": 1000,
+    "n_eval_docs": 211,
+    "n_train_docs": 789,
+    "n_train_no_gold": 14,
+    "n_train_usable": 735,
+    "n_val": 40,
+    "split": {
+      "seed": 0,
+      "train_frac": 0.8,
+      "unit": "document"
+    },
+    "train_no_gold_docs": [
+      "synth_70u_0001",
+      "synth_70u_0002",
+      "synth_70u_0006",
+      "synth_70u_0008",
+      "synth_70u_0011",
+      "synth_70u_0015",
+      "synth_70u_0016",
+      "synth_70u_0017",
+      "synth_70u_0021",
+      "synth_70x_0001",
+      "synth_70x_0005",
+      "synth_70x_0009",
+      "synth_70x_0011",
+      "synth_70x_0013"
+    ],
+    "val": {
+      "n_docs": 40,
+      "seed": 0
+    }
+  },
+  "experiment": "B2",
+  "generated_utc": "2026-08-15 22:58:33",
+  "primary_readout": [
+    "text",
+    "math"
+  ],
+  "smoke": true
+}

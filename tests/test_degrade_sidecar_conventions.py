@@ -1,11 +1,8 @@
-"""degrade.py cells.json bbox-convention handling (regression for the
-data-corrupting bug: table-generator xywh bboxes transformed down the
-corner path became hulls of inverted rects, and the sampler then silently
-dropped 100% of cells on every degraded table-generator page).
-
-The files are self-describing — the convention is sniffed PER FILE
-(coords string, then producer schema keys, then the corner geometric
-invariant), never guessed from a generator name.
+"""degrade.py cells.json bbox-convention handling: xywh bboxes transformed
+down the corner path become hulls of inverted rects, so the convention is
+sniffed PER FILE (coords string, then producer schema keys, then the corner
+geometric invariant) and never guessed from a generator name — each file is
+transformed IN its own convention.
 """
 
 import importlib.util
@@ -147,7 +144,7 @@ def test_xywh_cells_transform_stays_xywh_and_matches_affine_oracle():
         exp = [ex0, ey0, ex1 - ex0, ey1 - ey0]
         assert got["bbox"] == pytest.approx(exp, abs=1e-6)
         gx, gy, gw, gh = got["bbox"]
-        assert gw > 0 and gh > 0  # never the inverted-rect hull of the old bug
+        assert gw > 0 and gh > 0  # never an inverted-rect hull
     # non-coordinate fields untouched
     assert table_out["grid_rows"] == 4 and table_out["cells"][0]["tag"] == "th"
 
@@ -161,9 +158,8 @@ def test_corner_cells_transform_keeps_corner_semantics():
 
 
 def test_degraded_tablegen_cells_still_feed_the_sampler():
-    """The observed corruption: 27 cell probes on the clean twin, 0 on the
-    degraded one, silently. After the fix the degraded doc emits exactly as
-    many cell_row/cell_col rows as the clean doc."""
+    """A degraded table-generator doc must emit exactly as many
+    cell_row/cell_col rows as its clean twin — never silently zero."""
     doc = _tablegen_doc()
     n_cells = len(doc["tables"][0]["cells"])
     clean_rows = sample_cell_row_col("tables/tg", doc, ("0", 0), DEFAULT_CAPS["cell_rc"])
@@ -173,7 +169,7 @@ def test_degraded_tablegen_cells_still_feed_the_sampler():
     degraded_rows = sample_cell_row_col(
         "tables/tg__sev2b", moved, ("2b", 2), DEFAULT_CAPS["cell_rc"]
     )
-    assert len(degraded_rows) == len(clean_rows)  # was 0 with the corner-path bug
+    assert len(degraded_rows) == len(clean_rows)
     labels = {(r["probe"], r["label"]) for r in degraded_rows}
     assert ("cell_row", 3) in labels and ("cell_col", 2) in labels
 

@@ -105,17 +105,15 @@ def test_qwen_pixel_budget_applier_hits_every_knob_shape():
     class NoKnobs:
         pass
 
-    # A processor with no known knobs no longer raises (that raise crashed every
-    # Modal sweep job — Qwen2VLImageProcessor there exposes no pixel attrs).
-    # Instead: attrs are force-set, per-call kwargs are returned for encode() to
-    # pass at preprocess time, and the realized-token guard in encode() is the
-    # loud-fail if none of the paths took effect.
+    # A processor exposing no known knobs must NOT raise: attrs are force-set,
+    # per-call kwargs are returned for encode(), and encode()'s realized-token
+    # guard is the loud-fail if no channel took effect.
     bare = NoKnobs()
     kwargs = Qwen35Vit._apply_pixel_budget(bare, 0, 64 * 784)
     assert kwargs == {
         "max_pixels": 64 * 784,
-        # size-dict per-call override: the only channel transformers 5.x Qwen2VL
-        # processors actually honor (areas, smart_resize semantics)
+        # per-call size override: the channel transformers 5.x Qwen2VL
+        # processors honor (pixel areas, smart_resize semantics)
         "size": {"shortest_edge": 3136, "longest_edge": 64 * 784},
     }
     assert bare.max_pixels == 64 * 784  # force-set even on unknown variants

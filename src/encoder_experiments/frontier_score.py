@@ -9,14 +9,17 @@ Per-family metrics
 - **tables / replicator** — content-TEDS on the extracted ``<table>`` HTML vs
   ``test.json``'s ``expected_markdown``, computed by the *vendored benchmark
   implementation* (``parse_rl_utils/pb_table``, imported unmodified — see
-  ``_pb_table()``). When either side has no ``<table`` tag the score falls back
-  to the normalized edit-distance similarity below (recorded as
+  ``_pb_table()``). Markdown pipe tables in the PREDICTION are first converted
+  to HTML ``<table>`` blocks (:func:`convert_pipe_tables`; gold is already
+  HTML, so conversion applies to predictions only). When either side still has
+  no ``<table`` tag the score falls back to the normalized edit-distance
+  similarity below on the UNCONVERTED prediction (recorded as
   ``metric="edit_sim_fallback"``).
 - **text / math** — normalized character edit-distance similarity
   ``1 - levenshtein / max(len)`` vs the gold markdown, after the light
   normalization documented in :func:`normalize_text`.
-- **charts** — ``chart_data_point`` rule **recall**: the fraction of the
-  ``test.json`` rules whose ``(labels..., value)`` tuple appears in the
+- **charts** — primary: ``chart_data_point`` rule **recall**: the fraction of
+  the ``test.json`` rules whose ``(labels..., value)`` tuple appears in the
   prediction. A rule passes when every label appears as a (whitespace-collapsed)
   substring of the prediction AND the rule's value matches one of the numbers
   parsed from the prediction under ``normalize_numbers`` semantics (strip
@@ -24,7 +27,10 @@ Per-family metrics
   fall back to substring containment). **This is a RECALL proxy, not the full
   benchmark chart matcher** — it does not check label/value adjacency, series
   disambiguation, or ``max_diffs`` counting, so it can over-credit predictions
-  that scatter the right numbers next to the wrong labels.
+  that scatter the right numbers next to the wrong labels. Secondary: when the
+  chart doc has a gold ``.gold.md``, ``edit_sim`` vs that markdown is emitted on
+  the same record and summarized per family, so chart pages still discriminate
+  on their prose/table content when no stack transcribes plotted values.
 
 Text normalization (:func:`normalize_text`), applied to BOTH sides of every
 edit-distance comparison:
@@ -42,10 +48,15 @@ Outputs
 rounded to 6 places):
   - ``scores.jsonl`` — one line per doc: image_id, doc_id, family/generator,
     metric name and score (+ per-family detail fields),
+  - ``skipped.jsonl`` — docs excluded upfront for unresolvable gold, one
+    ``{image_id, reason}`` line each; reason is one of ``missing_test_json``,
+    ``no_gold_markdown``, ``no_chart_rules``,
   - ``summary.json`` — per-family n / mean / 95% CI over docs (normal
-    approximation, sample std) plus the overall mean.
+    approximation, sample std; charts also carry the secondary ``edit_sim``
+    aggregate), the overall mean, and ``n_skipped_no_gold``.
 ``write_runs_table`` renders one line per (stack, budget) run — a markdown
-table of per-family means for multiple prediction dirs.
+table of per-family means for multiple prediction dirs (plus a
+``charts_edit_sim`` column when the secondary metric is present).
 
 CLI
 ---
@@ -75,10 +86,6 @@ from pathlib import Path
 
 from rapidfuzz.distance import Levenshtein
 
-# --------------------------------------------------------------------------- #
-# Vendored benchmark table metric (pb_table) — imported, never modified.      #
-# --------------------------------------------------------------------------- #
-
 _DEFAULT_PB_TABLE_PARENT = (
     Path(__file__).resolve().parents[3]
     / "ocr_postraining"
@@ -91,11 +98,9 @@ _pb_table_mod = None
 
 
 def _pb_table():
-    """Import the vendored ``pb_table`` package (GriTS/TEDS) lazily.
-
-    The package lives in the sibling ``ocr_postraining`` tree; override the
-    location with ``FRONTIER_PB_TABLE_DIR`` (path of the directory that
-    CONTAINS ``pb_table/``).
+    """Import the vendored ``pb_table`` package (GriTS/TEDS) lazily, never
+    modified. It lives in the sibling ``ocr_postraining`` tree; override with
+    ``FRONTIER_PB_TABLE_DIR`` (path of the directory CONTAINING ``pb_table/``).
     """
     global _pb_table_mod
     if _pb_table_mod is None:
@@ -115,10 +120,6 @@ def teds_content_score(pred_markdown: str, gold_markdown: str) -> float:
     with contextlib.redirect_stdout(io.StringIO()):
         return float(pb.teds_score(pred_markdown, gold_markdown))
 
-
-# --------------------------------------------------------------------------- #
-# Text normalization + edit-distance similarity                               #
-# --------------------------------------------------------------------------- #
 
 _HTML_EMPH_RE = re.compile(
     r"</?(?:b|i|u|s|em|strong|del|ins|mark|sub|sup)\s*>", re.IGNORECASE
@@ -146,9 +147,65 @@ def edit_similarity(pred: str, gold: str) -> float:
     return 1.0 - Levenshtein.distance(a, b) / denom
 
 
-# --------------------------------------------------------------------------- #
-# Charts: chart_data_point rule recall (proxy)                                #
-# --------------------------------------------------------------------------- #
+_ALIGN_CELL_RE = re.compile(r"^:?-+:?$")
+
+
+def _is_pipe_row(line: str) -> bool:
+    return line.lstrip().startswith("|")
+
+
+def _split_pipe_row(line: str) -> list[str]:
+    s = line.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|"):
+        s = s[:-1]
+    return [c.strip() for c in s.split("|")]
+
+
+def _pipe_block_to_html(lines: list[str]) -> str:
+    rows = [_split_pipe_row(ln) for ln in lines]
+    header = None
+    if len(rows) >= 2 and all(_ALIGN_CELL_RE.match(c) for c in rows[1]):
+        header, rows = rows[0], rows[2:]
+    parts = ["<table>"]
+    if header is not None:
+        parts.append("<tr>" + "".join(f"<th>{c}</th>" for c in header) + "</tr>")
+    for row in rows:
+        parts.append("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>")
+    parts.append("</table>")
+    return "".join(parts)
+
+
+def convert_pipe_tables(markdown: str) -> tuple[str, int]:
+    """Deterministically convert markdown pipe tables to HTML ``<table>`` blocks.
+
+    A block is 2+ consecutive lines whose stripped form starts with ``|``. When
+    the block's second row is an alignment row (every cell matches ``:?-+:?``),
+    the first row becomes a ``<th>`` header row and the alignment row is
+    dropped; otherwise every row becomes a ``<td>`` row. One cell per pipe
+    delimiter — ragged rows keep their own cell count, no colspan inference,
+    cell text is not HTML-escaped. Non-table lines pass through untouched.
+    Returns ``(converted_markdown, n_tables_converted)``.
+    """
+    lines = (markdown or "").split("\n")
+    out: list[str] = []
+    converted = 0
+    i = 0
+    while i < len(lines):
+        if _is_pipe_row(lines[i]):
+            j = i
+            while j < len(lines) and _is_pipe_row(lines[j]):
+                j += 1
+            if j - i >= 2:
+                out.append(_pipe_block_to_html(lines[i:j]))
+                converted += 1
+                i = j
+                continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out), converted
+
 
 _NUM_TOKEN_RE = re.compile(r"[-+]?[$]?\d[\d,]*(?:\.\d+)?(?:[eE][-+]?\d+)?%?")
 
@@ -205,10 +262,6 @@ def chart_rule_recall(pred_markdown: str, rules: list[dict]) -> tuple[float, int
     return passed / len(cdp_rules), passed, len(cdp_rules)
 
 
-# --------------------------------------------------------------------------- #
-# Gold corpus access                                                          #
-# --------------------------------------------------------------------------- #
-
 TABLE_FAMILIES = {"tables", "replicator"}
 TEXT_FAMILIES = {"text", "math"}
 CHART_FAMILIES = {"charts"}
@@ -232,7 +285,8 @@ def load_images_jsonl(path: Path) -> list[dict]:
 def load_gold(dataset_root: Path, generator: str, doc_id: str) -> GoldDoc:
     """Gold for one doc. ``expected_markdown`` from ``<id>.test.json`` when
     present; otherwise the ``<id>.gold.md`` / ``<id>.md`` sidecar (charts store
-    gold markdown only in ``.gold.md``; math duplicates it in both)."""
+    gold markdown only in ``.gold.md``; math duplicates it in both). Raises
+    FileNotFoundError when the ``.test.json`` is missing."""
     doc_dir = dataset_root / "docs" / generator
     test = json.loads((doc_dir / f"{doc_id}.test.json").read_text())
     markdown = test.get("expected_markdown")
@@ -244,9 +298,18 @@ def load_gold(dataset_root: Path, generator: str, doc_id: str) -> GoldDoc:
     return GoldDoc(generator, doc_id, markdown, test.get("test_rules") or [])
 
 
-# --------------------------------------------------------------------------- #
-# Per-doc scoring                                                             #
-# --------------------------------------------------------------------------- #
+def gold_skip_reason(gold: GoldDoc) -> str | None:
+    """Why this doc has no resolvable gold (None when it is scoreable):
+    charts need at least one ``chart_data_point`` rule, every other family
+    needs gold markdown."""
+    if gold.generator in CHART_FAMILIES:
+        if not any(r.get("type") == "chart_data_point" for r in gold.rules):
+            return "no_chart_rules"
+        return None
+    if gold.markdown is None:
+        return "no_gold_markdown"
+    return None
+
 
 def _has_table(md: str | None) -> bool:
     return "<table" in (md or "").lower()
@@ -261,21 +324,26 @@ def score_doc(pred_markdown: str | None, gold: GoldDoc) -> dict:
 
     if gen in CHART_FAMILIES:
         recall, passed, total = chart_rule_recall(pred_markdown, gold.rules)
-        return {
+        rec = {
             "family": gen,
             "metric": "chart_rule_recall",
             "score": recall,
             "rules_passed": passed,
             "rules_total": total,
         }
+        if gold.markdown is not None:
+            rec["edit_sim"] = round(edit_similarity(pred_markdown, gold.markdown), 6)
+        return rec
 
     gold_md = gold.markdown or ""
     if gen in TABLE_FAMILIES:
-        if _has_table(gold_md) and _has_table(pred_markdown):
+        conv_pred, n_converted = convert_pipe_tables(pred_markdown)
+        if _has_table(gold_md) and _has_table(conv_pred):
             return {
                 "family": gen,
                 "metric": "teds_content",
-                "score": teds_content_score(pred_markdown, gold_md),
+                "score": teds_content_score(conv_pred, gold_md),
+                "pipe_tables_converted": n_converted,
             }
         return {
             "family": gen,
@@ -290,10 +358,6 @@ def score_doc(pred_markdown: str | None, gold: GoldDoc) -> dict:
         "score": edit_similarity(pred_markdown, gold_md),
     }
 
-
-# --------------------------------------------------------------------------- #
-# Directory scoring + summaries                                               #
-# --------------------------------------------------------------------------- #
 
 def _mean_ci(values: list[float]) -> dict:
     n = len(values)
@@ -321,8 +385,11 @@ def score_pred_dir(
 ) -> dict:
     """Score every image in ``images_jsonl`` against ``pred_dir/<image_id>.md``.
 
-    Writes ``out_dir/scores.jsonl`` and ``out_dir/summary.json``; returns the
-    summary dict. Deterministic: docs sorted by image_id.
+    Docs with no resolvable gold are filtered upfront into
+    ``out_dir/skipped.jsonl`` (see :func:`gold_skip_reason`) and excluded from
+    scores and aggregates. Writes ``scores.jsonl``, ``skipped.jsonl`` and
+    ``summary.json``; returns the summary dict. Deterministic: docs sorted by
+    image_id.
     """
     dataset_root = images_jsonl.resolve().parent
     rows = load_images_jsonl(images_jsonl)
@@ -333,10 +400,19 @@ def score_pred_dir(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     records = []
+    skipped = []
     for row in rows:
+        try:
+            gold = load_gold(dataset_root, row["generator"], row["doc_id"])
+        except FileNotFoundError:
+            skipped.append({"image_id": row["image_id"], "reason": "missing_test_json"})
+            continue
+        reason = gold_skip_reason(gold)
+        if reason is not None:
+            skipped.append({"image_id": row["image_id"], "reason": reason})
+            continue
         pred_path = pred_dir / f"{row['image_id']}.md"
         pred_md = pred_path.read_text() if pred_path.exists() else None
-        gold = load_gold(dataset_root, row["generator"], row["doc_id"])
         rec = {
             "image_id": row["image_id"],
             "doc_id": row["doc_id"],
@@ -349,17 +425,30 @@ def score_pred_dir(
     with (out_dir / "scores.jsonl").open("w") as f:
         for rec in records:
             f.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
+    with (out_dir / "skipped.jsonl").open("w") as f:
+        for rec in skipped:
+            f.write(json.dumps(rec, ensure_ascii=False, sort_keys=True) + "\n")
 
     by_family: dict[str, list[float]] = {}
+    secondary: dict[str, list[float]] = {}
     for rec in records:
         by_family.setdefault(rec["family"], []).append(rec["score"])
+        if "edit_sim" in rec:
+            secondary.setdefault(rec["family"], []).append(rec["edit_sim"])
     families = sorted(by_family, key=lambda g: (FAMILY_ORDER.index(g) if g in FAMILY_ORDER else 99, g))
+    family_summaries = {}
+    for g in families:
+        fs = _mean_ci(by_family[g])
+        if g in secondary:
+            fs["edit_sim"] = _mean_ci(secondary[g])
+        family_summaries[g] = fs
     summary = {
         "pred_dir": str(pred_dir),
         "n_docs": len(records),
         "n_missing_pred": sum(1 for r in records if r["metric"] == "missing_pred"),
+        "n_skipped_no_gold": len(skipped),
         "overall": _mean_ci([r["score"] for r in records]) if records else _mean_ci([]),
-        "families": {g: _mean_ci(by_family[g]) for g in families},
+        "families": family_summaries,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
     return summary
@@ -369,29 +458,34 @@ def write_runs_table(runs: list[tuple[str, str, dict]], out_path: Path) -> str:
     """One line per (stack, budget): markdown table of per-family means.
 
     ``runs`` is ``[(stack, budget, summary_dict), ...]`` where the summary is
-    what :func:`score_pred_dir` returns. Writes ``out_path`` and returns the
-    rendered table.
+    what :func:`score_pred_dir` returns. A ``charts_edit_sim`` column is
+    appended when any run carries the charts secondary metric. Writes
+    ``out_path`` and returns the rendered table.
     """
     fams = FAMILY_ORDER + sorted(
         {f for _, _, s in runs for f in s["families"]} - set(FAMILY_ORDER)
     )
+    charts_secondary = any(
+        "edit_sim" in s["families"].get("charts", {}) for _, _, s in runs
+    )
     header = ["stack", "budget", "n", "overall"] + fams
+    if charts_secondary:
+        header.append("charts_edit_sim")
     lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
     for stack, budget, s in runs:
         cells = [stack, budget, str(s["n_docs"]), f"{s['overall']['mean']:.4f}"]
         for fam in fams:
             fs = s["families"].get(fam)
             cells.append(f"{fs['mean']:.4f}" if fs else "-")
+        if charts_secondary:
+            cs = s["families"].get("charts", {}).get("edit_sim")
+            cells.append(f"{cs['mean']:.4f}" if cs else "-")
         lines.append("| " + " | ".join(cells) + " |")
     table = "\n".join(lines) + "\n"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(table)
     return table
 
-
-# --------------------------------------------------------------------------- #
-# CLI                                                                         #
-# --------------------------------------------------------------------------- #
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])

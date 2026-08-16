@@ -1,0 +1,5 @@
+{"doc_id": "synth_691_0002", "edit_sim": 0.046465, "family": "charts", "generator": "charts", "image_id": "charts__synth_691_0002", "metric": "chart_rule_recall", "rules_passed": 0, "rules_total": 45, "score": 0.0}
+{"doc_id": "synth_691_0006", "edit_sim": 0.034273, "family": "charts", "generator": "charts", "image_id": "charts__synth_691_0006", "metric": "chart_rule_recall", "rules_passed": 0, "rules_total": 18, "score": 0.0}
+{"doc_id": "synth_691_0008", "edit_sim": 0.02438, "family": "charts", "generator": "charts", "image_id": "charts__synth_691_0008", "metric": "chart_rule_recall", "rules_passed": 5, "rules_total": 21, "score": 0.238095}
+{"doc_id": "synth_691_0022", "edit_sim": 0.022629, "family": "charts", "generator": "charts", "image_id": "charts__synth_691_0022", "metric": "chart_rule_recall", "rules_passed": 0, "rules_total": 24, "score": 0.0}
+{"doc_id": "synth_691_0024", "edit_sim": 0.016246, "family": "charts", "generator": "charts", "image_id": "charts__synth_691_0024", "metric": "chart_rule_recall", "rules_passed": 0, "rules_total": 8, "score": 0.0}

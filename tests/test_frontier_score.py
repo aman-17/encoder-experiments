@@ -16,6 +16,7 @@ import pytest
 from encoder_experiments.frontier_score import (
     _pb_table,
     chart_rule_recall,
+    convert_pipe_tables,
     edit_similarity,
     normalize_text,
     score_pred_dir,
@@ -47,6 +48,15 @@ GOLD_CHART_MD = (
     "### Regional sales (histogram)\n\n"
     "| Category | Value |\n| --- | --- |\n"
     "| North | 93 |\n| South | 1250 |\n| West | 41.5 |\n"
+)
+
+PIPE_TABLE_PRED = (
+    "Intro line.\n\n"
+    "| Metric | Q1 | Q2 |\n"
+    "| --- | --- | --- |\n"
+    "| Revenue | 450.2 | 410.5 |\n"
+    "| Costs | (45.0) | (48.0) |\n\n"
+    "Outro line."
 )
 
 GARBAGE = "zzzz qqqq 000000 nothing to see here"
@@ -192,6 +202,128 @@ def test_chart_recall_semantics():
     assert passed == 0
     # no rules -> 0.0
     assert chart_rule_recall("anything", []) == (0.0, 0, 0)
+
+
+def test_convert_pipe_tables():
+    converted, n = convert_pipe_tables(PIPE_TABLE_PRED)
+    assert n == 1
+    assert converted == (
+        "Intro line.\n\n"
+        "<table>"
+        "<tr><th>Metric</th><th>Q1</th><th>Q2</th></tr>"
+        "<tr><td>Revenue</td><td>450.2</td><td>410.5</td></tr>"
+        "<tr><td>Costs</td><td>(45.0)</td><td>(48.0)</td></tr>"
+        "</table>\n\n"
+        "Outro line."
+    )
+
+    # No alignment row -> no header inference, every row is <td>.
+    converted, n = convert_pipe_tables("| a | b |\n| c | d |")
+    assert n == 1
+    assert converted == (
+        "<table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table>"
+    )
+
+    # Ragged rows keep their own cell count (no colspan inference, no error).
+    converted, n = convert_pipe_tables("| a | b | c |\n| --- | --- | --- |\n| x |\n| y | z |")
+    assert n == 1
+    assert "<tr><td>x</td></tr>" in converted
+    assert "<tr><td>y</td><td>z</td></tr>" in converted
+
+    # A lone pipe line is not a table; pipe-free text is untouched.
+    assert convert_pipe_tables("| solitary |") == ("| solitary |", 0)
+    assert convert_pipe_tables("plain text\nno pipes") == ("plain text\nno pipes", 0)
+    assert convert_pipe_tables("") == ("", 0)
+
+
+def test_pipe_table_pred_goes_down_teds_path(corpus, tmp_path):
+    """A pipe-table prediction is TEDS-scored against the gold HTML and beats
+    the edit-sim fallback it previously fell into."""
+    preds = _write_preds(tmp_path / "preds", {
+        "tables__t0001": PIPE_TABLE_PRED,
+        "text__x0001": GOLD_TEXT,
+        "charts__c0001": GOLD_CHART_MD,
+    })
+    out = tmp_path / "out"
+    score_pred_dir(preds, corpus / "images.jsonl", out)
+    rec = _scores_by_family(out)["tables"]
+    assert rec["metric"] == "teds_content"
+    assert rec["pipe_tables_converted"] == 1
+    fallback = edit_similarity(PIPE_TABLE_PRED, GOLD_TABLE)
+    assert rec["score"] > fallback
+    assert rec["score"] > 0.9  # same cell content as gold
+
+    # Genuinely tableless output still takes the fallback.
+    preds2 = _write_preds(tmp_path / "preds2", {"tables__t0001": GARBAGE})
+    out2 = tmp_path / "out2"
+    score_pred_dir(preds2, corpus / "images.jsonl", out2, only_preds=True)
+    assert _scores_by_family(out2)["tables"]["metric"] == "edit_sim_fallback"
+
+
+def test_charts_secondary_edit_sim(corpus, tmp_path):
+    preds = _write_preds(tmp_path / "preds", {
+        "tables__t0001": GOLD_TABLE,
+        "text__x0001": GOLD_TEXT,
+        "charts__c0001": GOLD_CHART_MD,
+    })
+    out = tmp_path / "out"
+    summary = score_pred_dir(preds, corpus / "images.jsonl", out)
+    rec = _scores_by_family(out)["charts"]
+    assert rec["metric"] == "chart_rule_recall"
+    assert rec["edit_sim"] == 1.0
+    assert summary["families"]["charts"]["edit_sim"]["mean"] == 1.0
+
+    preds2 = _write_preds(tmp_path / "preds2", {"charts__c0001": GARBAGE})
+    out2 = tmp_path / "out2"
+    summary2 = score_pred_dir(preds2, corpus / "images.jsonl", out2, only_preds=True)
+    rec2 = _scores_by_family(out2)["charts"]
+    assert rec2["score"] == 0.0
+    assert 0.0 <= rec2["edit_sim"] < 0.3
+    assert summary2["families"]["charts"]["edit_sim"]["mean"] == rec2["edit_sim"]
+
+    table = write_runs_table([("s", "196", summary)], tmp_path / "t.md")
+    header, _, row = table.splitlines()[:3]
+    assert header.rstrip(" |").endswith("charts_edit_sim")
+    assert row.rstrip(" |").endswith("1.0000")
+
+
+def test_gold_filter_writes_skipped_jsonl(corpus, tmp_path):
+    docs = corpus / "docs"
+    rows = [json.loads(l) for l in (corpus / "images.jsonl").read_text().splitlines()]
+
+    (docs / "text").mkdir(exist_ok=True)
+    (docs / "text" / "x0002.test.json").write_text(json.dumps({"expected_markdown": None}))
+    rows.append({"image_id": "text__x0002", "doc_id": "x0002", "generator": "text"})
+
+    (docs / "charts" / "c0002.test.json").write_text(json.dumps({"test_rules": []}))
+    rows.append({"image_id": "charts__c0002", "doc_id": "c0002", "generator": "charts"})
+
+    rows.append({"image_id": "tables__t0002", "doc_id": "t0002", "generator": "tables"})
+
+    with (corpus / "images.jsonl").open("w") as f:
+        for r in rows:
+            f.write(json.dumps(r) + "\n")
+
+    preds = _write_preds(tmp_path / "preds", {
+        "tables__t0001": GOLD_TABLE,
+        "text__x0001": GOLD_TEXT,
+        "charts__c0001": GOLD_CHART_MD,
+    })
+    out = tmp_path / "out"
+    summary = score_pred_dir(preds, corpus / "images.jsonl", out)
+
+    skipped = {r["image_id"]: r["reason"]
+               for r in map(json.loads, (out / "skipped.jsonl").read_text().splitlines())}
+    assert skipped == {
+        "tables__t0002": "missing_test_json",
+        "text__x0002": "no_gold_markdown",
+        "charts__c0002": "no_chart_rules",
+    }
+    assert summary["n_skipped_no_gold"] == 3
+    assert summary["n_docs"] == 3  # skipped docs never reach scores.jsonl
+    scored_ids = {json.loads(l)["image_id"]
+                  for l in (out / "scores.jsonl").read_text().splitlines()}
+    assert scored_ids == {"tables__t0001", "text__x0001", "charts__c0001"}
 
 
 def test_determinism_and_table_writer(corpus, tmp_path):

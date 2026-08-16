@@ -19,6 +19,12 @@ grid a full-grid reader would load), storage fp16. A rung above the tower's
 native grid is skipped (you cannot up-budget by pooling); a rung equal to
 it is an identity pool — the native point on the curve.
 
+Variable-grid caches (qwen35_vit natives) need no special casing: grid_hw is
+read per image, so each image pools to its own aspect-preserving target and
+over-budget rungs skip per image. --out-tower renames the output dirs (e.g.
+qwen35_vit -> qwen35_vit_pooled, the B3 pixel-information control) so pooled-
+native rungs never collide with the resolution-mechanism sweep's dirs.
+
 Output files follow the site_store contract EXACTLY (this module reuses
 site_store.build_site_manifest for point identity/ordering and
 extract.save_sites for the writer — no forked layout):
@@ -118,14 +124,22 @@ def derive_for_dir(
     out: Path,
     overwrite: bool = False,
     limit: int | None = None,
+    out_tower: str | None = None,
 ) -> dict:
     """Pool every full-grid file in `features_in` down each rung, write
     <out>/<tower>@<rung>/<id>.sites.safetensors. Resume-safe; per-image
     failures go to <out>/<tower>.derive_errors.jsonl and never kill the run.
+
+    Grids are read per image (grid_hw metadata), so variable-grid caches
+    (qwen35_vit natives) work the same as fixed-resolution ones — a rung an
+    image cannot reach counts as over_budget for that image only. out_tower
+    renames the output dirs (default: the source dir name); the pixel-
+    information control needs it because qwen35_vit@<rung> is already taken
+    by the resolution-mechanism sweep.
     """
     from safetensors import safe_open
 
-    tower = features_in.name  # e.g. clip_vit_l_336 or clip_vit_l_336__rand
+    tower = out_tower or features_in.name  # e.g. clip_vit_l_336 or clip_vit_l_336__rand
     manifest = load_site_manifest(probes)["images"]
     # feature files are named by safe_image_id; key the manifest the same way
     by_sid = {safe_image_id(image_id): spec for image_id, spec in manifest.items()}
@@ -222,6 +236,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="comma-separated target token budgets")
     ap.add_argument("--out", type=Path, required=True,
                     help="sweep root; writes <out>/<tower>@<rung>/")
+    ap.add_argument("--out-tower", default=None,
+                    help="output dir name override (default: the --features-in "
+                         "dir name), e.g. qwen35_vit_pooled")
     ap.add_argument("--overwrite", action="store_true")
     ap.add_argument("--limit", type=int, default=None)
     args = ap.parse_args(argv)
@@ -229,7 +246,7 @@ def main(argv: list[str] | None = None) -> int:
     rungs = [int(r) for r in args.rungs.split(",") if r.strip()]
     stats = derive_for_dir(
         args.features_in, args.probes, rungs, args.out,
-        overwrite=args.overwrite, limit=args.limit,
+        overwrite=args.overwrite, limit=args.limit, out_tower=args.out_tower,
     )
     print(f"[derive_pooled] {json.dumps(stats)}")
     if stats["failed"]:

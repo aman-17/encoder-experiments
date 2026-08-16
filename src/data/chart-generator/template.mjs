@@ -265,10 +265,9 @@ export function varyTemplate(t, rng) {
         // extractor maps the many unmatched source-font names onto a single
         // default per class, so without this one family would dominate ~1/3 of
         // the dataset.
-        // CG_SCAN_ERA: the 25% keep-branch would leak the template's captured
-        // modern face into scan-destined docs — force the re-pick to 100%.
-        // Draw order matches the pre-flag code exactly (bool, pick?, bool, pick?)
-        // so flag-off datasets reproduce byte-identically.
+        // CG_SCAN_ERA: force the re-pick to 100% so captured modern faces never
+        // leak into scan-destined docs; draw order matches pre-flag code exactly
+        // (flag-off datasets reproduce byte-identically).
         const repickBody = rng.bool(0.75);
         const reBody = (repickBody || SCAN_ERA_ACTIVE) ? rng.pick(GFONTS[classOf(v.body.fontFamily)]) : v.body.fontFamily;
         const repickTable = rng.bool(0.75);

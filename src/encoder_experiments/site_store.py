@@ -1,10 +1,9 @@
-"""SITE-MODE feature storage: the budget sweep's answer to full-grid disk cost.
+"""SITE-MODE feature storage: pre-sampled site vectors instead of full grids.
 
-Full-grid caches run ~1.5-2 MB/image; at 15-20k pages x 7 towers x a budget
-sweep that is hundreds of GB. But every probe row's read location is known up
-front (probes.jsonl carries point_xy; pooled probes read the pooled vector),
-so extraction can pre-sample exactly the needed site vectors and store
-~50 KB/image instead.
+Every probe row's read location is known up front (probes.jsonl carries
+point_xy; pooled probes read the pooled vector), so extraction can pre-sample
+exactly the needed site vectors: ~50 KB/image instead of the ~1.5-2 MB/image
+a full grid costs — the difference that makes the budget sweep fit on disk.
 
 This module owns the manifest that says WHICH sites each image needs:
 
@@ -42,10 +41,8 @@ probe_fit.assemble_features) is <safe_image_id>.sites.safetensors with
     pooled [D]    fp16
 plus the standard extraction metadata and the sweep contract fields
 {budget_tokens (actual token count, not nominal), mechanism, knob}.
-The sites tensor goes through the SAME fp16 rounding path as a full-grid
-cache read: features_at on the fp16-stored-then-floated grid, then the fp16
-storage cast — bit-identical to what probe_fit computes from a full grid,
-modulo only that final fp16 cast (pinned by tests/test_site_store.py).
+The fp16-parity rule for the sites tensor lives in extract.save_sites
+(pinned by tests/test_site_store.py).
 """
 
 from __future__ import annotations

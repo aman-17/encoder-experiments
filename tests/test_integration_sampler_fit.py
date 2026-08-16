@@ -1,12 +1,11 @@
 """Sampler -> fitter integration: probe_sampler's own output (on the shared
 3-doc fixture corpus) must feed probe_fit end to end for EVERY probe family.
 
-This is the contract test whose absence let the cell_rc dict-label bug
-through: the sampler and fitter each passed their own unit tests while
-disagreeing on the label schema. Here the probes.jsonl written by
-build_probes is consumed by load_probes + run_pair against synthetic
-features, and every family must fit without error (no dict labels, no
-task-type inference failures, doc-level split honored).
+Guards the shared label contract — the sampler and fitter can each pass
+their own unit tests while disagreeing on the label schema. The probes.jsonl
+written by build_probes is consumed by load_probes + run_pair against
+synthetic features, and every family must fit without error (no dict labels,
+no task-type inference failures, doc-level split honored).
 
 The fixture's 3 docs are each listed twice in the corpus (distinct
 image_ids sharing one sidecar file) so every family has >= 2 documents and

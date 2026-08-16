@@ -181,6 +181,89 @@ def test_pooled_only_image_gets_zero_site_file(toy_cache):
         assert torch.allclose(f.get_tensor("pooled").float(), torch.tensor([7.5, 75.0]))
 
 
+# --------------------------------------------------------------------------- #
+# variable per-image grids (the qwen35_vit native-cache shape) + --out-tower
+# --------------------------------------------------------------------------- #
+
+@pytest.fixture()
+def variable_cache(tmp_path):
+    """Two images with DIFFERENT grids in one tower dir: 4x4 square and 2x3
+    non-square (D=1) — over-budget rungs must skip per IMAGE, not per tower."""
+    feat_dir = tmp_path / "features" / "qwen_toy"
+    feat_dir.mkdir(parents=True)
+    for stem, (h, w) in (("docA", (4, 4)), ("docB", (2, 3))):
+        tokens = torch.arange(h * w, dtype=torch.float16).unsqueeze(1)
+        save_file(
+            {"tokens": tokens, "pooled": tokens.float().mean(0).half()},
+            feat_dir / f"{stem}.safetensors",
+            metadata={
+                "encoder": "qwen_toy", "checkpoint": "toy/ckpt", "pooled_kind": "mean",
+                "random_init": "False", "compute_dtype": "torch.float32",
+                "grid_h": str(h), "grid_w": str(w),
+                "num_tokens": str(h * w), "feat_dim": "1",
+            },
+        )
+    probes = tmp_path / "probes.jsonl"
+    _write_probes(probes, [
+        {"probe": "glyph_id", "image_id": "docA", "point_xy": [0.25, 0.25], "label": "a"},
+        {"probe": "glyph_id", "image_id": "docB", "point_xy": [0.5, 0.5], "label": "b"},
+    ])
+    return feat_dir, probes, tmp_path / "sweep"
+
+
+def test_variable_grids_pool_per_image_with_out_tower(variable_cache):
+    feat_dir, probes, out = variable_cache
+    stats = derive_for_dir(
+        feat_dir, probes, [4, 6, 16], out, out_tower="qwen_toy_pooled"
+    )
+    assert stats["tower"] == "qwen_toy_pooled"
+    # rung 4: both pool DOWN — docA 4x4->2x2 (4 tokens), docB 2x3->1x2
+    # (aspect-preserving floor, 2 tokens: realized <= nominal, like the knob).
+    assert stats["rungs"]["4"] == {"written": 2, "skipped_existing": 0, "over_budget": 0}
+    # rung 6: docA 4x4->2x2, docB identity (native point).
+    assert stats["rungs"]["6"] == {"written": 2, "skipped_existing": 0, "over_budget": 0}
+    # rung 16: docA identity, docB (6 native) over budget — per image, not per dir.
+    assert stats["rungs"]["16"] == {"written": 1, "skipped_existing": 0, "over_budget": 1}
+
+    a4 = out / "qwen_toy_pooled@4" / f"docA{SITES_SUFFIX}"
+    with safe_open(a4, framework="pt") as f:
+        meta = f.metadata()
+        # (0.25, 0.25) = center of pooled cell (0,0) at 2x2 = block mean 2.5
+        assert torch.allclose(f.get_tensor("sites").float(), torch.tensor([[2.5]]))
+    assert meta["mechanism"] == "merge"
+    assert (meta["budget_tokens"], meta["budget_nominal"]) == ("4", "4")
+    assert meta["knob"] == "adaptive_avg_pool:4x4->2x2"
+    assert (meta["source_grid_h"], meta["source_grid_w"]) == ("4", "4")
+
+    b4 = out / "qwen_toy_pooled@4" / f"docB{SITES_SUFFIX}"
+    with safe_open(b4, framework="pt") as f:
+        meta_b = f.metadata()
+        # 2x3 grid [[0,1,2],[3,4,5]] -> 1x2 adaptive bins {cols 0,1} / {cols 1,2}
+        # over both rows -> [2, 3]; (0.5, 0.5) reads the midpoint = 2.5.
+        assert torch.allclose(f.get_tensor("sites").float(), torch.tensor([[2.5]]))
+    assert (meta_b["budget_tokens"], meta_b["budget_nominal"]) == ("2", "4")
+    assert meta_b["knob"] == "adaptive_avg_pool:2x3->1x2"
+    assert (meta_b["grid_h"], meta_b["grid_w"]) == ("1", "2")
+
+    with safe_open(out / "qwen_toy_pooled@6" / f"docB{SITES_SUFFIX}", framework="pt") as f:
+        assert f.metadata()["knob"] == "adaptive_avg_pool:2x3->2x3"  # identity rung
+        assert f.metadata()["budget_tokens"] == "6"
+    assert not (out / "qwen_toy_pooled@16" / f"docB{SITES_SUFFIX}").exists()
+    assert (out / "qwen_toy_pooled@16" / f"docA{SITES_SUFFIX}").exists()
+    # source dirs untouched, no default-name output dirs created
+    assert not (out / "qwen_toy@4").exists()
+
+
+def test_cli_out_tower_flag(variable_cache):
+    feat_dir, probes, out = variable_cache
+    rc = main([
+        "--features-in", str(feat_dir), "--probes", str(probes),
+        "--rungs", "4", "--out", str(out), "--out-tower", "qwen_toy_pooled",
+    ])
+    assert rc == 0
+    assert (out / "qwen_toy_pooled@4" / f"docA{SITES_SUFFIX}").exists()
+
+
 def test_image_without_probe_rows_is_skipped(toy_cache):
     # Same rule as extract --sites-from: no probe rows -> nothing to store.
     feat_dir, probes, out = toy_cache

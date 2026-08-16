@@ -10,13 +10,10 @@
 // happens only at the final emission point (intBbox below). Classes are the
 // EXACT enum strings of llamacloud-bench's CanonicalLabel (Canonical17).
 //
-// Measurement contract: measureLayoutItems() MUST be evaluated on the CORRECTED
-// print-layout DOM (the charts' pixels.json re-measure fix) — i.e. after the
-// page has been laid out at the exact geometry Chrome prints (viewport
-// printW/scale x printH/scale when pdf({scale}) is used, or the zoom-baked DOM
-// printed at scale 1). Never reuse the legacy screen-viewport measurement,
-// which drifts whenever print scale != 1. The legacy layoutTest outputs are
-// left byte-untouched; this module only ADDS the new sidecar.
+// Measurement contract: measureLayoutItems() MUST be evaluated on the DOM laid
+// out at the exact geometry Chrome prints (viewport printW/scale x printH/scale
+// when pdf({scale}) is used, or the zoom-baked DOM printed at scale 1) — a
+// screen-viewport measurement drifts whenever print scale != 1.
 //
 // This file is intentionally IDENTICAL in chart-generator/ and table-generator/
 // (the selector is the union of both generators' element classes; classes that
@@ -109,20 +106,16 @@ export function measureLayoutItems() {
             r = tightRect(el);
             if (tag === "li") {
                 // Include the bullet/number ::marker. With list-style-position:
-                // outside (the default) the marker is painted LEFT of the li
-                // content box — and when the list has little or no padding it
-                // hangs outside the ul/ol border box too, so no ancestor rect
-                // bounds it. Marker boxes are pseudo-elements a Range cannot
-                // select, so measure the marker's inline advance indirectly:
-                // toggling the SAME li to list-style-position:inside lays the
-                // identical marker box out at the start of the first line,
-                // pushing the first-line text right by exactly the advance
-                // (marker + gap) the outside marker occupies left of the text
-                // start (probe-verified against raster ink for disc/circle/
-                // square/decimal at 8-16px). Both generators run this
-                // measurement AFTER page.pdf(), so the transient relayout
-                // cannot perturb any output, and restoring the inline style
-                // restores the exact previous layout.
+                // outside (the default) the marker paints LEFT of the li
+                // content box — often outside the ul/ol border box too — and
+                // marker boxes are pseudo-elements a Range cannot select, so
+                // measure the marker's inline advance indirectly: toggling the
+                // SAME li to list-style-position:inside lays the identical
+                // marker box out at the start of the first line, pushing the
+                // first-line text right by exactly the advance (marker + gap)
+                // the outside marker occupies left of the text start. Runs
+                // AFTER page.pdf(), so the transient relayout cannot perturb
+                // any output; restoring the inline style restores the layout.
                 const firstLineX = () => {
                     const range = document.createRange();
                     range.selectNodeContents(el);

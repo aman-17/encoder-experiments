@@ -9,6 +9,13 @@ Budget knob: --adapter-arg max_pixels=N (optionally min_pixels=N) caps the
 processor's pixel area; merged vision tokens ~= pixels / 784 (14px patch,
 2x2 merge), so max_pixels = target_tokens * 784 realizes a token budget
 from above. encode() asserts the realized count never exceeds it.
+
+Site knob: --adapter-arg site=premerge captures the patch states BEFORE the
+tower's 2x2 spatial merge + projector MLP — [h*w, D_pre] on the full patch
+grid (h, w), i.e. merge^2 = 4x the merged token count — instead of the
+default site=postmerge merged tokens. The budget guard scales by merge^2
+accordingly, and cache_tag/extra_meta carry the site so feature caches never
+collide with postmerge ones.
 """
 
 from __future__ import annotations
@@ -21,6 +28,7 @@ from PIL import Image
 from .base import EncoderAdapter, EncoderFeatures
 
 _VISUAL_ATTRS = ("visual", "model.visual", "vision_tower", "model.vision_tower")
+_SITES = ("postmerge", "premerge")
 
 
 def _resolve_attr(obj, dotted: str):
@@ -37,9 +45,29 @@ class Qwen35Vit(EncoderAdapter):
     pooled_kind = "mean"
     supports_random_init = False
 
+    @property
+    def site(self) -> str:
+        site = str(self.adapter_args.get("site", "postmerge"))
+        if site not in _SITES:
+            raise ValueError(f"{self.name}: unknown site={site!r}; expected one of {_SITES}")
+        return site
+
+    @property
+    def cache_tag(self) -> str:
+        return self.name if self.site == "postmerge" else f"{self.name}__{self.site}"
+
+    @property
+    def extra_meta(self) -> dict[str, str]:
+        return {} if self.site == "postmerge" else {"site": self.site}
+
+    @property
+    def budget_multiplier(self) -> int:
+        return self.merge**2 if self.site == "premerge" else 1
+
     def load(self) -> None:
         from transformers import AutoModel, AutoProcessor
 
+        site = self.site  # validate the knob before paying for the checkpoint
         self.checkpoint = self._arg("checkpoint", self.checkpoint)
         self.max_pixels = self._arg("max_pixels", 0)  # 0 -> processor default
         self.min_pixels = self._arg("min_pixels", 0)
@@ -70,6 +98,25 @@ class Qwen35Vit(EncoderAdapter):
         gc.collect()
         if self.device.type == "cuda":
             torch.cuda.empty_cache()
+        if site == "premerge":
+            self._install_premerge_capture()
+
+    def _install_premerge_capture(self) -> None:
+        """Forward pre-hook on the merger module: captures its input — the
+        pre-merge patch states — for releases whose return carries only merged
+        tokens. Releases without a `merger` attribute still work when their
+        ModelOutput exposes pre-merger last_hidden_state; encode() picks the
+        pre-merge tensor by shape either way."""
+        self._premerge_cache: list[torch.Tensor] = []
+        merger = getattr(self.visual, "merger", None)
+        if merger is not None:
+
+            def capture(_module, args, kwargs):
+                self._premerge_cache.extend(
+                    t for t in (*args, *kwargs.values()) if isinstance(t, torch.Tensor)
+                )
+
+            merger.register_forward_pre_hook(capture, with_kwargs=True)
 
     @staticmethod
     def _apply_pixel_budget(image_processor, min_pixels: int, max_pixels: int) -> dict[str, int]:
@@ -77,15 +124,13 @@ class Qwen35Vit(EncoderAdapter):
 
         Qwen2-VL-lineage processors variously read bare `min_pixels`/`max_pixels`
         attributes, a `size={"shortest_edge", "longest_edge"}` dict (pixel AREAS
-        for smart_resize), or per-call min/max_pixels kwargs. We set ALL of them:
+        for smart_resize), or per-call min/max_pixels kwargs. Set ALL of them:
         instance attrs unconditionally (variants that don't read them ignore
-        them), the size dict when present, and return per-call kwargs for
-        encode() to pass at preprocessing time — the path every release reads.
-        Correctness is enforced downstream, not here: encode() asserts realized
-        merged tokens <= budget, so a knob that failed to take effect fails
-        loudly per image instead of silently caching over-budget features.
-        (A previous hasattr-gated version raised on Modal's Qwen2VLImageProcessor,
-        which exposes no pixel attrs — every sweep job crashed at load.)
+        them), the size dict when present, plus per-call kwargs returned for
+        encode() to pass at preprocessing time. Correctness is enforced
+        downstream, not here: encode() asserts realized merged tokens <= budget,
+        so a knob that failed to take effect fails loudly per image instead of
+        silently caching over-budget features.
         """
         size = getattr(image_processor, "size", None)
         call_kwargs: dict = {}
@@ -103,12 +148,10 @@ class Qwen35Vit(EncoderAdapter):
         if max_pixels:
             # transformers 5.x Qwen2VL processors are driven by the `size` dict
             # (shortest/longest_edge as pixel AREAS -> smart_resize min/max_pixels)
-            # and IGNORE bare attrs and bare per-call min/max kwargs — observed on
-            # Modal: full-res 3796 tokens under a 49-token budget, caught by the
-            # realized-token guard. A per-call `size` override is the channel
-            # every HF processor honors. Misinterpretation (edge-px vs area)
-            # cannot slip through: edge-px semantics would upscale and trip the
-            # guard immediately.
+            # and IGNORE bare attrs and bare per-call min/max kwargs, so pass a
+            # per-call `size` override too — the channel every HF processor
+            # honors. An edge-px (vs area) misread cannot slip through: it would
+            # upscale and trip the realized-token guard immediately.
             call_kwargs["size"] = {
                 "shortest_edge": min_pixels or min(3136, max_pixels),
                 "longest_edge": max_pixels,
@@ -135,50 +178,79 @@ class Qwen35Vit(EncoderAdapter):
                     raise
         pixel_values = inputs["pixel_values"].to(self.device, self.dtype)
         grid_thw = inputs["image_grid_thw"].to(self.device)
+        premerge = self.site == "premerge"
+        if premerge:
+            self._premerge_cache.clear()
         out = self.visual(pixel_values, grid_thw=grid_thw)
         t, h, w = (int(x) for x in grid_thw[0])
-        grid_hw = (h // self.merge, w // self.merge)
-        tokens = self._merged_tokens(out, grid_hw[0] * grid_hw[1])  # [n_merged, D]
+        if premerge:
+            tokens = self._pick_tokens(
+                [*self._premerge_cache, *self._out_tensors(out)], h * w, "pre-merge"
+            )  # [h*w, D_pre]
+            tokens = self._to_row_major(tokens, h, w, self.merge)
+            grid_hw = (h, w)
+        else:
+            grid_hw = (h // self.merge, w // self.merge)
+            tokens = self._pick_tokens(
+                self._out_tensors(out), grid_hw[0] * grid_hw[1], "merged"
+            )  # [n_merged, D]
         assert t == 1 and grid_hw[0] * grid_hw[1] == tokens.shape[0], (
             f"token/grid mismatch: thw={(t, h, w)} merge={self.merge} tokens={tokens.shape}"
         )
         if self.max_pixels:
-            # Realized-budget guard: merged tokens x (patch*merge)^2 px each.
+            # Realized-budget guard: (patch*merge)^2 px per merged token;
+            # premerge emits merge^2 tokens per merged one (budget_multiplier).
             patch = int(getattr(self.processor.image_processor, "patch_size", 14))
-            max_tokens = self.max_pixels // ((patch * self.merge) ** 2)
+            max_tokens = (self.max_pixels // ((patch * self.merge) ** 2)) * self.budget_multiplier
             assert tokens.shape[0] <= max_tokens, (
-                f"budget overrun: {tokens.shape[0]} merged tokens > "
+                f"budget overrun: {tokens.shape[0]} {self.site} tokens > "
                 f"{max_tokens} allowed by max_pixels={self.max_pixels} "
                 "(pixel-budget knob did not take)"
             )
         return EncoderFeatures(tokens=tokens, grid_hw=grid_hw, pooled=tokens.mean(dim=0))
 
     @staticmethod
-    def _merged_tokens(out, n_merged: int) -> torch.Tensor:
-        """Unwrap the vision tower's return into [n_merged, D].
+    def _out_tensors(out) -> list[torch.Tensor]:
+        """The vision tower's return, flattened to candidate tensors.
 
         Transformers <5 returned the merged tokens as a bare tensor; 5.x wraps
         them in a ModelOutput (pooler_output = post-merger embeds, and
-        last_hidden_state = pre-merger patch states on some releases). Pick the
-        tensor whose leading dim matches the merged grid — self-checking, so a
-        layout change fails loudly instead of caching wrong features.
+        last_hidden_state = pre-merger patch states on some releases).
         """
         if isinstance(out, torch.Tensor):
-            candidates = [out]
-        elif isinstance(out, (tuple, list)):
-            candidates = [t for t in out if isinstance(t, torch.Tensor)]
-        else:  # ModelOutput
-            candidates = [
-                t for t in (getattr(out, "pooler_output", None), getattr(out, "last_hidden_state", None))
-                if isinstance(t, torch.Tensor)
-            ]
+            return [out]
+        if isinstance(out, (tuple, list)):
+            return [t for t in out if isinstance(t, torch.Tensor)]
+        return [  # ModelOutput
+            t
+            for t in (getattr(out, "pooler_output", None), getattr(out, "last_hidden_state", None))
+            if isinstance(t, torch.Tensor)
+        ]
+
+    @staticmethod
+    def _pick_tokens(candidates: list[torch.Tensor], n: int, what: str) -> torch.Tensor:
+        """Pick the candidate whose leading dim matches the expected grid —
+        self-checking, so a layout change fails loudly instead of caching
+        wrong features."""
         for cand in candidates:
             t = cand[0] if cand.dim() == 3 else cand
-            if t.dim() == 2 and t.shape[0] == n_merged:
+            if t.dim() == 2 and t.shape[0] == n:
                 return t
         raise RuntimeError(
-            f"qwen35_vit: no candidate tensor with {n_merged} merged tokens; "
+            f"qwen35_vit: no candidate tensor with {n} {what} tokens; "
             f"got shapes {[tuple(c.shape) for c in candidates]}"
+        )
+
+    @staticmethod
+    def _to_row_major(tokens: torch.Tensor, h: int, w: int, merge: int) -> torch.Tensor:
+        """Pre-merge sequence order is block-major over merge x merge windows
+        (the lineage's get_vision_position_ids layout: (h/m, w/m, m, m));
+        EncoderFeatures requires row-major over (h, w)."""
+        d = tokens.shape[1]
+        return (
+            tokens.reshape(h // merge, w // merge, merge, merge, d)
+            .permute(0, 2, 1, 3, 4)
+            .reshape(h * w, d)
         )
 
 
@@ -188,7 +260,7 @@ class Qwen3VlVit(Qwen35Vit):
     Qwen3.5 is natively multimodal (no separate -VL release), so qwen35_vit
     already carries that generation. This arm loads the PREVIOUS generation's
     dedicated VL checkpoint — the pair isolates generation + VL-specific
-    encoder training (and Qwen3-VL-8B is the Goodfire/Silico reference stack).
+    encoder training.
     """
 
     name = "qwen3_vl_vit"

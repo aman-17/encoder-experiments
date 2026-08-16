@@ -1,0 +1,39 @@
+{
+  "glyph_id": {
+    "coord_acc": 0.09095593919093017,
+    "coord_acc_shuffled": 0.0908271064158722,
+    "majority": 0.0908271064158722,
+    "n_test": 7762
+  },
+  "cell_row": {
+    "coord_acc": 0.09623287671232876,
+    "coord_acc_shuffled": 0.10445205479452055,
+    "majority": 0.10719178082191781,
+    "n_test": 2920
+  },
+  "cell_col": {
+    "coord_acc": 0.3763698630136986,
+    "coord_acc_shuffled": 0.1952054794520548,
+    "majority": 0.20205479452054795,
+    "n_test": 2920
+  },
+  "series_id": {
+    "coord_acc": 0.49651100375738055,
+    "coord_acc_shuffled": 0.49651100375738055,
+    "majority": 0.49651100375738055,
+    "n_test": 1863,
+    "color_acc": 0.49651100375738055,
+    "color_acc_shuffled": 0.49651100375738055,
+    "color_plus_coord_acc": 0.49651100375738055
+  },
+  "pl1_class": {
+    "coord_acc": 0.5776853354978355,
+    "coord_acc_shuffled": 0.5776853354978355,
+    "majority": 0.5776853354978355,
+    "n_test": 29568
+  },
+  "pl2_extent": {
+    "coord_mIoU": 0.23507095054760668,
+    "n_test": 12638
+  }
+}

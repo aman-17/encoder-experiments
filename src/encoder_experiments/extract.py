@@ -9,15 +9,16 @@ Manifest contract (the only thing the data side owes us): JSONL, one image per
 line, with at least {"image_id": str, "image_path": str}. Extra fields (labels,
 difficulty bins, marked points) ride along untouched — probes join on image_id.
 
-Output: features/<encoder>[__rand]/<image_id>.safetensors holding
+Output: features/<cache_tag>[__rand]/<image_id>.safetensors (cache_tag =
+encoder name, extended by adapter args that change the feature space, e.g.
+qwen35_vit__premerge) holding
     tokens [N, D] fp16, pooled [D] fp16
 with metadata {grid_h, grid_w, num_tokens, checkpoint, pooled_kind, ...}.
 Re-running skips existing files (resume-safe); per-image failures append to
 errors.jsonl and never kill the run. A finiteness guard runs before the fp16
 storage cast is written: NaN/Inf tokens or pooled vectors (including fp16
 overflow) raise NonFiniteFeaturesError — the image lands in errors.jsonl with
-per-tensor nan/inf/absmax counts and NO feature file is cached (MPS has
-produced NaN CLIP grids while reporting success; this makes that loud).
+per-tensor nan/inf/absmax counts and NO feature file is cached.
 
 SITE MODE (--sites-from <probes.jsonl | sites manifest>): for the budget
 sweep, where full grids cost ~1.5-2 MB/image. Since every probe row's read
@@ -55,7 +56,7 @@ from tqdm import tqdm
 from .adapters.base import EncoderFeatures
 from .registry import ADAPTERS, build, resolve_device, resolve_dtype
 from .site_store import MECHANISMS, SITES_SUFFIX, load_site_manifest
-from .sites import features_at
+from .sites import children_at, features_at
 
 
 def safe_image_id(image_id: str) -> str:
@@ -79,11 +80,9 @@ FP16_MAX = 65504.0
 def _check_finite(tensors: dict[str, torch.Tensor], source: EncoderFeatures) -> None:
     """Guard the fp16 storage cast: NaN/Inf in the cast tensors, or source
     values past fp16's 65504 ceiling, fail the image loudly. The overflow
-    check is explicit against the SOURCE because some backends (MPS) saturate
-    the fp16 cast to +-65504 instead of producing Inf — the absmax-pinned-at-
-    the-fp16-ceiling signature. MPS has produced NaN/1e9-magnitude CLIP grids
-    while reporting success; this makes that loud instead of silently caching
-    corrupt features."""
+    check runs against the SOURCE because some backends (MPS) saturate the
+    fp16 cast to +-65504 instead of producing Inf, which a cast-side check
+    would miss."""
     details: dict[str, dict] = {}
     bad = False
     for name, t in tensors.items():
@@ -132,6 +131,7 @@ def save_sites(
     feats: EncoderFeatures,
     points: list[list[float]],
     meta: dict[str, str],
+    child_merge: int | None = None,
 ) -> None:
     """Site-mode storage: pre-sampled site vectors instead of the full grid.
 
@@ -141,6 +141,12 @@ def save_sites(
     floated grid — followed by the same fp16 storage cast. So the grid is
     roundtripped through fp16 BEFORE sampling; sampling the raw fp32 grid
     would produce vectors that differ in the last bits from a full-grid read.
+
+    child_merge (pre-merge captures, meta site=premerge): additionally store
+    `children` [K, merge**2, D] fp16 — the raster-order children of each
+    point's containing merged cell — so probe_fit can serve the concat4/mean4
+    readouts from the sites layout. Children are exact fp16 token copies, so
+    the same parity holds bit-for-bit.
     """
     grid_h, grid_w = feats.grid_hw if feats.grid_hw is not None else (-1, -1)
     tokens16 = feats.tokens.detach().to("cpu", torch.float16).contiguous()
@@ -149,18 +155,29 @@ def save_sites(
     # combinations of tokens, so finite tokens => finite sites)
     _check_finite({"tokens": tokens16, "pooled": pooled16}, feats)
     pts = torch.tensor(points, dtype=torch.float32).reshape(-1, 2).contiguous()
+    children16: torch.Tensor | None = None
     if len(points) == 0:
         sites16 = torch.zeros((0, tokens16.shape[1]), dtype=torch.float16)
+        if child_merge is not None:
+            children16 = torch.zeros(
+                (0, child_merge**2, tokens16.shape[1]), dtype=torch.float16
+            )
     else:
         if feats.grid_hw is None:
             raise ValueError("encoder produced no spatial grid; site mode needs grid_hw")
         # fp16 roundtrip first = the exact tensor a full-grid reader would load
         sites16 = features_at(tokens16.float(), feats.grid_hw, pts).to(torch.float16)
+        if child_merge is not None:
+            children16 = children_at(
+                tokens16.float(), feats.grid_hw, pts, merge=child_merge
+            ).to(torch.float16)
     tensors = {
         "sites": sites16.contiguous(),
         "points": pts,
         "pooled": pooled16,
     }
+    if children16 is not None:
+        tensors["children"] = children16.contiguous()
     metadata = {
         **meta,
         "grid_h": str(grid_h),
@@ -170,6 +187,8 @@ def save_sites(
         "num_sites": str(pts.shape[0]),
         "budget_tokens": str(feats.tokens.shape[0]),
     }
+    if child_merge is not None:
+        metadata["child_merge"] = str(child_merge)
     tmp = path.with_suffix(".tmp")
     save_file(tensors, tmp, metadata=metadata)
     tmp.rename(path)
@@ -240,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
         adapter_args=parse_adapter_args(args.adapter_arg),
     )
 
-    tag = adapter.name + ("__rand" if args.random_init else "")
+    tag = adapter.cache_tag + ("__rand" if args.random_init else "")
     out_dir = args.out / tag
     out_dir.mkdir(parents=True, exist_ok=True)
     errors_path = out_dir / "errors.jsonl"
@@ -261,7 +280,13 @@ def main(argv: list[str] | None = None) -> int:
         "compute_dtype": str(dtype),
         "mechanism": args.mechanism,
         "knob": args.knob,
+        **adapter.extra_meta,
     }
+    # pre-merge captures store per-point child vectors so the concat4/mean4
+    # readouts are servable from the sites layout
+    child_merge = (
+        int(getattr(adapter, "merge", 2)) if meta.get("site") == "premerge" else None
+    )
 
     done = skipped = failed = no_sites = 0
     with torch.inference_mode():
@@ -282,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
                 image = Image.open(row["image_path"]).convert("RGB")
                 feats = adapter.encode(image)
                 if site_manifest is not None:
-                    save_sites(path, feats, spec["points"], meta)
+                    save_sites(path, feats, spec["points"], meta, child_merge=child_merge)
                 else:
                     save_features(path, feats, meta)
                 done += 1

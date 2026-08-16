@@ -27,28 +27,38 @@ but stored *nonlinearly* in most towers.
 
 ## Findings
 
-1. **Qwen3.5's tower (production, A3) wins everything symbolic** — glyphs
-   (.466, 2.5× the best public tower), cell indexing, chart series binding
-   (.533 vs .41 next), layout class (.831). Native resolution + OCR-adjacent
-   pretraining compound.
-2. **…but NOT extent.** SAM leads element-extent IoU at .165 — 3× Qwen (.055);
-   even DeepSeek (.096) beats Qwen there. The **double dissociation** is the
-   paper thesis in one table: symbol identity and spatial extent are stored by
-   *different* pretraining objectives; no tower wins both. Encoder choice is a
-   capability trade, not a ranking.
+1. **Qwen3.5's tower (production, A3) has the strongest probe-recoverable
+   fine-grained symbolic content among the evaluated towers** — glyphs (.466,
+   2.5× the best public tower), cell indexing, chart series binding, layout
+   class (.831). Native resolution + OCR-adjacent pretraining compound.
+   *(Validity addendum below: cell_col and series margins shrink
+   substantially against the measured shortcut floors; glyph and pl1
+   survive.)*
+2. **…while SAM retains substantially better spatial-extent readout** (.165
+   vs Qwen .055; DeepSeek .096). *(REFUTED by the [features ⊕ coords] refit,
+   2026-08-15: no tower's features add anything over the coordinate prior —
+   SAM Δ −.001, best Δ +.004, prior alone .235 mIoU. The pl2 column measured
+   how linearly each tower encodes position, not extent retention; the
+   SAM-vs-Qwen "double dissociation" does not survive. Extent claims await a
+   redesigned probe — see measurement-validation.md.)*
 3. **CLIP ≈ random-init CLIP on two families** — glyphs (.062 vs .061) and
-   series-ID (.384 vs .397). At 336px, CLIP's 400M-pair pretraining adds
-   ~nothing beyond a random projection for fine document content (its only
-   clear learned signal is layout class, .683 vs .577). Series-ID ≈ color
-   readout: random projections preserve color, so most towers cluster at
-   .34–.41; Qwen's .533 means it binds series beyond color (markers/dash
-   patterns).
+   series-ID (.384 vs .397): under these probes, at 336px, on this corpus,
+   learned CLIP features do not outperform the random-init control for fine
+   document content (its only clear learned margin is layout class, .683 vs
+   .577). Series-ID numbers must be read against the corrected floor
+   (addendum): most towers sit at or below bias-only accuracy; palette
+   randomization in the generators means a global color→series shortcut
+   does not exist in this corpus, so what remains after the multi-series
+   refit is candidate binding signal — counterfactual (color-permutation)
+   evidence is still required before any binding claim.
 4. **Resolution handling is the cleanest causal contrast**: same-lineage A1→A2
    (SigLIP2 fixed → NaFlex) lifts glyphs .122→.185 and cell_col .359→.387.
-5. **DeepSeek's 256-token global view: gist survives, detail doesn't.** Near-
-   floor on glyphs (.065) but **best-in-table pl3 layout summary** (R² .43) —
-   its 16× compression is tuned to keep page-level structure while character
-   identity rides on its (unprobed) crop path.
+5. **DeepSeek's 256-token global view: gist survives, detail doesn't.** At
+   the majority floor on glyphs (.065 vs .091 floor) but **best-in-table pl3
+   layout-category-presence summary** (R² .43; "pl3 layout summary" is
+   renamed — it measures page gist, per-class presence + counts, not layout
+   topology) — its 16× compression keeps page-level structure while
+   character identity rides on its (unprobed) crop path.
 6. **Layout localization is robust to scan degradation**: pl1 accuracy is FLAT
    across severities for every tower (Qwen .819–.874 over sev 0→3b). Noise
    destroys high-frequency content (glyphs) long before low-frequency layout —
@@ -95,19 +105,24 @@ doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
    super-linearly with tokens for every resolution-mechanism tower (Qwen3-VL
    .05→.20, Qwen3.5 .05→.18, NaFlex .05→.185 across 64→1024) while every
    merge-mechanism tower stays flat at ~.06–.08 — pooling cannot recover
-   glyphs that the native grid barely holds, and below ~200 tokens ALL towers
-   converge to near-floor: **nobody reads a full page under ~200 tokens.**
-   (Native-resolution Qwen at 3796 tokens reaches .466/.515 — the curve keeps
-   climbing well past our ladder.)
+   glyphs that the native grid barely holds, and below ~200 tokens all towers
+   converge to the majority floor. Pilot-scoped slogan (this corpus, these
+   towers, linear probes — not paper wording): "nobody reads a full page
+   under ~200 tokens." (Native-resolution Qwen at 3796 tokens reaches
+   .466/.515 — the curve keeps climbing well past our ladder.)
 2. **Structure barely notices the budget.** pl1 layout-class drifts only
    ~.70→.79 over a 16× token range; series binding and cell indices move
    gently; **pl2 extent is flat for every tower at every budget** — and SAM
    leads it at every single rung (~.18 IoU, 2× everyone). Localization is an
    encoder-identity property, not a budget property.
-3. **Generalization of Goodfire's "text dies first": text is effectively the
-   only thing that dies.** Everything else survives 64-token compression to
-   first order. The practical corollary for serving: token budgets are an
-   OCR-quality dial, nearly free for layout/structure tasks.
+3. **Among the signals tested, glyph identity exhibits the strongest budget
+   sensitivity; the tested structural probes remain comparatively stable**
+   down to 64 tokens (the per-signal twin of Goodfire's benchmark-level
+   "text dies first"). The practical corollary for serving: token budgets
+   are primarily an OCR-quality dial, comparatively cheap for the
+   layout/structure signals probed here. Note pl2's flatness is now partly
+   explained by the coordinate prior (validity addendum) — "structure
+   survives" claims rest on pl1/cell probes pending the pl2 refit.
 4. **Mechanism matters as much as budget** (H3 evidence): at equal token
    counts, resolution-scaled towers hold glyphs better than merge-pooled ones;
    SAM's pooled features nevertheless keep their structure lead (cell_col ~.42
@@ -126,3 +141,183 @@ doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
   visual knees (glyph super-linearity onset ~200–250 tokens) are the robust
   reading.
 - Merge rungs for CLIP/SigLIP2 cap at 576 (can't pool above native).
+
+---
+
+# Task frontier — full corpus (7 configs × 1,420 pages, 2026-08-15)
+
+Full stacks generating markdown, scored against gold (TEDS via pipe→HTML /
+edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](figures/frontier_pilot1k.png).
+
+| config | overall | tables | replicator | text | math |
+|---|---|---|---|---|---|
+| qwen3_vl@144 | .122 | .138 | .109 | .144 | .222 |
+| qwen3_vl@256 | .285 | .310 | .189 | .201 | .574 |
+| qwen3_vl@400 | .416 | .498 | .226 | .357 | .798 |
+| qwen3_vl@784 | .523 | .698 | .306 | .608 | .914 |
+| deepseek@100 | .464 | .526 | .241 | .627 | .863 |
+| deepseek@256 | .520 | .671 | .340 | .784 | .875 |
+| deepseek@400 | .538 | .711 | .359 | .802 | .888 |
+
+## Findings
+
+1. **Pareto crossover, measured — global-view frontier**: DeepSeek leads
+   every matched budget below 784 tokens (at 100 tokens it doubles qwen@256
+   overall); Qwen draws level at 784 (.523 vs .520) and, per its slope,
+   passes above it. Scope: DeepSeek ran its GLOBAL 1024px view only —
+   production serving adds tiled crops, so this is a global-view budget
+   frontier, not a production-efficiency comparison, until the crop-mode run
+   lands (measurement-validation.md item 7).
+2. **The eyes-vs-brain inversion** (the headline panel pair): Qwen's
+   *encoder* shows far higher probe-accessible glyph signal than DeepSeek's
+   at every budget, yet DeepSeek's *stack* wins end-to-end at low budgets —
+   a representation with lower probe-accessible glyph information yields
+   better end-task performance after decoder co-training. Why (better
+   decoder alignment, language priors, redundancy exploitation, recovery
+   from partial evidence) is NOT established here; localizing it is exp2a's
+   job. Probe results measure representation retention; end-task adds
+   decoder adaptation; the divergence itself is the finding.
+3. **Qwen's end-task curve is the task-level shadow of its glyph survival
+   curve** — steep, near-collapse at 144 tokens (.122), consistent with the
+   probe-level "nobody reads under ~200 tokens".
+4. **Low budgets are not cheap to serve for Qwen**: starved vision input made
+   the decoder ramble to the 4096-token cap (~80s/page at 144 vs ~30 at 784)
+   — cutting vision tokens raised decode cost. Budget dials must be priced
+   end-to-end, not by vision-token count alone.
+
+## Ops addenda
+
+- Function timeout must exceed shard_pages × worst s/page: the 4h ceiling
+  killed 355-page shards at ~80s/page; 16-way sharding + resume recovered.
+- Volume dirs under concurrent writers show commit-lineage read bounce; treat
+  per-file presence, not dir listings, as truth during active runs.
+
+---
+
+## Retroactive caveat (2026-08-15): qwen3_vl_vit numbers describe ONE of four bridges
+
+Qwen3-VL-4B-Instruct uses DeepStack (`deepstack_visual_indexes: [5, 11, 17]`):
+ViT features from three intermediate layers are injected at multiple decoder
+depths in addition to the top-level merger path. All qwen3_vl_vit probe numbers
+in this file measured the top path only; the VL decoder receives feature paths
+our probes never touched. Cross-generation comparisons (3.5 vs 3-VL towers)
+under-describe the VL side accordingly. Qwen3.5-4B (production) has
+`deepstack_visual_indexes: []` — a single bridge — so its numbers, and the
+bridge-localization experiment, are architecturally complete for that model.
+
+---
+
+# Measurement-validity addendum (2026-08-15) — shortcut baselines, measured
+
+External review (accepted) demanded shortcut baselines before trusting any
+probe number. Coordinate-only (linear + kNN-50) and color-only baselines,
+doc-level split, plain accuracy — same metric as the pilot table. Full table,
+verdicts, and the remaining battery: [measurement-validation.md](measurement-validation.md).
+
+**Corrections to the pilot table:**
+
+- **The "(chance)" column is superseded.** Measured test-majority floors:
+  glyph_id **.091** (not .04), cell_row **.107** (not .05), cell_col **.202**
+  (not .14), series_id **.497** (not .28), pl1 .578 (as stated).
+- **cell_col is largely a coordinate readout**: (x, y) alone scores **.376**.
+  Only Qwen (.493, +.117) clears the shortcut decisively; SAM (+.034)
+  marginally; every other tower is at/below it.
+- **pl2_extent is invalid — refit complete, finding refuted**: the
+  coordinate prior alone reaches **.235 mIoU — above every tower**, and the
+  [features ⊕ coords] refit shows NO tower's features add anything over it
+  (SAM Δ −.001, best Δ +.004). The extent column measured position
+  encoding, not extent retention; the SAM-specialization finding is dead
+  pending a redesigned probe (measurement-validation.md, refit round 1).
+- **series_id floors were wrong — refit complete, Qwen-only signal**: on
+  the multi-series slice (floor .304) every public tower sits at floor
+  (.278–.327); only qwen35_vit separates (linear .441, MLP .487). Color
+  shortcut measured ABSENT corpus-wide (palette randomization: color-only
+  .289 vs .309 majority on that slice); counterfactual twins remain before
+  any binding claim.
+- **glyph font-held-out refit**: Qwen .412 vs .466 in-distribution — the
+  glyph result is not font memorization (NaFlex .142 vs .185; CLIP falls
+  to its shuffled floor out-of-font).
+- **Survivors, strengthened**: glyph_id has no positional shortcut (coord ≤
+  floor) — Qwen's .466 = 5.1× floor stands; cell_row has no y-shortcut;
+  pl1's positional shortcut is negligible (+.014) against its margins.
+
+---
+
+# Exp 2a — bridge localization on the production tower (2026-08-15, exp2a_v1)
+
+Pre-registration: [exp2a-bridge-localization.md](exp2a-bridge-localization.md).
+Full grid ran clean: 48 fit jobs + 4 reconstruction jobs, 0 errors; raw
+bundle at `/vol/results/exp2a_v1/exp2a_summary.json` (local copy
+`validation/exp2a_summary.json`). Capacity-matched D=512, calibrated MLP
+(300ep/3e-5), shuffled controls, doc-level splits, 1000-doc bootstraps.
+All statements below are probe-accessibility statements except where the
+reconstruction test is cited.
+
+## glyph_id across sites (linear head, capacity-matched)
+
+| budget | S1 concat4 | S1 mean4 | S2 point | S3 point |
+|---|---|---|---|---|
+| 144 | .115 | .119 | .082 | .081 |
+| 400 | .149 | .162 | .128 | .116 |
+| 1024 | .204 | .223 | .197 | .160 |
+| native | .386 | .418 | **.439** | .308 |
+
+Reference (reconstruction module, raw-D single-point premerge readout, no
+capacity match): S1 point-readout at native = **.797** — far above every
+S2/S3 number. **Readout granularity dominates the native S1-vs-S2
+comparison**: under the registered concat4/mean4 arms S1 < S2 at native (the
+sandwich artifact detector fires: S1→S2 increases, linear +.021/+.053, MLP
+up to +.298 — S1's registered readouts understate presence); under the
+finest readout S1 ≫ S2. The concat/mean-vs-point spread is itself a result
+(pre-registered as such): at native, fine-grained glyph accessibility lives
+in *individual pre-merge patches*, and both averaging into merged cells and
+the merger itself reorganize it.
+
+## Pre-registered threshold outcomes (gap counts iff > CI half-width AND > yardstick)
+
+- **S1→S2 (the bridge) COUNTS on glyph at every served budget**: @144
+  +.033/.037 (concat4/mean4), @400 +.021/.034, @1024 +.026 (mean4). The
+  Phase-B gate condition is met.
+- **S1→S2 does NOT count at native** on the registered arms (gap negative;
+  artifact detector fired — see above; the reconstruction test below is the
+  licensed native instrument).
+- **S2→S3 (inside the decoder) counts at 400 (+.012), 1024 (+.037), and is
+  the largest registered-arm gap at native (+.131)**. Caveat (pre-registered
+  non-goal boundary): S3 measures what remains linearly present at a decoder
+  mid-layer, not what the decoder consumed — a decoder that has already read
+  the glyphs need not keep them linearly decodable.
+- pl1_class: small S1-advantage gaps count at compressed budgets (~+.02).
+- cell_row / cell_col: no counting gaps anywhere.
+- **pl2_extent: all 16 Δ-over-coords cells are ≈0 or negative** (−.022 to
+  +.012, |Δ| ≤ .022) — extent-beyond-position exists at NO site and NO
+  budget in the production stack. The nominally "counting" pl2 gaps are
+  differences between two ≈0 deltas and are dismissed as such.
+
+## Reconstruction test S2→S1 (the licensed instrument)
+
+| budget | ridge feature R² (unif) | glyph functional residual (true→recon, linear inverse) |
+|---|---|---|
+| 144 | .242 | .110 → .108, gap +.002 CI [−.005, +.010] |
+| 400 | .278 | .222 → .155, gap +.067 CI [+.056, +.078] |
+| 1024 | .321 | .389 → .213, gap +.176 CI [+.160, +.190] |
+| native | .438 | **.797 → .447, gap +.350 CI [+.336, +.364]** |
+
+Reconstructed-S1 recovers glyph accuracy only to ≈ S2's own level at every
+budget (consistent with data processing). Licensed statement: **at native
+resolution, the patch-level glyph signal accessible pre-merge is not
+recoverable from post-merge features by inverses of the stated capacity
+(ridge + early-stopped 512-hidden MLP) — 44% of true-S1 accuracy is lost
+through the bridge**; the residual shrinks monotonically as the budget
+contracts (at 144, S2 retains essentially everything S1 had — both are
+starved).
+
+## Pre-registered decision
+
+The Phase-B gate condition (S1→S2 counts on a headline family at a served
+budget) is **met** — on glyph_id, the one family that passed the full
+validity battery. Per the pre-registration and the 2026-08-15 double-gate,
+the next step is the **LoRA-scale bridge-only pilot with an equal-compute
+decoder-LoRA control** — held for an explicit go decision (training spend;
+the measurement-validation battery still has OOD + counterfactual items
+open). S3's native gap additionally motivates including the decoder-LoRA
+control arm rather than treating bridge-only as the foregone winner.

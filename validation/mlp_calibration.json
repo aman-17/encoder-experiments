@@ -1,0 +1,52 @@
+{
+  "config": {
+    "epochs": 300,
+    "lr": 3e-05,
+    "early_stop": false
+  },
+  "evidence": [
+    {
+      "arm": "glyph_id x qwen35_vit__premerge@400 #concat4",
+      "linear": 0.1427,
+      "mlp_before": 0.0977,
+      "mlp_after": 0.0755
+    },
+    {
+      "arm": "glyph_id x qwen35_vit__premerge@400 #mean4",
+      "linear": 0.1469,
+      "mlp_before": 0.1295,
+      "mlp_after": 0.1517
+    },
+    {
+      "arm": "pl2_extent x qwen35_vit__premerge@400 #concat4",
+      "linear": 0.029,
+      "mlp_before": 0.0111,
+      "mlp_after": 0.0138
+    },
+    {
+      "arm": "pl2_extent x qwen35_vit__premerge@400 #mean4",
+      "linear": 0.0436,
+      "mlp_before": 0.0252,
+      "mlp_after": 0.0294
+    },
+    {
+      "arm": "glyph_id x qwen35_vit@400 #point",
+      "linear": 0.0929,
+      "mlp_before": 0.1271,
+      "mlp_after": 0.1403
+    },
+    {
+      "arm": "pl2_extent x qwen35_vit@400 #point",
+      "linear": 0.0334,
+      "mlp_before": 0.0444,
+      "mlp_after": 0.0479
+    }
+  ],
+  "notes": [
+    "Method: exact replication of the gate2a smoke fits (probes_smoke2a.jsonl, local feature caches, capacity_match=512 seed 0, doc split train_frac 0.8 split_seed 0, seed 0); linear and mlp_before reproduce the smoke-grid JSONs to 4dp.",
+    "Recommended config achieves MLP >= linear on glyph mean4 (0.1517 vs 0.1469; seeds 0/1/2 = 0.1517/0.1445/0.1523) and improves the MLP on 5 of 6 arms vs the 30-epoch default, including S2 point arms (glyph 0.1271 -> 0.1403, pl2 0.0444 -> 0.0479).",
+    "S1 glyph concat4 and both pl2 S1 arms stay BELOW linear under every configuration swept: epochs 5-600, lr 3e-5 to 1e-2, early_stop on/off (patience 5-30), hidden 32-1024, AdamW weight decay 0-1.0 (best concat4 MLP anywhere: 0.1001 at epochs=30 lr=3e-3 vs linear 0.1427). The lin>mlp ordering on these arms is a property of the arm under the doc-held-out shift, not undertraining; the accessibility yardstick should not read a negative lin->mlp lift there as reduced accessibility.",
+    "Row-level val early stopping selects epochs favoring train-doc distribution under doc shift (e300_es lr1e-3 drops concat4 to 0.0737); early_stop=false with the low-lr fixed budget was the better selector on these arms. Alternative if S2-style arms dominate: epochs=300 lr=3e-4 early_stop=true scores S2 glyph 0.1541 but loses mean4 parity (0.1433).",
+    "Raw sweep tables: /private/tmp/claude-501/-Users-aman-programs-experimental/5deca487-ea46-4f68-b670-0f2ddf31712e/scratchpad/{mlp_calibration_raw,mlp_sweep2,mlp_finalists}.json."
+  ]
+}

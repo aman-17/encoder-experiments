@@ -6,7 +6,11 @@ rules): see [Data.md](Data.md).
 Frozen-encoder feature extraction + probe harness for the encoder-anatomy
 paper. No training happens here: each tower runs forward once per image,
 features are cached to disk, and `probe_fit` fits linear / 2-layer-MLP heads
-on the cache. Interim pilot results: [RESULTS.md](RESULTS.md).
+on the cache. Results (pilot table, survival curves, task frontier, caveats):
+[RESULTS.md](RESULTS.md); figures in `figures/`. Probe-validity program
+(shortcut baselines, corrected floors, OOD plan):
+[measurement-validation.md](measurement-validation.md), raw baselines in
+`validation/`. Paper framing: [ideas.md](ideas.md).
 
 ## Encoders
 
@@ -16,6 +20,7 @@ on the cache. Interim pilot results: [RESULTS.md](RESULTS.md).
 | `siglip2_so400m_384` | A1   | google/siglip2-so400m-patch14-384       | yes         |
 | `siglip2_naflex`     | A2   | google/siglip2-so400m-patch16-naflex    | yes         |
 | `qwen35_vit`         | A3   | Qwen/Qwen3.5-4B (vision tower)          | no          |
+| `qwen3_vl_vit`       | F1   | Qwen/Qwen3-VL-4B-Instruct (vision tower)| no          |
 | `sam_vit_b`          | A4/5 | facebook/sam-vit-base (pre-neck)        | yes         |
 | `deepseek_ocr`       | P2   | deepseek-ai/DeepSeek-OCR                | no          |
 
@@ -30,6 +35,12 @@ Notes:
   entirely. GLOBAL 1024px view only, 256 tokens (16×16): production DeepSeek-OCR
   adds tiled crops, so its probe numbers read as "the global encoder alone",
   not the full serving stack.
+- **Bridge topology differs between the Qwen towers** (checked in the configs):
+  Qwen3.5-4B has a single bridge (`deepstack_visual_indexes: []` — just the
+  2x2 merger), so encoder-output probes see everything its decoder receives.
+  Qwen3-VL uses DeepStack (`[5, 11, 17]`): three mid-ViT feature paths inject
+  at multiple decoder depths, so `qwen3_vl_vit` probe numbers describe the
+  top-level path only — its full stack receives more than we probe.
 - **Random-init floor control**: `--random-init` rebuilds the architecture from
   config with fresh weights. Supported for the four public towers only.
   **`sam_vit_b__rand` emits exactly-zero features** (a property of SAM's
@@ -229,15 +240,22 @@ ACTUAL realized count) under `features_sweep/<encoder>@<budget>/`:
       uv run modal run --detach modal_extract.py --derive-pooled \
           --encoders clip_vit_l_336,siglip2_so400m_384,sam_vit_b
 
+  Variable-grid caches pool the same way (grid_hw is read per image;
+  over-budget rungs skip per image). `--out-tower` renames the output dirs —
+  the B3 pixel-information control pools the qwen35_vit NATIVE grids to
+  `qwen35_vit_pooled@<rung>` because `qwen35_vit@<rung>` is the resolution
+  sweep's:
+
+      uv run modal run --detach modal_extract.py --derive-pooled \
+          --encoders qwen35_vit --out-tower qwen35_vit_pooled
+
 ## Pilot v1 (1k docs)
 
-`data/pilot_1k/`: 1,000 generated docs (300 charts / 250 tables / 250 math —
-200 old-book / 100 replicator / 100 text), 1,420 images (420 degraded at
-severities 1–3b), full GT sidecars, `images.jsonl` + `probes.jsonl`
-(288,329 samples, 8 families), audit in `DATASHEET.md`, browsable gallery at
-`browse/index.html`. Feature cache + per-pair fit results live on the Modal
-volume (`/vol/features`, `/vol/results/pilot_v1/`). Findings and caveats:
-[RESULTS.md](RESULTS.md).
+Corpus at `data/pilot_1k/` (audit: `DATASHEET.md`, gallery:
+`browse/index.html`); feature cache + per-pair fit results on the Modal volume
+(`/vol/features`, `/vol/results/pilot_v1/`). All results — pilot table,
+survival curves, task frontier, findings, caveats — live in
+[RESULTS.md](RESULTS.md); this README is tooling and contracts only.
 
 ## Disk sizing
 

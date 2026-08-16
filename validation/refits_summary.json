@@ -1,0 +1,1051 @@
+{
+  "run": "validation_v1",
+  "pilot_run": "pilot_v1",
+  "split": {
+    "by": "document",
+    "train_frac": 0.8,
+    "seed": 0
+  },
+  "towers": {
+    "clip_vit_l_336": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__clip_vit_l_336__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "clip_vit_l_336@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.2056164523511716,
+              "ci95": [
+                0.19842673181414944,
+                0.21330221622841064
+              ],
+              "shuffled": 0.012162389371192257
+            },
+            "mlp": {
+              "mean_iou": 0.10740647726492453,
+              "ci95": [
+                0.1026999469098353,
+                0.11218662792290399
+              ],
+              "shuffled": 0.00998348105709873
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__clip_vit_l_336__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "clip_vit_l_336@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.03282771898958403,
+          "mlp": -0.11835614642587339
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__clip_vit_l_336": {
+            "primary_metric": "accuracy",
+            "arm": "clip_vit_l_336@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.2900976290097629,
+              "ci95": [
+                0.2552534823726885,
+                0.3292505466772942
+              ],
+              "shuffled": 0.22873082287308227
+            },
+            "mlp": {
+              "accuracy": 0.300557880055788,
+              "ci95": [
+                0.2608339361995315,
+                0.34365186561604333
+              ],
+              "shuffled": 0.25453277545327757
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__clip_vit_l_336": {
+            "primary_metric": "accuracy",
+            "arm": "clip_vit_l_336@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.04908292430896409,
+              "ci95": [
+                0.042741289738287856,
+                0.05541399663590675
+              ],
+              "shuffled": 0.0433996383363472
+            },
+            "mlp": {
+              "accuracy": 0.06716610694910875,
+              "ci95": [
+                0.05756163594225844,
+                0.07726058576839827
+              ],
+              "shuffled": 0.04546628778093516
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.06235485369252206,
+            "ci95": [
+              0.056116787964657,
+              0.06971273426587853
+            ],
+            "shuffled": 0.03367394333488156
+          },
+          "mlp": {
+            "accuracy": 0.07373432419879239,
+            "ci95": [
+              0.06564922141007723,
+              0.08225228009358655
+            ],
+            "shuffled": 0.03982814677194612
+          }
+        }
+      }
+    },
+    "clip_vit_l_336__rand": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__clip_vit_l_336__rand__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "clip_vit_l_336__rand@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.22107673893511712,
+              "ci95": [
+                0.21330975600071544,
+                0.22899369811993978
+              ],
+              "shuffled": 0.013101450045560542
+            },
+            "mlp": {
+              "mean_iou": 0.16583193522766418,
+              "ci95": [
+                0.15854373346823317,
+                0.17304276211350228
+              ],
+              "shuffled": 0.012702746269648145
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__clip_vit_l_336__rand__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "clip_vit_l_336__rand@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075507,
+              "ci95": [
+                0.23024892348338474,
+                0.24690969909080823
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.017367432405637956,
+          "mlp": -0.059930688463133736
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__clip_vit_l_336__rand": {
+            "primary_metric": "accuracy",
+            "arm": "clip_vit_l_336__rand@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.2914923291492329,
+              "ci95": [
+                0.2581661235922941,
+                0.32798343918430833
+              ],
+              "shuffled": 0.2615062761506276
+            },
+            "mlp": {
+              "accuracy": 0.27405857740585776,
+              "ci95": [
+                0.24382432480836735,
+                0.3078283616320515
+              ],
+              "shuffled": 0.29497907949790797
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__clip_vit_l_336__rand": {
+            "primary_metric": "accuracy",
+            "arm": "clip_vit_l_336__rand@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.07491604236631362,
+              "ci95": [
+                0.06657992451225796,
+                0.08346021656850931
+              ],
+              "shuffled": 0.06897442521312322
+            },
+            "mlp": {
+              "accuracy": 0.08240764660294497,
+              "ci95": [
+                0.07153696872301508,
+                0.09242905991505852
+              ],
+              "shuffled": 0.07982433479721002
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.06130980027868091,
+            "ci95": [
+              0.055329490477013674,
+              0.067446765500856
+            ],
+            "shuffled": 0.060264746864839756
+          },
+          "mlp": {
+            "accuracy": 0.06758012076172783,
+            "ci95": [
+              0.06219426815670848,
+              0.07335916226341453
+            ],
+            "shuffled": 0.06653506734788667
+          }
+        }
+      }
+    },
+    "siglip2_so400m_384": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__siglip2_so400m_384__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_so400m_384@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.22227044920364214,
+              "ci95": [
+                0.2131365336155814,
+                0.23145092581794902
+              ],
+              "shuffled": 0.011490314160524602
+            },
+            "mlp": {
+              "mean_iou": 0.12675871296405425,
+              "ci95": [
+                0.12105636704268154,
+                0.13268435676123322
+              ],
+              "shuffled": 0.009413276265281902
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__siglip2_so400m_384__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_so400m_384@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.01617372213711349,
+          "mlp": -0.09900391072674367
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__siglip2_so400m_384": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_so400m_384@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.32705718270571826,
+              "ci95": [
+                0.2826989815493007,
+                0.3775139286851321
+              ],
+              "shuffled": 0.2377963737796374
+            },
+            "mlp": {
+              "accuracy": 0.32705718270571826,
+              "ci95": [
+                0.2740062090750387,
+                0.3933964479419025
+              ],
+              "shuffled": 0.29916317991631797
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__siglip2_so400m_384": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_so400m_384@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.10333247222939809,
+              "ci95": [
+                0.08939579281473914,
+                0.11765774998894016
+              ],
+              "shuffled": 0.04443296305864118
+            },
+            "mlp": {
+              "accuracy": 0.1082407646602945,
+              "ci95": [
+                0.09590984976062679,
+                0.12049577849549095
+              ],
+              "shuffled": 0.04159132007233273
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.12192289828146773,
+            "ci95": [
+              0.11207959681912673,
+              0.13230162328476722
+            ],
+            "shuffled": 0.03146771946121691
+          },
+          "mlp": {
+            "accuracy": 0.14235949837436135,
+            "ci95": [
+              0.13096491535552737,
+              0.15360381492148936
+            ],
+            "shuffled": 0.040640966093822575
+          }
+        }
+      }
+    },
+    "siglip2_so400m_384__rand": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__siglip2_so400m_384__rand__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_so400m_384__rand@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.1994368366279889,
+              "ci95": [
+                0.1855013666880529,
+                0.21244393746206094
+              ],
+              "shuffled": 0.011621329671128486
+            },
+            "mlp": {
+              "mean_iou": 0.18043325667327106,
+              "ci95": [
+                0.16969770601505663,
+                0.19040740281919108
+              ],
+              "shuffled": 0.012759695843925702
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__siglip2_so400m_384__rand__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_so400m_384__rand@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.03900733471276674,
+          "mlp": -0.04532936701752685
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__siglip2_so400m_384__rand": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_so400m_384__rand@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.28451882845188287,
+              "ci95": [
+                0.24115674864264747,
+                0.3371246961102107
+              ],
+              "shuffled": 0.25383542538354253
+            },
+            "mlp": {
+              "accuracy": 0.31311018131101814,
+              "ci95": [
+                0.2689338521904988,
+                0.36853105590062113
+              ],
+              "shuffled": 0.3089260808926081
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__siglip2_so400m_384__rand": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_so400m_384__rand@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.0705244122965642,
+              "ci95": [
+                0.06012354816764474,
+                0.0805959067311485
+              ],
+              "shuffled": 0.07000774993541721
+            },
+            "mlp": {
+              "accuracy": 0.0870576078532679,
+              "ci95": [
+                0.07548263552111749,
+                0.09851943864529437
+              ],
+              "shuffled": 0.09015758202014983
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.07048304691128658,
+            "ci95": [
+              0.06327804868750728,
+              0.07730591665840018
+            ],
+            "shuffled": 0.06421272642823966
+          },
+          "mlp": {
+            "accuracy": 0.07431490942870414,
+            "ci95": [
+              0.06553979316521995,
+              0.08299628506491809
+            ],
+            "shuffled": 0.0811658151416628
+          }
+        }
+      }
+    },
+    "siglip2_naflex": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__siglip2_naflex__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_naflex@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.2237732884218843,
+              "ci95": [
+                0.2155940820106626,
+                0.23210854959989047
+              ],
+              "shuffled": 0.012565645592734634
+            },
+            "mlp": {
+              "mean_iou": 0.13606090049939978,
+              "ci95": [
+                0.12921088390388358,
+                0.14300999377744014
+              ],
+              "shuffled": 0.00937471471385201
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__siglip2_naflex__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "siglip2_naflex@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.014670882918871336,
+          "mlp": -0.08970172319139813
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__siglip2_naflex": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_naflex@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.296373779637378,
+              "ci95": [
+                0.25846877764209325,
+                0.3418323735320687
+              ],
+              "shuffled": 0.23709902370990238
+            },
+            "mlp": {
+              "accuracy": 0.35495118549511856,
+              "ci95": [
+                0.2988427758980635,
+                0.416459856073278
+              ],
+              "shuffled": 0.2789400278940028
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__siglip2_naflex": {
+            "primary_metric": "accuracy",
+            "arm": "siglip2_naflex@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.14208214931542237,
+              "ci95": [
+                0.12463938305355113,
+                0.15852757879034454
+              ],
+              "shuffled": 0.043916300697494186
+            },
+            "mlp": {
+              "accuracy": 0.16559028674761045,
+              "ci95": [
+                0.14395028681901637,
+                0.18475334609379407
+              ],
+              "shuffled": 0.04546628778093516
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.18520668834184859,
+            "ci95": [
+              0.1734646794702929,
+              0.19730810088465903
+            ],
+            "shuffled": 0.030306549001393405
+          },
+          "mlp": {
+            "accuracy": 0.1951927542963307,
+            "ci95": [
+              0.18184876717485413,
+              0.21043419487696247
+            ],
+            "shuffled": 0.04424059451927543
+          }
+        }
+      }
+    },
+    "sam_vit_b": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__sam_vit_b__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "sam_vit_b@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.2372932341635924,
+              "ci95": [
+                0.22714356785044304,
+                0.2470553711971793
+              ],
+              "shuffled": 0.012326214532041706
+            },
+            "mlp": {
+              "mean_iou": 0.1626136599559123,
+              "ci95": [
+                0.15432926588893128,
+                0.1710843264019097
+              ],
+              "shuffled": 0.01021802728592057
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__sam_vit_b__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "sam_vit_b@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.0011509371771632193,
+          "mlp": -0.06314896373488563
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__sam_vit_b": {
+            "primary_metric": "accuracy",
+            "arm": "sam_vit_b@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.296373779637378,
+              "ci95": [
+                0.25615437217172776,
+                0.3376309517145552
+              ],
+              "shuffled": 0.25523012552301255
+            },
+            "mlp": {
+              "accuracy": 0.32496513249651326,
+              "ci95": [
+                0.2815229843426376,
+                0.36964414981460897
+              ],
+              "shuffled": 0.2719665271966527
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__sam_vit_b": {
+            "primary_metric": "accuracy",
+            "arm": "sam_vit_b@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.07465771118574012,
+              "ci95": [
+                0.06591246346769764,
+                0.08408255564891354
+              ],
+              "shuffled": 0.06535778868509429
+            },
+            "mlp": {
+              "accuracy": 0.06716610694910875,
+              "ci95": [
+                0.06003279084246052,
+                0.07500754059690147
+              ],
+              "shuffled": 0.04908292430896409
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.07884347422201579,
+            "ci95": [
+              0.07090240314992992,
+              0.08736198924402744
+            ],
+            "shuffled": 0.047724105898745935
+          },
+          "mlp": {
+            "accuracy": 0.08081746400371574,
+            "ci95": [
+              0.07177264412897198,
+              0.09091687882010462
+            ],
+            "shuffled": 0.040640966093822575
+          }
+        }
+      }
+    },
+    "qwen35_vit": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__qwen35_vit__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "qwen35_vit@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.24253796771595912,
+              "ci95": [
+                0.23045018424458005,
+                0.2544953046257304
+              ],
+              "shuffled": 0.011741744996320882
+            },
+            "mlp": {
+              "mean_iou": 0.1622514251518965,
+              "ci95": [
+                0.15209581858538934,
+                0.17219986397363504
+              ],
+              "shuffled": 0.009257705085381781
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__qwen35_vit__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "qwen35_vit@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": 0.00409379637520349,
+          "mlp": -0.06351119853890141
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__qwen35_vit": {
+            "primary_metric": "accuracy",
+            "arm": "qwen35_vit@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.44142259414225943,
+              "ci95": [
+                0.3707195854146667,
+                0.5227030635964566
+              ],
+              "shuffled": 0.2482566248256625
+            },
+            "mlp": {
+              "accuracy": 0.48675034867503486,
+              "ci95": [
+                0.4028930929698108,
+                0.5799369469797254
+              ],
+              "shuffled": 0.26359832635983266
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__qwen35_vit": {
+            "primary_metric": "accuracy",
+            "arm": "qwen35_vit@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.41229656419529837,
+              "ci95": [
+                0.3804254378285836,
+                0.4420368359785216
+              ],
+              "shuffled": 0.048824593128390596
+            },
+            "mlp": {
+              "accuracy": 0.48230431413071556,
+              "ci95": [
+                0.44624256761709064,
+                0.5155151143238649
+              ],
+              "shuffled": 0.05089124257297856
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.4659777055271714,
+            "ci95": [
+              0.44189471727863144,
+              0.490817512508689
+            ],
+            "shuffled": 0.03541569902461681
+          },
+          "mlp": {
+            "accuracy": 0.5284486762656758,
+            "ci95": [
+              0.5036305006892218,
+              0.5550174693082269
+            ],
+            "shuffled": 0.04725963771481653
+          }
+        }
+      }
+    },
+    "deepseek_ocr": {
+      "pl2_extent": {
+        "features_plus_coords": {
+          "pl2_extent__deepseek_ocr__coords": {
+            "primary_metric": "mean_iou",
+            "arm": "deepseek_ocr@na#default/point+coords",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.1985034322611763,
+              "ci95": [
+                0.1891534849122778,
+                0.20755415073385572
+              ],
+              "shuffled": 0.012273872159342229
+            },
+            "mlp": {
+              "mean_iou": 0.1275980245034499,
+              "ci95": [
+                0.12064807581194005,
+                0.13482558101859496
+              ],
+              "shuffled": 0.009707133158877442
+            }
+          }
+        },
+        "coords_only": {
+          "pl2_extent__deepseek_ocr__coordsonly": {
+            "primary_metric": "mean_iou",
+            "arm": "deepseek_ocr@na#default/pointcoordsonly",
+            "n_test": 11648,
+            "linear": {
+              "mean_iou": 0.23844417134075563,
+              "ci95": [
+                0.23024892348338538,
+                0.24690969909080898
+              ],
+              "shuffled": 0.012540325229457125
+            },
+            "mlp": {
+              "mean_iou": 0.22576262369079791,
+              "ci95": [
+                0.21678268079624805,
+                0.23496179097653516
+              ],
+              "shuffled": 0.012865454660259843
+            }
+          }
+        },
+        "delta_mean_iou": {
+          "linear": -0.03994073907957932,
+          "mlp": -0.09816459918734802
+        }
+      },
+      "series_id_multi": {
+        "fit": {
+          "series_id__deepseek_ocr": {
+            "primary_metric": "accuracy",
+            "arm": "deepseek_ocr@na#default/point",
+            "n_test": 1434,
+            "linear": {
+              "accuracy": 0.27824267782426776,
+              "ci95": [
+                0.23980675594231093,
+                0.3166203982828187
+              ],
+              "shuffled": 0.23640167364016737
+            },
+            "mlp": {
+              "accuracy": 0.3124128312412831,
+              "ci95": [
+                0.266523526816781,
+                0.3567732191169836
+              ],
+              "shuffled": 0.29218967921896793
+            }
+          }
+        },
+        "majority_floor": {
+          "n_test": 1434,
+          "floor": 0.30404463040446306,
+          "majority_label": "0"
+        }
+      },
+      "glyph_id": {
+        "font_held_out": {
+          "glyph_id__deepseek_ocr": {
+            "primary_metric": "accuracy",
+            "arm": "deepseek_ocr@na#default/point",
+            "n_test": 3871,
+            "linear": {
+              "accuracy": 0.06174115215706536,
+              "ci95": [
+                0.053634531013799856,
+                0.07187308386093999
+              ],
+              "shuffled": 0.04701627486437613
+            },
+            "mlp": {
+              "accuracy": 0.06019116507362439,
+              "ci95": [
+                0.05212467152096977,
+                0.06991296087715274
+              ],
+              "shuffled": 0.05192456729527254
+            }
+          }
+        },
+        "pilot_in_distribution": {
+          "primary_metric": "accuracy",
+          "arm": null,
+          "n_test": 8612,
+          "linear": {
+            "accuracy": 0.06490942870413377,
+            "ci95": [
+              0.05723206106558047,
+              0.07393382214362924
+            ],
+            "shuffled": 0.03878309335810497
+          },
+          "mlp": {
+            "accuracy": 0.06862517417556897,
+            "ci95": [
+              0.06101489710320912,
+              0.07830823737436837
+            ],
+            "shuffled": 0.03727357176033442
+          }
+        }
+      }
+    }
+  }
+}

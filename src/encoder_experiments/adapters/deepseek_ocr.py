@@ -19,9 +19,6 @@ crop mode is the VLM's tiling policy, not part of the encoder anatomy probe.
 Weights come from the checkpoint safetensors filtered to the three module
 prefixes; `load()` fails loudly on missing/unexpected keys.
 
-P2 is a reference point, not a trained arm (its training data confounds
-everything); nothing downstream blocks on it.
-
 Extra deps beyond the base stack: einops, easydict (imported by deepencoder.py).
 """
 

@@ -13,9 +13,9 @@ Two stacks, dispatched by name:
                   (max_pixels = budget * 784), applied through the qwen_vit
                   adapter's _apply_pixel_budget — the per-call `size` dict is
                   the only channel transformers 5.14 honors (bare
-                  min/max_pixels attrs are ignored; verified on the Exp 2
-                  sweep). Realized merged-token count is read back from
-                  image_grid_thw per image and guarded <= budget.
+                  min/max_pixels attrs are ignored). Realized merged-token
+                  count is read back from image_grid_thw per image and
+                  guarded <= budget.
     deepseek_ocr  deepseek-ai/DeepSeek-OCR through its own remote-code
                   infer() path (modeling_deepseekocr), GLOBAL VIEW ONLY:
                   crop_mode=False with base_size = image_size =
@@ -27,8 +27,8 @@ Two stacks, dispatched by name:
                   <|grounding|> variant would interleave <|ref|>/<|det|> box
                   tags into the markdown). infer() hardcodes its own
                   generation knobs (temperature=0.0, max_new_tokens=8192,
-                  no_repeat_ngram_size=35 in eval_mode) — we take them as-is:
-                  this stack is "the checkpoint's own serving path", not ours.
+                  no_repeat_ngram_size=35 in eval_mode), taken as-is: this
+                  stack is the checkpoint's own serving path, not ours.
 
 The two stacks need INCOMPATIBLE transformers pins (Qwen3-VL needs 5.x;
 DeepSeek-OCR's remote code imports LlamaFlashAttention2, removed after 4.47,
@@ -133,6 +133,29 @@ dsocr_image = (
     .env({"HF_HOME": HF_CACHE_PATH})
     .add_local_python_source("encoder_experiments")
 )
+
+
+def _strip_md_fence(text: str) -> str:
+    """Unwrap a whole-output ```markdown fence (qwen3_vl wraps its answer in
+    one despite the prompt). Only a wrapper on the ENTIRE output is stripped —
+    fences inside the document (code blocks) are content and stay. A missing
+    closer (output truncated at max_new_tokens) still gets the opener
+    stripped when it is an explicit ```markdown/```md tag."""
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+    first_nl = stripped.find("\n")
+    if first_nl == -1:
+        return stripped
+    tag = stripped[3:first_nl].strip().lower()
+    if tag not in ("", "markdown", "md"):
+        return stripped  # a real code block, not a wrapper
+    body = stripped[first_nl + 1:]
+    if body.rstrip().endswith("```"):
+        return body.rstrip()[:-3].strip()
+    if tag:  # truncated wrapper, but unambiguously tagged as markdown
+        return body.strip()
+    return stripped  # bare ``` opener with no closer: could be content
 
 
 def _run_generation_loop(
@@ -276,9 +299,8 @@ def generate_markdown_qwen3_vl(
 
         max_pixels = int(budget_knobs("qwen3_vl_vit", budget)["max_pixels"])
         processor = AutoProcessor.from_pretrained(QWEN_CHECKPOINT)
-        # The Exp 2 lesson, reused verbatim: sets every pixel knob the
-        # processor generation exposes and returns the per-call kwargs
-        # (including the `size` dict — the channel transformers 5.14 honors).
+        # Sets every pixel knob the processor exposes and returns the per-call
+        # kwargs, including the `size` dict — the channel transformers 5.14 honors.
         budget_kwargs = Qwen35Vit._apply_pixel_budget(
             processor.image_processor, 0, max_pixels
         )
@@ -328,7 +350,7 @@ def generate_markdown_qwen3_vl(
                 )
             new_tokens = out[0][inputs["input_ids"].shape[1]:]
             markdown = processor.decode(new_tokens, skip_special_tokens=True).strip()
-            return markdown, realized
+            return _strip_md_fence(markdown), realized
 
         def count_output_tokens(text: str) -> int:
             return len(processor.tokenizer(text, add_special_tokens=False)["input_ids"])

@@ -101,16 +101,12 @@ export function sweepLayout({ pageW, pageH }) {
     const y1 = Math.min(box[3], Math.max(...rects.map((q) => q.bottom)) + sy);
     return x1 > x0 && y1 > y0 ? [x0, y0, x1, y1] : box.slice();
   };
-  // <li> ::marker: with list-style-position:outside (the default) the marker
-  // paints LEFT of the content box — often outside the li border box too — and
-  // marker boxes are pseudo-elements a Range cannot select. Port of the
-  // layoutSidecar.mjs marker-advance trick: toggling the SAME element to
-  // list-style-position:inside lays the identical marker box out at the start
-  // of the first line, pushing the first-line text right by exactly the
-  // advance (marker + gap) the outside marker occupies left of the text start.
-  // The inline style is saved and restored, so the layout Chrome prints is
-  // untouched. Returns the marker's left edge (page coords), or null when
-  // there is no marker (list-style: none).
+  // <li> ::marker left edge (page coords), or null when there is no marker.
+  // Markers are pseudo-elements a Range cannot select; same marker-advance
+  // trick as layoutSidecar.mjs: toggling the SAME element to
+  // list-style-position:inside pushes the first line right by exactly the
+  // outside marker's advance. The inline style is saved and restored, so the
+  // layout Chrome prints is untouched.
   const markerX0 = (el) => {
     const firstLineX = () => {
       const rg = document.createRange();

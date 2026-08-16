@@ -200,9 +200,8 @@ def test_iou_sanity():
 
 
 def test_derived_doc_id_strips_degrade_suffix():
-    # regression: clean + degraded variants of ONE document derived different
-    # doc_ids and straddled the train/test split (math__math_6sk_0001 in test,
-    # math__math_6sk_0001__sev2b in train)
+    # without the __sev strip, clean and degraded variants of one document
+    # derive different doc_ids and straddle the train/test split
     assert derive_doc_id("math__math_6sk_0001__sev2b") == "math__math_6sk_0001"
     assert derive_doc_id("math__math_6sk_0001") == "math__math_6sk_0001"
     assert derive_doc_id("tables__synth_70w_0003__sev3") == "tables__synth_70w_0003"
@@ -279,8 +278,8 @@ def _isolation_dataset(root):
 
 
 def test_family_error_is_isolated_and_summary_always_written(tmp_path):
-    # regression: the series_id empty-split RuntimeError used to abort the
-    # whole run AFTER other families had succeeded — exit 1, no summary.md
+    # a raising family must not abort the run: other families' results and
+    # summary.md still land, exit stays 0
     probes = _isolation_dataset(tmp_path)
     out = tmp_path / "results"
     rc = main([

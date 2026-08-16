@@ -135,10 +135,9 @@ def test_table_weird_family():
 
 
 def make_tablegen_table(grid_rows=6, grid_cols=5, *, header_rows=1, spans=None):
-    """Real table-generator cells.json shape (regression for the pilot-corpus
-    doc that crashed the tagger): grid_rows/grid_cols instead of n_rows/n_cols,
-    rowspan/colspan instead of row_span/col_span, tag "th"/"td" instead of
-    is_header, and [x, y, w, h] bboxes instead of corners."""
+    """Real table-generator cells.json shape: grid_rows/grid_cols instead of
+    n_rows/n_cols, rowspan/colspan instead of row_span/col_span, tag "th"/"td"
+    instead of is_header, and [x, y, w, h] bboxes instead of corners."""
     spans = spans or {}
     swallowed = set()
     for (r, c), (rs, cs) in spans.items():
@@ -175,9 +174,8 @@ def make_tablegen_table(grid_rows=6, grid_cols=5, *, header_rows=1, spans=None):
 
 
 def test_table_generator_schema_tags_without_raising():
-    # the pilot-corpus regression: a full sidecar in table-generator spelling
-    # must classify (a raise here is an implementation bug — Data.md rules are
-    # exhaustive by precedence for any doc WITH sidecars)
+    # a full sidecar in table-generator spelling must classify — Data.md rules
+    # are exhaustive by precedence for any doc with sidecars
     level, cov = tag_table(make_tablegen_table())
     assert level == "easy"
     assert cov["n_rows"] == 6 and cov["n_cols"] == 5

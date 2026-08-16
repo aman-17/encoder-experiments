@@ -3,6 +3,12 @@
 Both heads standardize inputs with train-split statistics only. The MLP also
 standardizes regression targets internally (and un-scales predictions) so the
 same hyperparameters work across probe families with different label scales.
+
+Capacity matching: cross-arm score comparisons are confounded when arms differ
+in feature dim (a wider X buys the head more parameters). capacity_match_projection
+builds the seeded Gaussian random projection to a common dim D that every arm's
+X passes through BEFORE standardize+heads; with MLP hidden fixed, total head
+params are then equal across arms by construction.
 """
 
 from __future__ import annotations
@@ -16,6 +22,35 @@ def standardize(X_train: np.ndarray, X_test: np.ndarray) -> tuple[np.ndarray, np
     sd = X_train.std(axis=0)
     sd = np.where(sd < 1e-8, 1.0, sd)
     return (X_train - mu) / sd, (X_test - mu) / sd
+
+
+def capacity_match_projection(raw_dim: int, target_dim: int, seed: int) -> np.ndarray:
+    """[raw_dim, target_dim] seeded Gaussian random projection.
+
+    Deterministic in (seed, raw_dim, target_dim) alone — the same seed gives
+    the same matrix per source dim, across processes. Columns are
+    QR-orthonormalized (signs pinned to the R diagonal, so the LAPACK sign
+    ambiguity cannot flip them) and scaled by sqrt(raw_dim/target_dim) so
+    expected squared norms are preserved for isotropic inputs.
+    """
+    if target_dim <= 0:
+        raise ValueError(f"capacity-match dim must be positive, got {target_dim}")
+    if target_dim > raw_dim:
+        raise ValueError(
+            f"capacity-match dim {target_dim} exceeds raw feature dim {raw_dim}: "
+            "an orthonormal projection cannot widen — pick D <= the smallest arm dim"
+        )
+    rng = np.random.default_rng(np.random.SeedSequence([seed, raw_dim, target_dim]))
+    g = rng.standard_normal((raw_dim, target_dim))
+    q, r = np.linalg.qr(g)
+    q = q * np.where(np.diag(r) >= 0.0, 1.0, -1.0)
+    return q * np.sqrt(raw_dim / target_dim)
+
+
+def project_features(X: np.ndarray, target_dim: int, seed: int) -> np.ndarray:
+    """X [n, raw_dim] float -> [n, target_dim] float32 via capacity_match_projection."""
+    P = capacity_match_projection(X.shape[1], target_dim, seed)
+    return (X.astype(np.float64) @ P).astype(np.float32)
 
 
 def fit_predict_linear(
@@ -51,13 +86,22 @@ def fit_predict_mlp(
     epochs: int = 30,
     lr: float = 1e-3,
     batch_size: int = 256,
+    early_stop: bool = False,
+    val_fraction: float = 0.15,
+    patience: int = 10,
     seed: int = 0,
     device: str = "cpu",
 ) -> np.ndarray:
-    """2-layer torch head (Linear -> ReLU -> Linear), Adam, fixed epoch budget.
+    """2-layer torch head (Linear -> ReLU -> Linear), Adam.
 
     Classification: y_train is int class codes, returns predicted codes.
     Regression/bbox: y_train is [n] or [n, k] float, returns same shape.
+
+    early_stop=True carves a seeded row-level val_fraction split out of the
+    train rows, treats `epochs` as a maximum, stops after `patience` epochs
+    without a val-loss improvement, and restores the best-val-epoch weights.
+    Deterministic given seed; with early_stop=False the fit is bit-identical
+    to the fixed-epoch-budget behavior (val_fraction/patience unused).
     """
     import torch
     from torch import nn
@@ -91,17 +135,47 @@ def fit_predict_mlp(
     opt = torch.optim.Adam(model.parameters(), lr=lr)
 
     gen = torch.Generator().manual_seed(seed)
-    n = len(xtr)
+    fit_idx = None
+    if early_stop:
+        n_all = len(xtr)
+        n_val = int(round(n_all * val_fraction))
+        if not 0 < n_val < n_all:
+            raise ValueError(
+                f"early_stop val split is degenerate: n={n_all}, val_fraction={val_fraction}"
+            )
+        split = torch.randperm(n_all, generator=torch.Generator().manual_seed(seed))
+        val_idx, fit_idx = split[:n_val], split[n_val:]
+
+    n = len(xtr) if fit_idx is None else len(fit_idx)
+    best_val = float("inf")
+    best_state = None
+    stale = 0
     model.train()
     for _ in range(epochs):
         perm = torch.randperm(n, generator=gen)
+        if fit_idx is not None:
+            perm = fit_idx[perm]
         for start in range(0, n, batch_size):
             idx = perm[start : start + batch_size]
             opt.zero_grad()
             loss = loss_fn(model(xtr[idx]), ytr[idx])
             loss.backward()
             opt.step()
+        if early_stop:
+            model.eval()
+            with torch.no_grad():
+                val = float(loss_fn(model(xtr[val_idx]), ytr[val_idx]))
+            model.train()
+            if val < best_val:
+                best_val, stale = val, 0
+                best_state = {k: v.detach().clone() for k, v in model.state_dict().items()}
+            else:
+                stale += 1
+                if stale >= patience:
+                    break
 
+    if best_state is not None:
+        model.load_state_dict(best_state)
     model.eval()
     with torch.no_grad():
         out = model(xte).cpu().numpy()

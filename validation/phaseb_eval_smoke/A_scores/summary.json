@@ -1,0 +1,26 @@
+{
+  "families": {
+    "charts": {
+      "ci95_hi": 0.140952,
+      "ci95_lo": -0.045714,
+      "edit_sim": {
+        "ci95_hi": 0.039144,
+        "ci95_lo": 0.018453,
+        "mean": 0.028799,
+        "n": 5
+      },
+      "mean": 0.047619,
+      "n": 5
+    }
+  },
+  "n_docs": 5,
+  "n_missing_pred": 0,
+  "n_skipped_no_gold": 0,
+  "overall": {
+    "ci95_hi": 0.140952,
+    "ci95_lo": -0.045714,
+    "mean": 0.047619,
+    "n": 5
+  },
+  "pred_dir": "/Users/aman/programs/experimental/encoder-experiments/validation/phaseb_eval_smoke/A"
+}
