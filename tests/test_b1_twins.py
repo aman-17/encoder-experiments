@@ -21,7 +21,7 @@ def _load(name: str, path: Path):
 
 
 twins = _load("make_b1_twins", ROOT / "src" / "data" / "make_b1_twins.py")
-assembler = _load("run_b1_patching", ROOT / "run_b1_patching.py")
+assembler = _load("run_b1_patching", ROOT / "pipelines" / "run_b1_patching.py")
 
 
 def _row(image_id, gen, sev=0, path=None):

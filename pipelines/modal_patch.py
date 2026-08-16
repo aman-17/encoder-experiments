@@ -1,4 +1,4 @@
-"""B1 activation patching on Modal (phase-b-causal.md §B1): causal localization
+"""B1 activation patching on Modal (docs/experiments.md §B1): causal localization
 of the degradation reading loss in the Qwen3.5-4B stack, inference-only.
 
 Per twin pair (clean/degraded at IDENTICAL pixel dims -> identical token

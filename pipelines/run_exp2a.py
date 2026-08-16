@@ -1,7 +1,7 @@
 """Exp 2a bridge-localization grid (exp2a_v1): the pre-registered probe fan-out
 over the production tower's three sites, the S2->S1 reconstruction test, and
 the sandwich/threshold assembler (pre-registration:
-exp2a-bridge-localization.md; deliverables are raw JSONs, no conclusions).
+docs/experiments.md §Exp 2a; deliverables are raw JSONs, no conclusions).
 
 Arms {S1 concat4, S1 mean4, S2 point, S3 point} x budgets {144, 400, 1024,
 native} x families {glyph_id, cell_row, cell_col, pl1_class, pl2_extent as an
@@ -51,7 +51,7 @@ try:
 except ImportError:
     modal_extract = None
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parents[1]
 MLP_CALIBRATION_PATH = REPO_ROOT / "validation" / "mlp_calibration.json"
 LOCAL_SUMMARY_PATH = REPO_ROOT / "validation" / "exp2a_summary.json"
 
@@ -415,7 +415,7 @@ def assemble_summary(records: list[dict], recons: list[dict] | None = None) -> d
 
     return {
         "run": RUN,
-        "pre_registration": "exp2a-bridge-localization.md",
+        "pre_registration": "docs/experiments.md §Exp 2a",
         "capacity_match": CAPACITY_MATCH,
         "sites": [{"site": s, "tower": t, "readout": r} for s, t, r in SITES],
         "budgets": [budget_label(b) for b in BUDGETS],

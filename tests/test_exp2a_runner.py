@@ -14,6 +14,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "pipelines"))
 
 import run_exp2a  # noqa: E402
 import run_validation_refits  # noqa: E402
@@ -316,7 +317,7 @@ class TestValidationRunner:
 
 
 def _load_without_modal(name: str):
-    spec = importlib.util.spec_from_file_location(f"{name}_nomodal", REPO_ROOT / f"{name}.py")
+    spec = importlib.util.spec_from_file_location(f"{name}_nomodal", REPO_ROOT / "pipelines" / f"{name}.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod

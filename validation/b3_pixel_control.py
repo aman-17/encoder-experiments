@@ -7,7 +7,7 @@ resolution-knob sweep, run sweep_v1) — and writes the raw per-rung table to
 validation/b3_pixel_control.json. Deltas are pooled - resolution on each
 head's primary metric; realized token counts ride along because both
 mechanisms realize <= the nominal rung. Raw numbers only, no verdict fields
-(phase-b-causal.md SSB3 output discipline).
+(docs/experiments.md §Part II SSB3 output discipline).
 
     uv run python validation/b3_pixel_control.py \
         --pooled-dir <dir with <probe>__qwen35_vit_pooled@<rung>.json> \

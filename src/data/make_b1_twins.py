@@ -1,5 +1,5 @@
 """B1 twins: geometry-aligned clean/degraded pairs for the activation-patching
-experiment (phase-b-causal.md §B1).
+experiment (docs/experiments.md §B1).
 
 Selects ~100 glyph-heavy pilot pages (text + math generators, sev-0 clean
 images from data/pilot_1k), renders each one's degraded twin with degrade.py's

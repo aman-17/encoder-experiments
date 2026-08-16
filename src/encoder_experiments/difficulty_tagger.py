@@ -1,8 +1,8 @@
-"""Difficulty tagging for Exp 1 probe data — rules v1, spec: Data.md.
+"""Difficulty tagging for Exp 1 probe data — rules v1, spec: docs/experiments.md §Closed.
 
 Pure functions from sidecar dicts (+ generator covariates) to
 ``{difficulty, difficulty_rules: "v1", covariates, flags}``. Two invariants
-from Data.md, non-negotiable:
+from docs/experiments.md §Closed, non-negotiable:
 
 1. Tags are a derived view — the raw continuous covariates are returned
    alongside the tag so retagging is a re-run, never a re-annotation.
@@ -24,7 +24,7 @@ Four task families:
 
 ``scan_severity`` is an orthogonal axis and is deliberately NOT an input to
 any rule here — a degraded easy table and a clean hard table fail
-differently, and that distinction is a finding (Data.md).
+differently, and that distinction is a finding (docs/experiments.md §Closed).
 
 Rule changes bump the version (``v2``, ...) — never silently edit ``v1``.
 """
@@ -42,7 +42,7 @@ MEDIUM = "medium"
 HARD = "hard"
 LEVELS = (EASY, MEDIUM, HARD)  # ordered: easy < medium < hard
 
-# Rule constants — verbatim from Data.md (v1). Do not edit without a version
+# Rule constants — verbatim from docs/experiments.md §Closed (v1). Do not edit without a version
 # bump.
 
 # Tables
@@ -51,7 +51,7 @@ TABLE_HARD_EMPTY_FRAC = 0.2     # hard if empty_frac >= 0.2
 TABLE_HARD_MAX_SPAN = 4         # hard if max_span >= 4
 TABLE_HARD_HEADER_DEPTH = 2     # hard if header_depth >= 2
 TABLE_MEDIUM_EMPTY_FRAC = 0.05  # medium if 0.05 <= empty_frac < 0.2
-# Replicator template families with pathological layout (Data.md: snaking,
+# Replicator template families with pathological layout (docs/experiments.md §Closed: snaking,
 # mirrored, line-printer, continuation-fragment, ...). Matched as tokens
 # against the normalized template name.
 WEIRD_FAMILY_TOKENS = (
@@ -85,7 +85,7 @@ MULTI_CHART_MIN = 2  # multi_chart = n_charts >= 2
 
 class Unclassifiable(ValueError):
     """Input that cannot be featurized for any v1 rule — a hard error,
-    never a silent default (Data.md principle 2)."""
+    never a silent default (docs/experiments.md §Closed principle 2)."""
 
 
 def _max_level(levels: list[str]) -> str:
@@ -168,7 +168,7 @@ def table_covariates(
     template: str | None = None,
     weird_family: bool | None = None,
 ) -> dict:
-    """Continuous covariates for one table (kept per Data.md)."""
+    """Continuous covariates for one table (kept per docs/experiments.md §Closed)."""
     table = normalize_table(table)
     n_rows = _require_count(table.get("n_rows"), "n_rows")
     n_cols = _require_count(table.get("n_cols"), "n_cols")

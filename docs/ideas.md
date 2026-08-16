@@ -228,7 +228,7 @@ Generation spec for the scale-up (owner: friend):
 - **Keep** scan-severity coverage (degradation twins are B1's instrument) and
   the exact-GT sidecars.
 - **Drop** effort on the difficulty taxonomy — it tags ~100% hard on dense
-  pages ([data.md](data.md)) and nothing in this paper stratifies on it.
+  pages ([experiments.md](experiments.md) §Closed) and nothing in this paper stratifies on it.
 - **Add** rendering variation (anti-aliasing, subpixel positioning, DPI jitter)
   — this is the cheapest available insurance against "your effect is a renderer
   artifact", which is now a first-order reviewer risk.
@@ -244,8 +244,8 @@ week 2, not week 11.
 
 **G1 — the go/no-go (weeks 1–2). Run before anything else is committed.**
 B1 activation patching + the B2 pilot, both already coded
-([run_b1_patching.py](run_b1_patching.py), [modal_phaseb_train.py](modal_phaseb_train.py)),
-decided by the pre-registered rule in [phase-b-causal.md](phase-b-causal.md) §B2.
+([run_b1_patching.py](../pipelines/run_b1_patching.py), [modal_phaseb_train.py](../pipelines/modal_phaseb_train.py)),
+decided by the pre-registered rule in [experiments.md](experiments.md) §B2.
 
 - **A > B beyond CI** → the bridge is the recoverable stage. Build R2. This paper.
 - **A ≈ B > C** → adaptation helps but is not stage-specific. The method framing
@@ -292,7 +292,7 @@ each of these costs credibility per page it occupies.
   DeepSeek-OCR (the compressed-bridge contrast). CLIP / SigLIP2 / NaFlex / SAM
   and the random-init floors move to one appendix table.
 - **The budget sweep** → one motivation figure, not a results section.
-- **The difficulty taxonomy** ([data.md](data.md)) — degenerate and unused here.
+- **The difficulty taxonomy** ([experiments.md](experiments.md) §Closed) — degenerate and unused here.
 - **Transplantability**, the LR-sweep mechanics, knee localization — gone.
 - **Slogans.** "Nobody reads under ~200 tokens", "text dies first". Figures may
   imply it; prose states the defensible version.
@@ -300,7 +300,7 @@ each of these costs credibility per page it occupies.
   subjects scored at floor. It is not a contribution and it invites the "you
   probed a lot and found one thing" review.
 
-Nothing measured is deleted from the record — [RESULTS.md](RESULTS.md) keeps
+Nothing measured is deleted from the record — [results.md](results.md) keeps
 every number, including the refuted ones. Demotion is a paper-scope decision,
 not a retraction.
 
@@ -362,11 +362,11 @@ and the title says so.
 ---
 
 *Internal (remove before submission): G1 decides paper vs venue and runs first;
-[phase-b-causal.md](phase-b-causal.md) is now the paper's §4–§5 pre-registration,
-not a gated Part II; [exp2a-bridge-localization.md](exp2a-bridge-localization.md)
-is §3; [measurement-validation.md](measurement-validation.md) is the appendix
+[experiments.md](experiments.md) is now the paper's §4–§5 pre-registration,
+not a gated Part II; [experiments.md](experiments.md)
+is §3; [experiments.md](experiments.md) is the appendix
 validity section, re-scoped to the two surviving probes. Measurement record and
-demotion status: [RESULTS.md](RESULTS.md).*
+demotion status: [results.md](results.md).*
 
 ---
 

@@ -1,7 +1,7 @@
 """Measurement-validation refits (validation_v1): Modal CPU fit_probes fan-out
 over the 8 pilot towers' EXISTING native caches (/vol/features/<tower>).
 
-Configs (measurement-validation.md, battery items 1-2):
+Configs (docs/experiments.md §Exp 1b):
 
     pl2_coords       pl2_extent with [features + coords] heads   (--append-coords)
     pl2_coordsonly   pl2_extent coords-only baseline arm         (--coords-only)
@@ -44,7 +44,7 @@ except ImportError:
     modal = None
     modal_extract = None
 
-REPO_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SUMMARY_PATH = REPO_ROOT / "validation" / "refits_summary.json"
 
 RUN = "validation_v1"

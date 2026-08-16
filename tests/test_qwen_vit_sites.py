@@ -155,7 +155,7 @@ def test_site_plumbing(tower):
     with pytest.raises(ValueError, match="unknown site"):
         _ = Qwen35Vit(torch.device("cpu"), torch.float32, site="midtower").site
 
-    spec_path = Path(__file__).parents[1] / "modal_extract.py"
+    spec_path = Path(__file__).parents[1] / "pipelines" / "modal_extract.py"
     spec = importlib.util.spec_from_file_location("modal_extract", spec_path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)

@@ -1,4 +1,4 @@
-"""Phase B2 — bridge-only pilot vs decoder-LoRA control (phase-b-causal.md §B2).
+"""Phase B2 — bridge-only pilot vs decoder-LoRA control (docs/experiments.md §B2).
 
 Three arms on Qwen3.5-4B (same trust_remote_code loading as
 modal_extract.extract_decoder_mid), bf16 + gradient checkpointing:
@@ -851,7 +851,7 @@ def _pick_best_lrs(eval_lrs: str, smoke: bool) -> dict[str, float]:
 def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
     from encoder_experiments.frontier_score import score_pred_dir
 
-    repo = Path(__file__).resolve().parent
+    repo = Path(__file__).resolve().parents[1]
     dataset_root = repo / "data" / "pilot_1k"
     out_root = repo / "validation" / ("phaseb_eval_smoke" if smoke else "phaseb_eval")
     out_root.mkdir(parents=True, exist_ok=True)
@@ -953,7 +953,7 @@ def main(
     if sum([plan, smoke, train, eval, score]) != 1:
         raise SystemExit("pass exactly one of --plan --smoke --train --eval --score")
 
-    dataset_root = Path(__file__).resolve().parent / "data" / "pilot_1k"
+    dataset_root = Path(__file__).resolve().parents[1] / "data" / "pilot_1k"
     manifests = build_manifests(dataset_root)
     counts = manifests["counts"]
 

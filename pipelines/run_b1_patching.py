@@ -1,5 +1,5 @@
 """B1 assembler: score the patching conditions and compute restoration
-fractions (phase-b-causal.md §B1). Raw numbers only — no conclusion prose.
+fractions (docs/experiments.md §B1). Raw numbers only — no conclusion prose.
 
 Reads a local copy of the Modal output tree (fetch with
 ``uv run modal volume get encoder-anatomy-pilot /patch_b1 <pred-root>``),
@@ -124,7 +124,7 @@ def assemble(pred_root: Path, images_jsonl: Path, out_path: Path,
 
 
 def main() -> int:
-    root = Path(__file__).resolve().parent
+    root = Path(__file__).resolve().parents[1]
     ap = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
     ap.add_argument("--pred-root", type=Path, required=True,
                     help="local dir holding the <condition>/<image_id>.md tree")

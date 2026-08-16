@@ -10,6 +10,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "pipelines"))
 
 import modal_phaseb_train as pb  # noqa: E402
 from encoder_experiments.probe_fit import doc_is_train  # noqa: E402

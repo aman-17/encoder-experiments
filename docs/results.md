@@ -16,7 +16,7 @@
 > | CLIP / SigLIP2 / NaFlex / SAM + rand floors | one appendix table |
 >
 > Demotion is a scope decision, not a retraction. If gate G1
-> ([phase-b-causal.md](phase-b-causal.md) §B2) fails, the survival-curve framing
+> ([experiments.md](experiments.md) §B2) fails, the survival-curve framing
 > returns as a TMLR submission and most of this file is promoted back.
 >
 > **Inline tags (added 2026-08-15).** Every item below is marked for the
@@ -36,7 +36,7 @@
 
 > **Budget-sweep addendum (2026-08-14, 448/448 pairs): see "Survival curves"
 > section at the bottom — the signature figure is
-> [figures/survival_pilot1k.png](figures/survival_pilot1k.png).**
+> [figures/survival_pilot1k.png](../figures/survival_pilot1k.png).**
 
 1,000 docs / 1,420 images / 288,329 probe samples / 8 probe families ×
 8 encoder variants. Linear + MLP heads, shuffled-label controls, doc-level
@@ -81,7 +81,7 @@ page-layout summary is present but stored *nonlinearly* in most towers.
    SAM Δ −.001, best Δ +.004, prior alone .235 mIoU. The pl2 column measured
    how linearly each tower encodes position, not extent retention; the
    SAM-vs-Qwen "double dissociation" does not survive. Extent claims await a
-   redesigned probe — see measurement-validation.md.)*
+   redesigned probe — see experiments.md §Exp 1b.)*
 3. `[APPENDIX]` — a probe-validity signal, not a finding about CLIP; CLIP is
    not in the paper. **CLIP ≈ random-init CLIP on two families** — glyphs (.062 vs .061) and
    series-ID (.384 vs .397): under these probes, at 336px, on this corpus,
@@ -127,7 +127,7 @@ page-layout summary is present but stored *nonlinearly* in most towers.
   slice is reported in this paper.)*
 - `[KEEP]` pl1's chance floor is high (.57, background-heavy); read margins over floor.
 - `[APPENDIX]` Corpus skews: bar-family chart types; no degraded replicator pages; bbox
-  difficulty tags saturate (Data.md calibration note). *(The bbox-tag half is
+  difficulty tags saturate (taxonomy dropped — experiments.md §Closed). *(The bbox-tag half is
   `[UNNECESSARY]` — tagging is dropped entirely.)*
 
 ## Ops notes `[KEEP]` — retitle "for the 20k bridge-training run"
@@ -153,8 +153,8 @@ page-layout summary is present but stored *nonlinearly* in most towers.
 doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
 (NaFlex, both Qwen towers), res-mode (DeepSeek base sizes), merge
 (CLIP/SigLIP2/SAM adaptive-pooled from cached full grids). Figure:
-[figures/survival_pilot1k.png](figures/survival_pilot1k.png); tidy data:
-[figures/survival_pilot1k_curves.json](figures/survival_pilot1k_curves.json).
+[figures/survival_pilot1k.png](../figures/survival_pilot1k.png); tidy data:
+[figures/survival_pilot1k_curves.json](../figures/survival_pilot1k_curves.json).
 
 ## Findings
 
@@ -212,7 +212,7 @@ doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
 > `[UNNECESSARY]`.
 
 Full stacks generating markdown, scored against gold (TEDS via pipe→HTML /
-edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](figures/frontier_pilot1k.png).
+edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](../figures/frontier_pilot1k.png).
 
 | config | overall | tables | replicator | text | math |
 |---|---|---|---|---|---|
@@ -232,7 +232,7 @@ edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](figures/fr
    passes above it. Scope: DeepSeek ran its GLOBAL 1024px view only —
    production serving adds tiled crops, so this is a global-view budget
    frontier, not a production-efficiency comparison, until the crop-mode run
-   lands (measurement-validation.md item 7).
+   lands (experiments.md §Closed (DeepSeek crop path)).
 2. **The eyes-vs-brain inversion** (the headline panel pair): Qwen's
    *encoder* shows far higher probe-accessible glyph signal than DeepSeek's
    at every budget, yet DeepSeek's *stack* wins end-to-end at low budgets —
@@ -289,7 +289,7 @@ bridge-localization experiment, are architecturally complete for that model.
 External review (accepted) demanded shortcut baselines before trusting any
 probe number. Coordinate-only (linear + kNN-50) and color-only baselines,
 doc-level split, plain accuracy — same metric as the pilot table. Full table,
-verdicts, and the remaining battery: [measurement-validation.md](measurement-validation.md).
+verdicts, and the remaining battery: [experiments.md](experiments.md).
 
 **Corrections to the pilot table:**
 
@@ -304,7 +304,7 @@ verdicts, and the remaining battery: [measurement-validation.md](measurement-val
   [features ⊕ coords] refit shows NO tower's features add anything over it
   (SAM Δ −.001, best Δ +.004). The extent column measured position
   encoding, not extent retention; the SAM-specialization finding is dead
-  pending a redesigned probe (measurement-validation.md, refit round 1).
+  pending a redesigned probe (experiments.md §Exp 1b).
 - **series_id floors were wrong — refit complete, Qwen-only signal**: on
   the multi-series slice (floor .304) every public tower sits at floor
   (.278–.327); only qwen35_vit separates (linear .441, MLP .487). Color
@@ -327,9 +327,9 @@ verdicts, and the remaining battery: [measurement-validation.md](measurement-val
 > method is built to recover (+.350 native functional residual = 44% of the
 > pre-merge glyph readout). Two open dependencies before it can be written up:
 > **V0** (verify the merger concatenates rather than pools) and **G2** (does
-> this residual reproduce on real documents) — [phase-b-causal.md](phase-b-causal.md).
+> this residual reproduce on real documents) — [experiments.md](experiments.md).
 
-Pre-registration: [exp2a-bridge-localization.md](exp2a-bridge-localization.md).
+Pre-registration: [experiments.md](experiments.md).
 Full grid ran clean: 48 fit jobs + 4 reconstruction jobs, 0 errors; raw
 bundle at `/vol/results/exp2a_v1/exp2a_summary.json` (local copy
 `validation/exp2a_summary.json`). Capacity-matched D=512, calibrated MLP
@@ -404,6 +404,6 @@ budget) is **met** — on glyph_id, the one family that passed the full
 validity battery. Per the pre-registration and the 2026-08-15 double-gate,
 the next step is the **LoRA-scale bridge-only pilot with an equal-compute
 decoder-LoRA control** — held for an explicit go decision (training spend;
-the measurement-validation battery still has OOD + counterfactual items
+the validity battery (experiments.md) still has OOD + counterfactual items
 open). S3's native gap additionally motivates including the decoder-LoRA
 control arm rather than treating bridge-only as the foregone winner.

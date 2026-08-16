@@ -1,4 +1,4 @@
-"""B1 activation-patching primitives (phase-b-causal.md §B1), pure parts.
+"""B1 activation-patching primitives (docs/experiments.md §B1), pure parts.
 
 Everything modal_patch.py needs that can be tested without a GPU:
 

@@ -1,4 +1,4 @@
-"""Boundary pins for the v1 difficulty rules (Data.md).
+"""Boundary pins for the v1 difficulty rules (docs/experiments.md §Closed).
 
 Boundary bugs in tagging silently corrupt every downstream results table,
 so the exact cut points are pinned here: max(R,C)==9 vs 10, the empty_frac
@@ -174,7 +174,7 @@ def make_tablegen_table(grid_rows=6, grid_cols=5, *, header_rows=1, spans=None):
 
 
 def test_table_generator_schema_tags_without_raising():
-    # a full sidecar in table-generator spelling must classify — Data.md rules
+    # a full sidecar in table-generator spelling must classify — docs/experiments.md §Closed rules
     # are exhaustive by precedence for any doc with sidecars
     level, cov = tag_table(make_tablegen_table())
     assert level == "easy"
