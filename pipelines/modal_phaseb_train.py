@@ -31,6 +31,25 @@ aux head on live merger captures, total = lm_ce + lam * aux, lam fanned over
     train_stats.json gains lm_ce/aux curves + finals so "bound but didn't
     transfer" is distinguishable from "failed to bind".
 
+R5 arms (docs/experiments.md §R5 — the pin-vs-scale 2x2; R4 outputs
+untouched). Both use R4a's exact objective (CE + lam=1 glyph aux, lr 3e-4):
+
+    R5b  bridge-only: the R4a recipe verbatim — its 2x2 cell is the train
+         corpus (R5b_700 duplicates R4a_1's recipe on the pilot split;
+         R5b_5k is the new-corpus run).
+    R5j  joint: merger AND decoder LoRA r16 both in the optimizer (LoRA lr
+         3e-4 too), encoder frozen. NOT param-matched to bridge-only by
+         design; merger/LoRA/aux-head counts reported separately.
+
+    --train-corpus {pilot,r5} picks the train data: pilot = the 789-split
+    below; r5 = /vol/corpus_r5/images_r5_modal.jsonl + probes_r5.jsonl,
+    read remotely (val = fixed seeded 40 r5 docs). EVAL IS UNCHANGED for
+    every arm: the same 211 pilot held-out docs. Checkpoints land in
+    /vol/phaseb/R5{j,b}_<corpus>/ with <corpus> in {700,5k} — disjoint
+    from every A_/B_/R4 dir. R5j saves bridge.safetensors (merger) + the
+    peft adapter + aux_head.safetensors, all three; generation needs
+    merger AND adapter, the b2 probe readout needs the merger half alone.
+
 Data: the pilot_1k probe-harness doc split (probe_fit.doc_is_train, seed 0,
 train_frac 0.8 -> 789 train / 211 held-out docs), clean natives from
 /vol/corpus, gold located exactly as the frontier scoring pipeline located it
@@ -57,8 +76,11 @@ then generates greedily (modal_frontier's pattern, its QWEN_PROMPT, native
 resolution) over the held-out docs -> /vol/phaseb/eval/<arm>/<image_id>.md,
 resume-safe. --score fetches the eval outputs, scores every arm with
 frontier_score.score_pred_dir against data/pilot_1k, and writes the raw
-bundle (per-arm summaries + doc-paired bootstrap contrasts A-B, A-C, B-C;
-no conclusion prose) to validation/b2_pilot.json.
+bundle (per-arm summaries + doc-paired bootstrap contrasts A-B, A-C, B-C, and
+the same contrasts on the §R5 content_edit_sim readout as content_contrasts;
+no conclusion prose) to validation/b2_pilot.json. Retro-scoring the §R5
+content metric over ALREADY-fetched eval outputs (no volume access) is
+pipelines/retro_content_metric.py.
 
 The train/eval manifests (gold markdown inline; ~2.5 MB) are rebuilt locally
 and re-uploaded to /vol/corpus/phaseb_{train,eval}.jsonl on every --smoke/
@@ -107,7 +129,16 @@ R4_LR = 3e-4  # fixed: arm A's val-loss winner (docs/experiments.md §R4)
 LAM_GRID = (0.1, 1.0)
 SMOKE_LAM = 1.0
 GLYPH_SIDECAR = "phaseb_glyphs.json"  # under /vol/corpus, next to the manifests
-SMOKE_LR = {"A": 1e-4, "B": 3e-4, "R4a": R4_LR, "R4b": R4_LR}
+R5_ARMS = ("R5j", "R5b")  # joint (merger + decoder LoRA r16) / bridge-only (§R5)
+R5_LR = R4_LR  # one lr for merger AND LoRA — pre-registered, no fan
+R5_LAM = 1.0  # glyph aux weight, fixed: R4a's lam=1 recipe
+R5_LORA_RANK = 16
+GLYPH_AUX_ARMS = ("R4a", *R5_ARMS)  # arms whose aux is the glyph-probe head
+CORPUS_TAGS = {"pilot": "700", "r5": "5k"}  # --train-corpus -> checkpoint-dir key
+R5_CORPUS_DIR = "corpus_r5"  # under /vol; built by the §R5 corpus job, read-only here
+R5_IMAGES = "images_r5_modal.jsonl"
+R5_PROBES = "probes_r5.jsonl"
+SMOKE_LR = {"A": 1e-4, "B": 3e-4, "R4a": R4_LR, "R4b": R4_LR, "R5j": R5_LR}
 SMOKE_DOCS = 20
 SMOKE_VAL_DOCS = 5
 SMOKE_MICRO_STEPS = 30
@@ -209,6 +240,87 @@ def build_manifests(
     return {"train_rows": train_rows, "eval_rows": eval_rows, "counts": counts}
 
 
+def build_r5_manifest(
+    corpus_root: Path,
+    images_name: str = R5_IMAGES,
+    n_val_docs: int = N_VAL_DOCS,
+    val_seed: int = VAL_SEED,
+) -> dict:
+    """The §R5 train-corpus contract, read from <corpus_root>/images_r5_modal
+    .jsonl (single-page docs; image_path relative to corpus_root). Gold =
+    inline `gold_markdown`, else the row's `gold_path` sidecar read relative
+    to corpus_root; rows with neither (or empty gold) are dropped and listed.
+    Val = n_val_docs sampled (random.Random(val_seed)) from the sorted usable
+    doc_ids — build_manifests' slice, verbatim, on the r5 corpus. TRAIN ONLY:
+    eval stays the pilot 211 held-out docs for every arm, so no eval rows are
+    built here. -> {"train_rows", "counts"}; deterministic for a fixed corpus
+    (tests/test_phaseb_r5.py pins content + the val slice)."""
+    rows = [json.loads(line)
+            for line in (corpus_root / images_name).read_text().splitlines()
+            if line.strip()]
+    rows.sort(key=lambda r: r["image_id"])
+    assert len({r["image_id"] for r in rows}) == len(rows), "duplicate r5 image_ids"
+    assert len({r["doc_id"] for r in rows}) == len(rows), "r5 rows must be 1 page/doc"
+
+    train_rows: list[dict] = []
+    no_gold: list[str] = []
+    for r in rows:
+        gold = r.get("gold_markdown", "")
+        if not gold and r.get("gold_path"):
+            gold_file = corpus_root / r["gold_path"]
+            gold = gold_file.read_text(encoding="utf-8") if gold_file.exists() else ""
+        if not gold:
+            no_gold.append(r["doc_id"])
+            continue
+        train_rows.append({"image_id": r["image_id"], "image_path": r["image_path"],
+                           "doc_id": r["doc_id"], "generator": r.get("generator", ""),
+                           "split": "train", "gold_markdown": gold})
+
+    usable_docs = sorted(r["doc_id"] for r in train_rows)
+    val_docs = set(random.Random(val_seed).sample(usable_docs, n_val_docs))
+    for r in train_rows:
+        if r["doc_id"] in val_docs:
+            r["split"] = "val"
+
+    counts = {
+        "corpus": "r5",
+        "n_docs": len(rows),
+        "n_train_usable": sum(r["split"] == "train" for r in train_rows),
+        "n_val": sum(r["split"] == "val" for r in train_rows),
+        "n_no_gold": len(no_gold),
+        "no_gold_docs": sorted(no_gold),
+        "val": {"n_docs": n_val_docs, "seed": val_seed},
+    }
+    return {"train_rows": train_rows, "counts": counts}
+
+
+def certify_joint_trainable(named_params, merger_param_ids: set[int]) -> dict:
+    """R5j trainable-set certification: every trainable param must be either
+    the merger's or a decoder-LoRA matrix, and BOTH halves must be present.
+    A stray trainable (encoder, embeddings, lm head) or a missing half is a
+    hard error — never a silently different experiment. -> separate counts
+    {"merger_params", "lora_params"} (reported separately by contract; the
+    joint arm is deliberately not param-matched)."""
+    merger_n = lora_n = 0
+    stray: list[str] = []
+    for name, p in named_params:
+        if not p.requires_grad:
+            continue
+        if id(p) in merger_param_ids:
+            merger_n += p.numel()
+        elif "lora_" in name:
+            lora_n += p.numel()
+        else:
+            stray.append(name)
+    if stray:
+        raise ValueError(f"R5j stray trainable params (encoder/decoder body must "
+                         f"stay frozen): {sorted(stray)[:5]}")
+    if not (merger_n and lora_n):
+        raise ValueError(f"R5j needs both halves in the optimizer: "
+                         f"merger={merger_n}, lora={lora_n}")
+    return {"merger_params": merger_n, "lora_params": lora_n}
+
+
 def build_training_ids(
     prefix_ids: list[int], gold_ids: list[int], eos_id: int, cap: int = SEQ_CAP
 ) -> tuple[list[int], list[int]] | None:
@@ -273,19 +385,23 @@ def bootstrap_contrast(
 
 
 def contrast_block(
-    scores_a: dict[str, dict], scores_b: dict[str, dict], n_boot: int = 2000, seed: int = 0
+    scores_a: dict[str, dict], scores_b: dict[str, dict], n_boot: int = 2000,
+    seed: int = 0, key: str = "score",
 ) -> dict:
     """Overall + per-family contrasts from two {image_id: scores.jsonl record}
-    maps (frontier_score output). Only docs scored in BOTH arms pair up."""
-    common = sorted(set(scores_a) & set(scores_b))
+    maps (frontier_score output). Only docs scored in BOTH arms pair up; with a
+    non-default ``key`` (e.g. ``content_edit_sim``), only docs carrying that
+    field in both arms."""
+    common = sorted(i for i in set(scores_a) & set(scores_b)
+                    if key in scores_a[i] and key in scores_b[i])
     out = {"overall": bootstrap_contrast(
-        [(scores_a[i]["score"], scores_b[i]["score"]) for i in common],
+        [(scores_a[i][key], scores_b[i][key]) for i in common],
         n_boot=n_boot, seed=seed,
     )}
     fams = sorted({scores_a[i]["family"] for i in common})
     out["families"] = {
         fam: bootstrap_contrast(
-            [(scores_a[i]["score"], scores_b[i]["score"])
+            [(scores_a[i][key], scores_b[i][key])
              for i in common if scores_a[i]["family"] == fam],
             n_boot=n_boot, seed=seed,
         )
@@ -394,25 +510,36 @@ def _fmt_lr(lr: float) -> str:
     return f"{lr:g}"
 
 
-def arm_dir(arm: str, knob: float, smoke: bool = False) -> str:
+def _fmt_knob(knob: float | str) -> str:
+    return knob if isinstance(knob, str) else _fmt_lr(knob)
+
+
+def arm_dir(arm: str, knob: float | str, smoke: bool = False) -> str:
     """Relative (to /vol) checkpoint dir: phaseb/[smoke/]<arm>_<knob>.
 
     The knob is the arm's fan axis — lr for A/B, lam for R4 arms (whose lr
-    is fixed at R4_LR). The arm name prefixes the dir, so R4 dirs can never
-    collide with A_/B_ ones (pinned in tests/test_phaseb_r4.py)."""
+    is fixed at R4_LR), corpus tag (700|5k) for R5 arms (lr AND lam fixed).
+    The arm name prefixes the dir, so R4/R5 dirs can never collide with
+    A_/B_ ones or each other (pinned in tests/test_phaseb_r{4,5}.py)."""
     root = f"{PHASEB_ROOT}/smoke" if smoke else PHASEB_ROOT
-    return f"{root}/{arm}_{_fmt_lr(knob)}"
+    return f"{root}/{arm}_{_fmt_knob(knob)}"
 
 
-def arm_label(arm: str, knob: float) -> str:
+def arm_label(arm: str, knob: float | str) -> str:
     """Eval/score identity: bare arm for A/B/C (one eval'd checkpoint each),
-    arm_<lam> for R4 arms (both lams are adjudication readouts)."""
-    return f"{arm}_{_fmt_lr(knob)}" if arm in R4_ARMS else arm
+    arm_<lam> for R4 arms (both lams are adjudication readouts), arm_<corpus>
+    for R5 arms (each 2x2 cell is its own readout)."""
+    return f"{arm}_{_fmt_knob(knob)}" if arm in (*R4_ARMS, *R5_ARMS) else arm
 
 
 def stats_label(stats: dict) -> str:
     """arm_label of a train_stats.json record."""
-    knob = stats["lam"] if stats["arm"] in R4_ARMS else stats["lr"]
+    if stats["arm"] in R5_ARMS:
+        knob = stats["corpus_tag"]
+    elif stats["arm"] in R4_ARMS:
+        knob = stats["lam"]
+    else:
+        knob = stats["lr"]
     return arm_label(stats["arm"], knob)
 
 
@@ -556,6 +683,7 @@ def train_arm(
     arm: str,
     lr: float,
     lam: float = 0.0,
+    train_corpus: str = "pilot",
     smoke: bool = False,
     epochs: int = EPOCHS,
     grad_accum: int = GRAD_ACCUM,
@@ -564,12 +692,17 @@ def train_arm(
 ) -> dict:
     """One (arm, knob) training run -> /vol/phaseb/[smoke/]<arm>_<knob>/
     (bridge.safetensors or adapter/, saved at every val improvement, +
-    train_stats.json; knob = lr for A/B, lam for R4). Arm A trains the merger
-    only; arm B trains decoder LoRA rank-matched to the merger count within
-    2x; R4 arms train the merger + a jointly-optimized aux head whose loss
-    (lam-weighted) is added to the LM CE — the head is saved separately
-    (aux_head.safetensors) and is NOT part of the bridge deliverable. All
-    arms freeze everything else and hard-assert it at step 0."""
+    train_stats.json; knob = lr for A/B, lam for R4, corpus tag for R5). Arm
+    A trains the merger only; arm B trains decoder LoRA rank-matched to the
+    merger count within 2x; R4/R5 arms train the merger + a jointly-optimized
+    aux head whose loss (lam-weighted) is added to the LM CE — the head is
+    saved separately (aux_head.safetensors) and is NOT part of the bridge
+    deliverable. R5b is the R4a recipe on the chosen corpus; R5j additionally
+    puts decoder LoRA r16 in the optimizer (adapter/ saved next to the
+    bridge; both are needed for generation). train_corpus=r5 reads
+    /vol/corpus_r5 remotely (manifest + glyph sidecar built in-process,
+    deterministic); R5 arms only. All arms freeze everything else —
+    encoder always — and hard-assert it at step 0."""
     import time
 
     import torch
@@ -577,32 +710,60 @@ def train_arm(
     from PIL import Image
     from safetensors.torch import save_file
 
-    from encoder_experiments.adapters.qwen_vit import _resolve_attr
     from modal_frontier import QWEN_PROMPT
 
     is_r4 = arm in R4_ARMS
-    assert arm in ("A", "B") or is_r4, f"train_arm takes A, B, R4a or R4b, got {arm!r}"
-    assert (lam > 0) == is_r4, f"lam is the R4 knob: arm {arm} got lam={lam}"
+    is_r5 = arm in R5_ARMS
+    is_aux = is_r4 or is_r5
+    is_glyph = arm in GLYPH_AUX_ARMS
+    assert arm in ("A", "B") or is_aux, (
+        f"train_arm takes A, B, R4a, R4b, R5j or R5b, got {arm!r}"
+    )
+    assert (lam > 0) == is_aux, f"lam is the aux knob: arm {arm} got lam={lam}"
+    assert train_corpus in CORPUS_TAGS, f"unknown train_corpus {train_corpus!r}"
+    assert is_r5 or train_corpus == "pilot", (
+        f"arm {arm} is pilot-only; --train-corpus r5 takes R5 arms"
+    )
+    corpus_tag = CORPUS_TAGS[train_corpus]
     data_volume.reload()
 
-    corpus = Path(VOL_PATH) / "corpus"
-    manifest = corpus / TRAIN_MANIFEST
-    if not manifest.exists():
-        raise FileNotFoundError(f"{manifest} not found — run --plan/--train locally first")
-    rows = [json.loads(line) for line in manifest.read_text().splitlines() if line.strip()]
+    r5_counts = None
+    if train_corpus == "r5":
+        corpus = Path(VOL_PATH) / R5_CORPUS_DIR
+        if not (corpus / R5_IMAGES).exists():
+            raise FileNotFoundError(
+                f"{corpus / R5_IMAGES} not found — the §R5 corpus job must land first"
+            )
+        r5 = build_r5_manifest(corpus)
+        rows, r5_counts = r5["train_rows"], r5["counts"]
+        print(f"[phaseb] r5 corpus: {json.dumps({k: v for k, v in r5_counts.items() if k != 'no_gold_docs'})}")
+    else:
+        corpus = Path(VOL_PATH) / "corpus"
+        manifest = corpus / TRAIN_MANIFEST
+        if not manifest.exists():
+            raise FileNotFoundError(f"{manifest} not found — run --plan/--train locally first")
+        rows = [json.loads(line) for line in manifest.read_text().splitlines() if line.strip()]
     train_rows = [r for r in rows if r["split"] == "train"]
     val_rows = [r for r in rows if r["split"] == "val"]
 
     glyphs = n_glyph_classes = None
-    if arm == "R4a":
-        sidecar_path = corpus / GLYPH_SIDECAR
-        if not sidecar_path.exists():
-            raise FileNotFoundError(f"{sidecar_path} not found — run --plan/--train locally first")
-        sidecar = json.loads(sidecar_path.read_text())
+    if is_glyph:
+        if train_corpus == "r5":
+            probes_path = corpus / R5_PROBES
+            if not probes_path.exists():
+                raise FileNotFoundError(
+                    f"{probes_path} not found — the §R5 corpus job must land first"
+                )
+            sidecar = build_glyph_sidecar(probes_path, {r["image_id"] for r in rows})
+        else:
+            sidecar_path = corpus / GLYPH_SIDECAR
+            if not sidecar_path.exists():
+                raise FileNotFoundError(f"{sidecar_path} not found — run --plan/--train locally first")
+            sidecar = json.loads(sidecar_path.read_text())
         glyphs, n_glyph_classes = sidecar["images"], sidecar["n_classes"]
 
     if smoke:
-        if arm == "R4a":
+        if is_glyph:
             # the plain [:SMOKE_DOCS] head of the sorted manifest is all
             # chart docs with zero glyph rows; R4a's smoke must exercise the
             # aux path, so slice the first glyph-covered docs instead
@@ -623,15 +784,19 @@ def train_arm(
 
     merger, visual_prefix = _find_merger(model)
     bridge_params = sum(p.numel() for p in merger.parameters())
+    # merge size resolved pre-wrap: peft's attr forwarding would obscure the
+    # dotted visual path for R5j (only the aux grid math uses it)
+    from encoder_experiments.adapters.qwen_vit import _resolve_attr
+
+    visual = _resolve_attr(model, visual_prefix)
+    merge = int(getattr(visual, "spatial_merge_size", None)
+                or getattr(getattr(visual, "config", None), "spatial_merge_size", 2))
+    del visual
 
     model.requires_grad_(False)
     lora_rank = None
-    if arm != "B":  # A and both R4 arms train the merger
-        merger.requires_grad_(True)
-        merger_ids = {id(p) for p in merger.parameters()}
-        trainable = {n: p for n, p in model.named_parameters() if id(p) in merger_ids}
-        expected = {n for n, p in model.named_parameters() if id(p) in merger_ids}
-    else:
+    lora_params = None
+    if arm in ("B", "R5j"):  # decoder LoRA joins the optimizer
         target_shapes: list[tuple[int, int]] = []
         target_names: list[str] = []
         for name, mod in model.named_modules():
@@ -640,37 +805,62 @@ def train_arm(
             if isinstance(mod, torch.nn.Linear) and name.rsplit(".", 1)[-1] in LORA_TARGET_SUFFIXES:
                 target_names.append(name)
                 target_shapes.append((mod.in_features, mod.out_features))
-        lora_rank, expected_count = pick_lora_rank(bridge_params, target_shapes)
+        if arm == "B":
+            lora_rank, expected_count = pick_lora_rank(bridge_params, target_shapes)
+        else:  # R5j: rank fixed at 16 by §R5 — deliberately NOT param-matched
+            lora_rank = R5_LORA_RANK
+            expected_count = lora_param_count(target_shapes, lora_rank)
         from peft import LoraConfig, get_peft_model
 
         model = get_peft_model(model, LoraConfig(
             r=lora_rank, lora_alpha=2 * lora_rank, lora_dropout=0.0,
             bias="none", target_modules=target_names,
         ))
+    merger_ids = {id(p) for p in merger.parameters()}
+    if arm != "B":  # A/R4/R5 train the merger (peft re-froze it, so after the wrap)
+        merger.requires_grad_(True)
+    if arm == "B":
         trainable = {n: p for n, p in model.named_parameters() if p.requires_grad}
         assert all("lora_" in n for n in trainable), sorted(trainable)[:5]
         actual = sum(p.numel() for p in trainable.values())
         assert actual == expected_count, (
             f"LoRA count mismatch: peft trainable {actual} != formula {expected_count}"
         )
-        expected = set(trainable)
+    elif arm == "R5j":
+        trainable = {n: p for n, p in model.named_parameters() if p.requires_grad}
+        joint = certify_joint_trainable(model.named_parameters(), merger_ids)
+        assert joint["merger_params"] == bridge_params, joint
+        assert joint["lora_params"] == expected_count, (
+            f"LoRA count mismatch: peft trainable {joint['lora_params']} != "
+            f"formula {expected_count}"
+        )
+        lora_params = joint["lora_params"]
+    else:
+        trainable = {n: p for n, p in model.named_parameters() if id(p) in merger_ids}
+    expected = set(trainable)
 
     trainable_params = sum(p.numel() for p in trainable.values())
     match_ratio = max(trainable_params / bridge_params, bridge_params / trainable_params)
-    assert match_ratio <= LORA_MATCH_MAX_RATIO, (
-        f"arm {arm}: trainable {trainable_params} vs bridge {bridge_params} "
-        f"ratio {match_ratio:.2f} > {LORA_MATCH_MAX_RATIO}"
-    )
+    if arm != "R5j":  # the joint arm is not capacity-matched (§R5, by design)
+        assert match_ratio <= LORA_MATCH_MAX_RATIO, (
+            f"arm {arm}: trainable {trainable_params} vs bridge {bridge_params} "
+            f"ratio {match_ratio:.2f} > {LORA_MATCH_MAX_RATIO}"
+        )
     actual_names = {n for n, p in model.named_parameters() if p.requires_grad}
     assert actual_names == expected, (
         f"trainable set drifted: +{sorted(actual_names - expected)[:5]} "
         f"-{sorted(expected - actual_names)[:5]}"
     )
     print(f"[phaseb] arm {arm} lr={_fmt_lr(lr)}"
-          f"{f' lam={_fmt_lr(lam)}' if is_r4 else ''}: bridge_params={bridge_params:,} "
+          f"{f' lam={_fmt_lr(lam)}' if is_aux else ''}"
+          f"{f' corpus={train_corpus}({corpus_tag})' if is_r5 else ''}: "
+          f"bridge_params={bridge_params:,} "
           f"trainable={trainable_params:,} (ratio {match_ratio:.2f}"
           f"{f', lora r={lora_rank}' if lora_rank else ''}) "
           f"train={len(train_rows)} val={len(val_rows)} docs")
+    if arm == "R5j":
+        print(f"[phaseb] R5j trainable halves (counted separately, not matched): "
+              f"merger={bridge_params:,} lora={lora_params:,}")
 
     if hasattr(model, "gradient_checkpointing_enable"):
         model.gradient_checkpointing_enable(
@@ -715,13 +905,10 @@ def train_arm(
             inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
         return inputs.to(device), torch.tensor([labels], device=device)
 
-    # ---- R4: merger tap + jointly-trained aux head ----------------------- #
+    # ---- R4/R5: merger tap + jointly-trained aux head -------------------- #
     tap = aux_head = aux_kind = None
-    aux_head_params = merge = None
-    if is_r4:
-        visual = _resolve_attr(model, visual_prefix)
-        merge = int(getattr(visual, "spatial_merge_size", None)
-                    or getattr(getattr(visual, "config", None), "spatial_merge_size", 2))
+    aux_head_params = None
+    if is_aux:
         tap = _MergerTap(merger)
 
         def merged_grid(inputs, out):
@@ -747,7 +934,7 @@ def train_arm(
             model(**probe_enc[0])
         model.train()
         d_out = tap.out.shape[-1]
-        if arm == "R4a":
+        if is_glyph:
             merged_grid(probe_enc[0], tap.out)
             aux_head = torch.nn.Linear(d_out, n_glyph_classes)
             aux_kind = "glyph_ce"
@@ -762,14 +949,15 @@ def train_arm(
         del probe_enc
         print(f"[phaseb] {arm} aux head ({aux_kind}): "
               f"{d_out} -> {aux_head.out_features}, params={aux_head_params:,}; "
-              f"optimizer = merger {trainable_params:,} + aux head "
+              f"optimizer = {'merger + decoder LoRA' if arm == 'R5j' else 'merger'} "
+              f"{trainable_params:,} + aux head "
               f"{aux_head_params:,} (deliverable bridge.safetensors = merger only)")
 
         def aux_loss(row, inputs):
             """The lam-weighted aux term for one image, or None when it
-            carries no supervision (R4a doc without glyph rows)."""
+            carries no supervision (glyph-aux doc without glyph rows)."""
             out = tap.out
-            if arm == "R4a":
+            if is_glyph:
                 g = glyphs.get(row["image_id"])
                 if g is None:
                     return None
@@ -793,7 +981,8 @@ def train_arm(
     warmup = min(20, max(1, optim_total // 10))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup, optim_total)
 
-    out_dir = Path(VOL_PATH) / arm_dir(arm, lam if is_r4 else lr, smoke=smoke)
+    knob = corpus_tag if is_r5 else lam if is_r4 else lr
+    out_dir = Path(VOL_PATH) / arm_dir(arm, knob, smoke=smoke)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     def save_weights():
@@ -802,9 +991,13 @@ def train_arm(
         else:
             save_file({k: v.detach().to("cpu", torch.float32) for k, v in
                        merger.state_dict().items()}, out_dir / "bridge.safetensors")
+            if arm == "R5j":
+                # the joint arm's decoder half: generation needs bridge AND
+                # adapter; the b2 probe readout needs the bridge alone
+                model.save_pretrained(str(out_dir / "adapter"))
             if aux_head is not None:
                 # record only — NOT the deliverable; eval and the b2 probe
-                # pipeline load bridge.safetensors alone
+                # pipeline never load it
                 save_file({k: v.detach().to("cpu", torch.float32) for k, v in
                            aux_head.state_dict().items()}, out_dir / "aux_head.safetensors")
         data_volume.commit()
@@ -812,7 +1005,7 @@ def train_arm(
     @torch.no_grad()
     def val_metrics():
         """-> (lm_ce, aux or None, total). total is the selection metric:
-        the training objective lm + lam*aux for R4, plain lm for A/B."""
+        the training objective lm + lam*aux for R4/R5, plain lm for A/B."""
         model.eval()
         lm_losses, aux_losses = [], []
         for row in val_rows:
@@ -820,17 +1013,17 @@ def train_arm(
             if enc is None:
                 continue
             inputs, labels = enc
-            if is_r4:
+            if is_aux:
                 tap.clear()
             lm_losses.append(float(_token_ce(model(**inputs).logits, labels).item()))
-            if is_r4:
+            if is_aux:
                 a = aux_loss(row, inputs)
                 if a is not None:
                     aux_losses.append(float(a.item()))
         model.train()
         lm = sum(lm_losses) / len(lm_losses) if lm_losses else float("nan")
         aux = sum(aux_losses) / len(aux_losses) if aux_losses else None
-        total = lm + lam * aux if (is_r4 and aux is not None) else lm
+        total = lm + lam * aux if (is_aux and aux is not None) else lm
         return lm, aux, total
 
     dropped: set[str] = set()
@@ -863,12 +1056,12 @@ def train_arm(
                 dropped.add(row["image_id"])
                 continue
             inputs, labels = enc
-            if is_r4:
+            if is_aux:
                 tap.clear()
             lm = _token_ce(model(**inputs).logits, labels)
             loss = lm
             aux = None
-            if is_r4:
+            if is_aux:
                 assert tap.out is not None and tap.out.requires_grad, (
                     "merger capture is outside autograd (checkpointed or "
                     "no-grad forward) — the aux loss cannot shape the merger"
@@ -889,7 +1082,7 @@ def train_arm(
                 optim += 1
                 lm_ce_curve.append(round(sum(win_lm) / len(win_lm), 6))
                 win_lm = []
-                if is_r4:
+                if is_aux:
                     aux_curve.append(
                         round(sum(win_aux) / len(win_aux), 6) if win_aux else None
                     )
@@ -905,16 +1098,18 @@ def train_arm(
                         f"{[a for a, b in zip(now, fingerprint0) if a != b][:3]}"
                     )
                     frozen_checked = True
+                    desc = {"A": "merger", "B": "decoder LoRA",
+                            "R5j": "merger + decoder LoRA + aux head"}.get(
+                                arm, "merger + aux head")
                     print(f"[phaseb] step-0 frozen check passed "
-                          f"({len(fingerprint0)} fingerprints; trainable = "
-                          f"{'merger + aux head' if is_r4 else 'merger' if arm == 'A' else 'decoder LoRA'})")
+                          f"({len(fingerprint0)} fingerprints; trainable = {desc})")
             if micro % 25 == 0:
                 aux_s = f" aux={float(aux.item()):.4f}" if aux is not None else ""
                 print(f"[phaseb] {arm}_{_fmt_lr(lr)} micro {micro}/{micro_total} "
                       f"lm_ce={float(lm.item()):.4f}{aux_s}")
         vl_lm, vl_aux, vl = val_metrics()
         entry = {"epoch": epoch + 1, "optim_step": optim, "val_loss": round(vl, 6)}
-        if is_r4:
+        if is_aux:
             entry["val_lm_ce"] = round(vl_lm, 6)
             entry["val_aux"] = round(vl_aux, 6) if vl_aux is not None else None
         val_curve.append(entry)
@@ -929,18 +1124,23 @@ def train_arm(
     stats = {
         "arm": arm,
         "lr": lr,
-        "lam": lam if is_r4 else None,
+        "lam": lam if is_aux else None,
+        "train_corpus": train_corpus,
+        "corpus_tag": corpus_tag if is_r5 else None,
+        "corpus_counts": r5_counts,
         "smoke": smoke,
         "checkpoint": CHECKPOINT,
         "bridge_params": bridge_params,
         "trainable_params": trainable_params,
+        "merger_params": bridge_params if arm == "R5j" else None,  # halves, separately
+        "lora_params": lora_params,
         "aux_kind": aux_kind,
         "aux_head_params": aux_head_params,
-        "n_no_aux_supervision": n_no_aux if is_r4 else None,
+        "n_no_aux_supervision": n_no_aux if is_aux else None,
         "lm_ce_curve": lm_ce_curve,
         "lm_ce_final": (round(sum(lm_ce_curve[-5:]) / len(lm_ce_curve[-5:]), 6)
                         if lm_ce_curve else None),
-        "aux_curve": aux_curve if is_r4 else None,
+        "aux_curve": aux_curve if is_aux else None,
         "aux_loss_final": (round(sum(aux_pts[-5:]) / len(aux_pts[-5:]), 6)
                            if aux_pts else None),
         "match_ratio": round(match_ratio, 4),
@@ -970,9 +1170,10 @@ def train_arm(
     (out_dir / "train_stats.json").write_text(json.dumps(stats, indent=2) + "\n")
     data_volume.commit()
     print(f"[phaseb] {json.dumps({k: v for k, v in stats.items() if k != 'dropped_overlong'})}")
-    if smoke and is_r4:
-        # smoke contract: the aux objective must bind and the LM CE must
-        # survive it — asserted after stats land so a failure is inspectable
+    if smoke and is_aux:
+        # smoke contract (R4 and R5j alike): the aux objective must bind and
+        # the LM CE must survive it — asserted after stats land so a failure
+        # is inspectable
         assert all(math.isfinite(v) for v in lm_ce_curve), (
             f"lm_ce went non-finite under the aux loss: {lm_ce_curve}"
         )
@@ -995,6 +1196,7 @@ def train_arm(
 def eval_arm(
     arm: str,
     lr: float = 0.0,
+    corpus: str = "",
     shard: int = 0,
     nshards: int = 1,
     limit: int = 0,
@@ -1003,11 +1205,17 @@ def eval_arm(
     """Greedy generation (modal_frontier's pattern: fixed QWEN_PROMPT, native
     resolution, fence-stripped) over the held-out docs for one arm ->
     /vol/phaseb/[smoke/]eval/<label>/<image_id>.md, resume-safe (label =
-    arm for A/B/C, <arm>_<lam> for R4). Arms A/R4a/R4b load
-    bridge.safetensors into the merger — for R4 that is merger-only BY
+    arm for A/B/C, <arm>_<lam> for R4, <arm>_<corpus> for R5). Arms
+    A/R4a/R4b/R5b load bridge.safetensors into the merger — merger-only BY
     CONTRACT: the aux head is never loaded at eval. Arm B attaches the peft
-    adapter, arm C is the untouched base. For R4 arms the `lr` argument
-    carries the lam knob (the checkpoint-dir key)."""
+    adapter, arm C is the untouched base. R5j needs BOTH halves for
+    generation: bridge.safetensors into the merger AND the peft adapter
+    (the b2 probe readout, by contrast, consumes bridge.safetensors alone —
+    the merger half suffices there). For R4 arms the `lr` argument carries
+    the lam knob; for R5 arms `corpus` (700|5k) is the checkpoint-dir key.
+
+    Every arm generates over the SAME pilot eval manifest (211 held-out
+    docs) regardless of its train corpus — §R5's fixed-eval contract."""
     import time
     import traceback
 
@@ -1018,8 +1226,15 @@ def eval_arm(
     from encoder_experiments.extract import safe_image_id
     from modal_frontier import QWEN_PROMPT, _strip_md_fence
 
-    assert arm in ("A", "B", "C", *R4_ARMS), f"unknown arm {arm!r}"
-    assert arm == "C" or lr > 0, f"arm {arm} needs its trained knob (lr / lam)"
+    assert arm in ("A", "B", "C", *R4_ARMS, *R5_ARMS), f"unknown arm {arm!r}"
+    if arm in R5_ARMS:
+        assert corpus in CORPUS_TAGS.values(), (
+            f"arm {arm} needs corpus in {sorted(CORPUS_TAGS.values())}, got {corpus!r}"
+        )
+        knob: float | str = corpus
+    else:
+        assert arm == "C" or lr > 0, f"arm {arm} needs its trained knob (lr / lam)"
+        knob = lr
     data_volume.reload()
 
     corpus = Path(VOL_PATH) / "corpus"
@@ -1034,27 +1249,33 @@ def eval_arm(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, processor = _load_model_and_processor(CHECKPOINT, device)
     weights_note = "base"
-    if arm in ("A", *R4_ARMS):
+    if arm in ("A", *R4_ARMS, *R5_ARMS):
         merger, _ = _find_merger(model)
-        path = Path(VOL_PATH) / arm_dir(arm, lr, smoke=smoke) / "bridge.safetensors"
+        ckpt_dir = Path(VOL_PATH) / arm_dir(arm, knob, smoke=smoke)
+        path = ckpt_dir / "bridge.safetensors"
         state = {k: v.to(torch.bfloat16) for k, v in load_file(str(path)).items()}
         merger.load_state_dict(state, strict=True)
         merger.to(device)
         weights_note = str(path)
+        if arm == "R5j":  # the joint arm's decoder half rides along
+            from peft import PeftModel
+
+            model = PeftModel.from_pretrained(model, str(ckpt_dir / "adapter"))
+            weights_note += " + adapter"
     elif arm == "B":
         from peft import PeftModel
 
-        path = Path(VOL_PATH) / arm_dir(arm, lr, smoke=smoke) / "adapter"
+        path = Path(VOL_PATH) / arm_dir(arm, knob, smoke=smoke) / "adapter"
         model = PeftModel.from_pretrained(model, str(path))
         weights_note = str(path)
     model.eval()
 
     root = Path(VOL_PATH) / PHASEB_ROOT / ("smoke/eval" if smoke else "eval")
-    out_dir = root / arm_label(arm, lr)
+    out_dir = root / arm_label(arm, knob)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta_path = out_dir / f"meta.shard{shard}.jsonl"
     errors_path = out_dir / f"errors.shard{shard}.jsonl"
-    print(f"[phaseb-eval] arm {arm_label(arm, lr)} ({weights_note}) shard {shard}/{nshards}: "
+    print(f"[phaseb-eval] arm {arm_label(arm, knob)} ({weights_note}) shard {shard}/{nshards}: "
           f"{len(rows)} docs -> {out_dir}")
 
     messages = [{
@@ -1115,7 +1336,8 @@ def eval_arm(
 
     data_volume.commit()
     stats = {
-        "arm": arm, "lr": lr or None, "shard": shard, "nshards": nshards,
+        "arm": arm, "lr": lr or None, "corpus": corpus or None,
+        "shard": shard, "nshards": nshards,
         "done": done, "skipped": skipped, "failed": failed,
         "mean_gen_s": round(sum(gen_times) / len(gen_times), 2) if gen_times else None,
         "weights": weights_note,
@@ -1173,30 +1395,41 @@ def _upload_manifests(
           f"{glyph_sidecar['n_classes']} classes)")
 
 
-def _pick_eval_knobs(eval_lrs: str, smoke: bool) -> tuple[dict[str, float], dict[str, list[float]]]:
-    """-> (best-val-loss LR per B2 arm, ALL trained lams per R4 arm — both
-    lams are pre-registered adjudication readouts, no picking) from the
-    volume's train_stats.json files. --eval-lrs 'A:0.0001,R4a:1' pins
-    instead (R4 values are lams)."""
+def _pick_eval_knobs(
+    eval_lrs: str, smoke: bool
+) -> tuple[dict[str, float], dict[str, list[float]], dict[str, list[str]]]:
+    """-> (best-val-loss LR per B2 arm, ALL trained lams per R4 arm, ALL
+    trained corpus tags per R5 arm — every R4/R5 cell is a pre-registered
+    adjudication readout, no picking) from the volume's train_stats.json
+    files. --eval-lrs 'A:0.0001,R4a:1,R5j:5k' pins instead (R4 values are
+    lams, R5 values are corpus tags)."""
     if eval_lrs:
         best: dict[str, float] = {}
         r4: dict[str, list[float]] = {}
+        r5: dict[str, list[str]] = {}
         for part in eval_lrs.split(","):
             arm_name, knob_s = part.split(":")
-            arm_name = arm_name.strip()
-            if arm_name in R4_ARMS:
+            arm_name, knob_s = arm_name.strip(), knob_s.strip()
+            if arm_name in R5_ARMS:
+                assert knob_s in CORPUS_TAGS.values(), f"bad R5 corpus tag {knob_s!r}"
+                r5.setdefault(arm_name, []).append(knob_s)
+            elif arm_name in R4_ARMS:
                 r4.setdefault(arm_name, []).append(float(knob_s))
             else:
                 best[arm_name] = float(knob_s)
-        return best, r4
+        return best, r4, r5
     prefix = ["smoke"] if smoke else [""]
     stats = fetch_phaseb.remote(prefix, "train_stats.json")
     best_raw: dict[str, tuple[float, float]] = {}  # arm -> (val_loss, lr)
     r4 = {}
+    r5 = {}
     for rel, text in stats.items():
         if not smoke and rel.startswith(("smoke/", "eval/")):
             continue
         s = json.loads(text)
+        if s["arm"] in R5_ARMS:
+            r5.setdefault(s["arm"], []).append(s["corpus_tag"])
+            continue
         if s["arm"] in R4_ARMS:
             r4.setdefault(s["arm"], []).append(s["lam"])
             continue
@@ -1207,10 +1440,12 @@ def _pick_eval_knobs(eval_lrs: str, smoke: bool) -> tuple[dict[str, float], dict
             best_raw[s["arm"]] = (vl, s["lr"])
     picked = {a: lr for a, (vl, lr) in best_raw.items()}
     r4 = {a: sorted(set(v)) for a, v in r4.items()}
+    r5 = {a: sorted(set(v)) for a, v in r5.items()}
     print(f"[phaseb] best-LR picks from train_stats: "
           f"{ {a: (_fmt_lr(lr), best_raw[a][0]) for a, lr in picked.items()} }"
-          + (f" ; R4 lams: { {a: [_fmt_lr(v) for v in vs] for a, vs in r4.items()} }" if r4 else ""))
-    return picked, r4
+          + (f" ; R4 lams: { {a: [_fmt_lr(v) for v in vs] for a, vs in r4.items()} }" if r4 else "")
+          + (f" ; R5 corpora: {r5}" if r5 else ""))
+    return picked, r4, r5
 
 
 def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
@@ -1266,6 +1501,14 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
         for a, b in combinations(arms, 2)
         if a in arm_scores and b in arm_scores
     }
+    # §R5 content-normalized readout: same doc-paired bootstrap, on the
+    # additive content_edit_sim field (text/math co-primary; per-arm means
+    # already live in each summary's content_edit_sim blocks)
+    content_contrasts = {
+        f"{a}-{b}": contrast_block(arm_scores[a], arm_scores[b], key="content_edit_sim")
+        for a, b in combinations(arms, 2)
+        if a in arm_scores and b in arm_scores
+    }
     from datetime import datetime, timezone
 
     bundle = {
@@ -1289,6 +1532,8 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
             for arm in arms
         },
         "contrasts": contrasts,
+        "content_metric": "content_edit_sim",  # frontier_score.content_normalize
+        "content_contrasts": content_contrasts,
         "bootstrap": {"n_resamples": 2000, "unit": "document", "seed": 0},
     }
     out_path = repo / "validation" / ("b2_pilot_smoke.json" if smoke else "b2_pilot.json")
@@ -1296,6 +1541,8 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
     print(f"[phaseb-score] wrote {out_path}")
     for name, c in contrasts.items():
         print(f"[phaseb-score] {name} overall: {c['overall']}")
+    for name, c in content_contrasts.items():
+        print(f"[phaseb-score] {name} content_edit_sim overall: {c['overall']}")
 
 
 @app.local_entrypoint()
@@ -1308,6 +1555,7 @@ def main(
     arms: str = "",
     lrs: str = "",
     lam: str = "",
+    train_corpus: str = "pilot",
     eval_lrs: str = "",
     shards: int = 2,
     limit: int = 0,
@@ -1316,15 +1564,20 @@ def main(
     """One mode per invocation: --plan | --smoke | --train | --eval | --score.
 
     --arms restricts the arm set ("A,B" for train — pass "R4a,R4b" for the
-    R4 fan — "A,B,C" for eval/score, where R4 entries are labeled
-    R4a_<lam>); --lrs overrides the A/B training LR grid (comma floats; R4
-    lr is fixed at R4_LR); --lam overrides the R4 lam grid the same way;
-    --eval-lrs "A:0.0001,R4a:1" pins eval checkpoints (R4 values are lams)
-    instead of the auto-pick; --smoke-artifacts points --eval/--score at the
-    smoke checkpoints/outputs.
+    R4 fan, "R5j,R5b" for R5 — "A,B,C" for eval/score, where R4 entries are
+    labeled R4a_<lam> and R5 entries R5j_<700|5k>); --lrs overrides the A/B
+    training LR grid (comma floats; R4/R5 lr is fixed); --lam overrides the
+    R4 lam grid the same way (R5 lam is fixed at 1); --train-corpus
+    {pilot,r5} picks the R5 arms' train data (dir tag 700|5k; eval is always
+    the pilot 211); --eval-lrs "A:0.0001,R4a:1,R5j:5k" pins eval checkpoints
+    (R4 values are lams, R5 values are corpus tags) instead of the
+    auto-pick; --smoke-artifacts points --eval/--score at the smoke
+    checkpoints/outputs.
     """
     if sum([plan, smoke, train, eval, score]) != 1:
         raise SystemExit("pass exactly one of --plan --smoke --train --eval --score")
+    if train_corpus not in CORPUS_TAGS:
+        raise SystemExit(f"--train-corpus takes {sorted(CORPUS_TAGS)}, got {train_corpus!r}")
 
     dataset_root = Path(__file__).resolve().parents[1] / "data" / "pilot_1k"
     manifests = build_manifests(dataset_root)
@@ -1333,16 +1586,20 @@ def main(
     if plan:
         train_jobs = [(a, lr) for a in ("A", "B") for lr in LR_GRID[a]]
         r4_jobs = [(a, l) for a in R4_ARMS for l in LAM_GRID]
+        r5_jobs = [(a, t) for a in R5_ARMS for t in CORPUS_TAGS.values()]
         print(json.dumps(counts, indent=2))
         print(f"[plan] gpu={GPU} seq_cap={SEQ_CAP} epochs={EPOCHS} accum={GRAD_ACCUM}")
         print(f"[plan] train jobs ({len(train_jobs)}): "
               f"{[f'{a}_{_fmt_lr(lr)}' for a, lr in train_jobs]}")
         print(f"[plan] R4 jobs ({len(r4_jobs)}, lr={_fmt_lr(R4_LR)}, --arms R4a,R4b): "
               f"{[f'{a}_{_fmt_lr(l)}' for a, l in r4_jobs]}")
+        print(f"[plan] R5 jobs ({len(r5_jobs)}, lr={_fmt_lr(R5_LR)} lam={_fmt_lr(R5_LAM)} "
+              f"lora r={R5_LORA_RANK} for R5j; --arms R5j,R5b --train-corpus pilot|r5): "
+              f"{[f'{a}_{t}' for a, t in r5_jobs]}")
         print(f"[plan] smoke: {SMOKE_DOCS} docs, {SMOKE_MICRO_STEPS} micro steps, "
               f"lrs { {a: _fmt_lr(lr) for a, lr in SMOKE_LR.items()} }, "
-              f"R4 lam {_fmt_lr(SMOKE_LAM)}")
-        print(f"[plan] outputs: /vol/{PHASEB_ROOT}/<arm>_<lr|lam>/ ; eval -> "
+              f"aux lam {_fmt_lr(SMOKE_LAM)}")
+        print(f"[plan] outputs: /vol/{PHASEB_ROOT}/<arm>_<lr|lam|corpus>/ ; eval -> "
               f"/vol/{PHASEB_ROOT}/eval/<label>/ ; score -> validation/b2_pilot.json")
         return
 
@@ -1358,18 +1615,28 @@ def main(
     _upload_manifests(manifests["train_rows"], manifests["eval_rows"], glyph_sidecar)
 
     if smoke:
-        arm_list = [a for a in (arms or "A,B,R4a,R4b").split(",") if a in SMOKE_LR]
+        # smoke always exercises the pilot slice — R5j included (§R5: joint
+        # step-0 certification + aux binding on 20 docs / 30 steps)
+        arm_list = [a for a in (arms or "A,B,R4a,R4b,R5j").split(",") if a in SMOKE_LR]
         handles = []
         for a in arm_list:
-            sl = SMOKE_LAM if a in R4_ARMS else 0.0
+            sl = SMOKE_LAM if a in (*R4_ARMS, *R5_ARMS) else 0.0
             label = f"{a}_{_fmt_lr(SMOKE_LR[a])}" + (f"_lam{_fmt_lr(sl)}" if sl else "")
             handles.append((label, train_arm.spawn(arm=a, lr=SMOKE_LR[a], lam=sl, smoke=True)))
     elif train:
         lr_override = [float(x) for x in lrs.split(",") if x.strip()]
         lam_override = [float(x) for x in lam.split(",") if x.strip()]
+        arm_names = [a for a in (arms or "A,B").split(",") if a]
+        non_r5 = [a for a in arm_names if a not in R5_ARMS]
+        if train_corpus != "pilot" and non_r5:
+            raise SystemExit(f"--train-corpus r5 takes R5 arms only, got {non_r5}")
         handles = []
-        for a in (arms or "A,B").split(","):
-            if a in R4_ARMS:
+        for a in arm_names:
+            if a in R5_ARMS:
+                handles.append((f"{a}_{CORPUS_TAGS[train_corpus]}",
+                                train_arm.spawn(arm=a, lr=R5_LR, lam=R5_LAM,
+                                                train_corpus=train_corpus)))
+            elif a in R4_ARMS:
                 for l in (lam_override or LAM_GRID):
                     handles.append((f"{a}_lam{_fmt_lr(l)}",
                                     train_arm.spawn(arm=a, lr=R4_LR, lam=l)))
@@ -1377,23 +1644,35 @@ def main(
                 for lr in (lr_override or LR_GRID[a]):
                     handles.append((f"{a}_{_fmt_lr(lr)}", train_arm.spawn(arm=a, lr=lr)))
     else:  # eval
-        picked, r4_lams = _pick_eval_knobs(eval_lrs, smoke_artifacts)
+        picked, r4_lams, r5_corp = _pick_eval_knobs(eval_lrs, smoke_artifacts)
         arm_list = [a for a in (arms or "A,B,C").split(",") if a]
         missing = [a for a in arm_list if a != "C"
-                   and a not in (r4_lams if a in R4_ARMS else picked)]
+                   and a not in (r5_corp if a in R5_ARMS
+                                 else r4_lams if a in R4_ARMS else picked)]
         if missing:
             raise SystemExit(f"no train_stats for arms {missing}; train first or pass --eval-lrs")
         handles = []
         for a in arm_list:
-            knobs = [0.0] if a == "C" else r4_lams[a] if a in R4_ARMS else [picked[a]]
+            if a == "C":
+                knobs: list[float | str] = [0.0]
+            elif a in R5_ARMS:
+                knobs = r5_corp[a]
+            elif a in R4_ARMS:
+                knobs = r4_lams[a]
+            else:
+                knobs = [picked[a]]
             for knob in knobs:
                 lbl = arm_label(a, knob)
-                if a not in R4_ARMS and knob:
+                if a not in (*R4_ARMS, *R5_ARMS) and knob:
                     lbl += "@" + _fmt_lr(knob)
+                is_r5_arm = a in R5_ARMS
                 for shard in range(shards):
                     handles.append((
                         f"eval {lbl} shard {shard}",
-                        eval_arm.spawn(arm=a, lr=knob, shard=shard, nshards=shards,
+                        eval_arm.spawn(arm=a,
+                                       lr=0.0 if is_r5_arm else knob,
+                                       corpus=knob if is_r5_arm else "",
+                                       shard=shard, nshards=shards,
                                        limit=limit, smoke=smoke_artifacts),
                     ))
 

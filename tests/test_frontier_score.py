@@ -16,6 +16,8 @@ import pytest
 from encoder_experiments.frontier_score import (
     _pb_table,
     chart_rule_recall,
+    content_edit_sim,
+    content_normalize,
     convert_pipe_tables,
     edit_similarity,
     normalize_text,
@@ -187,6 +189,90 @@ def test_normalization_semantics():
     assert edit_similarity("The  quarterly figures", "The **quarterly** figures") == 1.0
     assert edit_similarity("", "") == 1.0
     assert edit_similarity("abc", "") == 0.0
+
+
+def test_content_normalize_contract():
+    """§R5 content normalization: every case class from the documented contract."""
+    # markdown pipe table -> bare cell-content stream (pipes, alignment row gone)
+    assert content_normalize("| A | B |\n| --- | :-: |\n| 1 | 2 |") == "ab12"
+    # HTML table normalizes to the SAME stream (tag names never leak)
+    assert content_normalize(
+        "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>"
+    ) == "ab12"
+    # LaTeX: control words/symbols dropped whole, arguments survive as content
+    assert content_normalize(r"$E = mc^2$, \frac{1}{2}, 100\%") == "emc212100"
+    assert content_normalize(r"\begin{align} x_1 \le 2 \\ \end{align}") == "alignx12align"
+    # code fences: delimiter lines (info string included) are syntax; body is content
+    assert content_normalize("```python\nx = 1\n```") == "x1"
+    # HTML entities resolve, then punctuation drops
+    assert content_normalize("Fish &amp; Chips &#65;") == "fishchipsa"
+    # NFKC: ligatures / fullwidth / superscripts to compatibility forms
+    assert content_normalize("ﬁle １２３ x²") == "file123x2"
+    # casefold, whitespace, punctuation, underscores
+    assert content_normalize("Straße") == "strasse"
+    assert content_normalize("# Head\n\n**bold** _sub_ `code`") == "headboldsubcode"
+    assert content_normalize("") == ""
+
+
+def test_content_edit_sim_semantics():
+    # formatting-only differences are invisible
+    pipe = ("| Metric | Q1 | Q2 |\n| --- | --- | --- |\n"
+            "| Revenue | 450.2 | 410.5 |\n| Costs | (45.0) | (48.0) |")
+    assert content_edit_sim(pipe, GOLD_TABLE) == 1.0
+    assert content_edit_sim("# Report\n\n**bold** text", "report bold text") == 1.0
+    # content differences still register
+    assert content_edit_sim("report bold text", "report bald text") < 1.0
+    # empty semantics mirror edit_similarity
+    assert content_edit_sim("", "") == 1.0
+    assert content_edit_sim("| --- |", "") == 1.0  # syntax-only == empty
+    assert content_edit_sim("abc", "") == 0.0
+    # determinism
+    assert content_edit_sim(pipe, GOLD_TEXT) == content_edit_sim(pipe, GOLD_TEXT)
+
+
+def test_content_field_wiring(corpus, tmp_path):
+    """content_edit_sim is additive-only: present per record + summary blocks,
+    all pre-existing fields/values untouched."""
+    preds = _write_preds(tmp_path / "preds", {
+        "tables__t0001": GOLD_TABLE,
+        "text__x0001": GOLD_TEXT,
+        # missing charts pred -> content_edit_sim 0.0 on the missing_pred record
+    })
+    out = tmp_path / "out"
+    summary = score_pred_dir(preds, corpus / "images.jsonl", out)
+    by_fam = _scores_by_family(out)
+
+    assert by_fam["tables"]["content_edit_sim"] == 1.0
+    assert by_fam["text"]["content_edit_sim"] == 1.0
+    assert by_fam["charts"]["metric"] == "missing_pred"
+    assert by_fam["charts"]["content_edit_sim"] == 0.0
+
+    # the ONLY new record key is content_edit_sim
+    assert set(by_fam["text"]) == {"image_id", "doc_id", "generator", "family",
+                                   "metric", "score", "content_edit_sim"}
+    # pre-existing fields keep their pre-content values
+    assert by_fam["tables"]["metric"] == "teds_content" and by_fam["tables"]["score"] == 1.0
+    assert by_fam["text"]["metric"] == "edit_sim" and by_fam["text"]["score"] == 1.0
+
+    # summary: additive per-family + top-level blocks; existing blocks untouched
+    assert summary["families"]["text"]["content_edit_sim"]["mean"] == 1.0
+    assert summary["families"]["charts"]["content_edit_sim"]["mean"] == 0.0
+    assert summary["content_edit_sim"]["n"] == 3
+    assert summary["content_edit_sim"]["mean"] == pytest.approx(2 / 3)
+    assert summary["families"]["text"] == {
+        "n": 1, "mean": 1.0, "ci95_lo": 1.0, "ci95_hi": 1.0,
+        "content_edit_sim": {"n": 1, "mean": 1.0, "ci95_lo": 1.0, "ci95_hi": 1.0},
+    }
+
+    # a case/punctuation-mangled prediction: primary edit_sim drops (it keeps
+    # case + punctuation), the content readout survives
+    mangled = ("Report THE QUARTERLY figures rose by 12 % according to the audit; "
+               "second paragraph — with spacing quirks!")
+    preds2 = _write_preds(tmp_path / "preds2", {"text__x0001": mangled})
+    score_pred_dir(preds2, corpus / "images.jsonl", tmp_path / "out2", only_preds=True)
+    rec = _scores_by_family(tmp_path / "out2")["text"]
+    assert rec["content_edit_sim"] == 1.0
+    assert rec["score"] < 1.0  # asterisks/HTML-tag content differ pre-content-strip
 
 
 def test_chart_recall_semantics():

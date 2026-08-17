@@ -42,6 +42,19 @@ edit-distance comparison:
   3. collapse every whitespace run to a single space and strip the ends.
 Case, punctuation and digits are untouched.
 
+Content-normalized metric (docs/experiments.md §R5 readout 2)
+-------------------------------------------------------------
+``content_edit_sim`` is the de-formatted perception readout: the same
+``1 - levenshtein/maxlen`` similarity, computed on
+:func:`content_normalize`-normalized text — casefolded, NFKC-normalized,
+with ALL markdown/HTML/LaTeX syntax, whitespace and punctuation stripped
+down to the bare alphanumeric character stream (contract documented on the
+function). Every scored doc whose gold markdown resolves carries an
+additive ``content_edit_sim`` field on its scores.jsonl record (missing
+predictions score 0.0 there too); ``summary.json`` gains a per-family
+``content_edit_sim`` mean/CI block plus a top-level ``content_edit_sim``
+overall block. All pre-existing fields are unchanged.
+
 Outputs
 -------
 ``score_pred_dir`` writes, deterministically (docs sorted by image_id, floats
@@ -75,12 +88,14 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import html
 import io
 import json
 import math
 import os
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -141,6 +156,66 @@ def edit_similarity(pred: str, gold: str) -> float:
     Both-empty compares equal (1.0); one-side-empty scores 0.0.
     """
     a, b = normalize_text(pred), normalize_text(gold)
+    if not a and not b:
+        return 1.0
+    denom = max(len(a), len(b))
+    return 1.0 - Levenshtein.distance(a, b) / denom
+
+
+# --- content-normalized metric (§R5 readout 2) -------------------------------
+
+# a whole code-fence delimiter line, info string included ("```python" is
+# syntax, not content; the fenced body itself IS content and is kept)
+_CONTENT_FENCE_RE = re.compile(r"^[ \t]*(?:`{3,}|~{3,})[^\n]*$", re.MULTILINE)
+# any HTML/XML tag, e.g. <table>, </td>, <br/> — removed whole so tag NAMES
+# never leak into the content stream
+_CONTENT_TAG_RE = re.compile(r"<[^<>]*>")
+# a LaTeX control word (\frac, \begin, \sum*, …) or control symbol (\%, \\, \{)
+# — removed whole so command NAMES never leak; their arguments are content and
+# survive (the braces are punctuation, dropped later)
+_CONTENT_LATEX_RE = re.compile(r"\\(?:[a-zA-Z]+\*?|[^a-zA-Z\s])")
+# everything that is not a unicode alphanumeric; \w == [alnum + _] under the
+# default unicode semantics, so [\W_] drops underscore too
+_CONTENT_DROP_RE = re.compile(r"[\W_]+")
+
+
+def content_normalize(s: str) -> str:
+    """De-formatting normalization: reduce markdown/HTML/LaTeX to its bare
+    content character stream. Deterministic; unicode-sane.
+
+    Contract, applied in order:
+      1. drop code-fence delimiter lines (``\\`\\`\\`lang`` / ``~~~``) whole —
+         the info string is syntax; the fenced body is kept as content,
+      2. remove HTML/XML tags whole (``<table>`` contributes nothing, not
+         "table"),
+      3. unescape HTML entities (``&amp;`` -> ``&``, ``&#65;`` -> ``A``) —
+         after tag removal, so literal ``&lt;``/``&gt;`` in prose can never
+         create text that step 2 would then eat,
+      4. NFKC unicode normalization (ligatures, fullwidth forms, superscripts
+         -> their compatibility decompositions),
+      5. remove LaTeX control words/symbols whole (``\\frac`` contributes
+         nothing, not "frac"; brace-delimited arguments survive as content),
+      6. casefold (unicode-sane lowercasing),
+      7. keep ONLY unicode alphanumerics: every whitespace, punctuation,
+         underscore and symbol character is deleted (this alone erases pipes,
+         ``#``, emphasis markers, ``$`` math delimiters, table rules, …).
+    """
+    s = _CONTENT_FENCE_RE.sub(" ", s or "")
+    s = _CONTENT_TAG_RE.sub(" ", s)
+    s = html.unescape(s)
+    s = unicodedata.normalize("NFKC", s)
+    s = _CONTENT_LATEX_RE.sub(" ", s)
+    s = s.casefold()
+    return _CONTENT_DROP_RE.sub("", s)
+
+
+def content_edit_sim(pred: str, gold: str) -> float:
+    """``1 - levenshtein/maxlen`` on :func:`content_normalize`-normalized
+    strings — the §R5 content-normalized (de-formatted) readout.
+
+    Both-empty compares equal (1.0); one-side-empty scores 0.0.
+    """
+    a, b = content_normalize(pred), content_normalize(gold)
     if not a and not b:
         return 1.0
     denom = max(len(a), len(b))
@@ -317,7 +392,18 @@ def _has_table(md: str | None) -> bool:
 
 def score_doc(pred_markdown: str | None, gold: GoldDoc) -> dict:
     """Route one doc to its family metric. Returns the scores.jsonl record body
-    (without image ids)."""
+    (without image ids). Whenever gold markdown resolves, the record ALSO
+    carries the additive ``content_edit_sim`` field (§R5 de-formatted readout;
+    UNCONVERTED prediction vs gold markdown, missing predictions score 0.0)."""
+    rec = _score_doc_primary(pred_markdown, gold)
+    if gold.markdown is not None:
+        rec["content_edit_sim"] = round(
+            content_edit_sim(pred_markdown or "", gold.markdown), 6
+        )
+    return rec
+
+
+def _score_doc_primary(pred_markdown: str | None, gold: GoldDoc) -> dict:
     gen = gold.generator
     if pred_markdown is None:
         return {"family": gen, "metric": "missing_pred", "score": 0.0}
@@ -431,16 +517,21 @@ def score_pred_dir(
 
     by_family: dict[str, list[float]] = {}
     secondary: dict[str, list[float]] = {}
+    content: dict[str, list[float]] = {}
     for rec in records:
         by_family.setdefault(rec["family"], []).append(rec["score"])
         if "edit_sim" in rec:
             secondary.setdefault(rec["family"], []).append(rec["edit_sim"])
+        if "content_edit_sim" in rec:
+            content.setdefault(rec["family"], []).append(rec["content_edit_sim"])
     families = sorted(by_family, key=lambda g: (FAMILY_ORDER.index(g) if g in FAMILY_ORDER else 99, g))
     family_summaries = {}
     for g in families:
         fs = _mean_ci(by_family[g])
         if g in secondary:
             fs["edit_sim"] = _mean_ci(secondary[g])
+        if g in content:
+            fs["content_edit_sim"] = _mean_ci(content[g])
         family_summaries[g] = fs
     summary = {
         "pred_dir": str(pred_dir),
@@ -448,6 +539,9 @@ def score_pred_dir(
         "n_missing_pred": sum(1 for r in records if r["metric"] == "missing_pred"),
         "n_skipped_no_gold": len(skipped),
         "overall": _mean_ci([r["score"] for r in records]) if records else _mean_ci([]),
+        # §R5 content-normalized readout, over every doc whose gold markdown
+        # resolved (chart docs without a .gold.md are the only exclusions)
+        "content_edit_sim": _mean_ci([v for vs in content.values() for v in vs]),
         "families": family_summaries,
     }
     (out_dir / "summary.json").write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")

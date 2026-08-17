@@ -598,3 +598,39 @@ score, text/math slice and overall.
 Guards: new checkpoint dirs /vol/phaseb/R4{a,b}_<lam>/ (B2 arms untouched);
 frozen-set certification as in B2; aux-loss curves logged so "failed to
 bind" is distinguishable from "bound but didn't transfer".
+
+---
+
+# R5 — the pin-vs-scale 2×2 (pre-registered 2026-08-16, authorized)
+
+R4's bound-but-did-not-transfer outcome has two live explanations: (a) the
+frozen decoder PINS the merger (any large reorganization breaks
+decoder-readability → LM loss spikes → optimizer stays local; the linear-↑/
+MLP-↓ re-allocation signature is the fingerprint), and (b) supervision/step
+underdose (31.5k glyph points, 180 optimizer steps). The 2×2 isolates them:
+
+|  | ~700 docs (pilot split) | ~5k fresh glyph-heavy docs |
+|---|---|---|
+| **bridge-only** (CE + λ=1 glyph aux; = R4a recipe) | **= R4a_1, already run** (probe +.017 n.s.; task .586) | R5b5k |
+| **joint** (same objective; merger + decoder-LoRA r16 both trainable, encoder frozen) | R5j700 | R5j5k |
+
+- Joint arms are NOT param-matched to bridge-only (that is not the
+  question); trainable counts reported everywhere. Same λ=1 glyph aux, same
+  LR 3e-4 (merger) with LoRA lr 3e-4, same schedule; 5k arms ~2 epochs
+  (~1.2k optimizer steps).
+- **Data**: ~5k fresh glyph-heavy synthetic docs (text+math ≈ 60/40, small
+  size_pt biased, dense; generators' exact-GT sidecars; agent may cut to
+  ≥3k if local generation throughput demands — count recorded). Train-only;
+  eval stays the SAME 211 held-out pilot docs. New corpus at /corpus_r5.
+- **Readouts** (all four cells): (1) probe-space repaired-S2 glyph vs stock
+  (b2_probe_readout pipeline); (2) task-space on the 211 docs with the
+  existing metrics PLUS a **content-normalized glyph metric** (edit-sim on
+  lowercased alphanumeric-only content, markdown syntax stripped) on
+  text/math — the de-formatted perception readout, computed retroactively
+  for A/B/C/R4 arms too.
+- **Pre-registered adjudication**: joint↑ where bridge-only stays flat (at
+  either scale) → PIN confirmed; repair requires decoder co-adaptation —
+  positive final act. Both ↑ only at 5k → dose story; scale further.
+  All flat incl. joint@5k → saturation/interface claim is airtight; TMLR
+  negative arc final. Probe-space primary; content-metric co-primary on
+  task side; CI discipline as everywhere.
