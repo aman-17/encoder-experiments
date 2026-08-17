@@ -10,6 +10,27 @@ modal_extract.extract_decoder_mid), bf16 + gradient checkpointing:
        so trainable params match arm A within 2x (both counts recorded).
     C  anchor: no training, eval only.
 
+R4 arms (docs/experiments.md §R4 — diagnosis-supervised bridge training; B2
+arms and their outputs untouched): arm-A recipe (merger trainable, encoder +
+decoder frozen, LR fixed at 3e-4 = arm A's winner) plus a jointly-trained
+aux head on live merger captures, total = lm_ce + lam * aux, lam fanned over
+{0.1, 1.0} (--lam overrides):
+
+    R4a  glyph-probe aux: linear head + CE over the corpus glyph vocab, read
+         bilinearly (sites.features_at's convention, autograd kept) from the
+         merger OUTPUT grid at the train images' glyph probe points
+         (/vol/corpus/phaseb_glyphs.json, built locally from probes.jsonl —
+         glyph_id rows, train docs only, corpus-wide vocab).
+    R4b  inverse-map aux: linear head + MSE (per-dim std-normalized so lam is
+         scale-comparable to CE) reconstructing each merged token's 4-patch
+         pre-merge input concat from the merger output.
+
+    Checkpoints land in /vol/phaseb/R4{a,b}_<lam>/; bridge.safetensors stays
+    merger-only (the deliverable) — the aux head is saved separately as
+    aux_head.safetensors, for the record, and is never loaded at eval.
+    train_stats.json gains lm_ce/aux curves + finals so "bound but didn't
+    transfer" is distinguishable from "failed to bind".
+
 Data: the pilot_1k probe-harness doc split (probe_fit.doc_is_train, seed 0,
 train_frac 0.8 -> 789 train / 211 held-out docs), clean natives from
 /vol/corpus, gold located exactly as the frontier scoring pipeline located it
@@ -81,7 +102,12 @@ EPOCHS = 2
 GRAD_ACCUM = 8
 MAX_NEW_TOKENS = 4096
 LR_GRID = {"A": (3e-5, 1e-4, 3e-4), "B": (1e-4, 3e-4, 1e-3)}
-SMOKE_LR = {"A": 1e-4, "B": 3e-4}
+R4_ARMS = ("R4a", "R4b")
+R4_LR = 3e-4  # fixed: arm A's val-loss winner (docs/experiments.md §R4)
+LAM_GRID = (0.1, 1.0)
+SMOKE_LAM = 1.0
+GLYPH_SIDECAR = "phaseb_glyphs.json"  # under /vol/corpus, next to the manifests
+SMOKE_LR = {"A": 1e-4, "B": 3e-4, "R4a": R4_LR, "R4b": R4_LR}
 SMOKE_DOCS = 20
 SMOKE_VAL_DOCS = 5
 SMOKE_MICRO_STEPS = 30
@@ -268,14 +294,126 @@ def contrast_block(
     return out
 
 
+def build_glyph_sidecar(probes_path: Path, train_image_ids: set[str]) -> dict:
+    """R4a supervision, built once locally and uploaded next to the train
+    manifest: per-train-image glyph rows from probes.jsonl (probe=glyph_id).
+
+    vocab = sorted unique glyph labels over the WHOLE corpus (train + eval
+    docs), so head class indices are split-independent and deterministic;
+    `images` keeps only train-manifest image_ids, points/labels in probes
+    file order, labels re-coded as vocab indices. Same probes file -> byte-
+    identical sidecar; row order can only permute per-image point order,
+    never the vocab (tests/test_phaseb_r4.py pins both).
+    """
+    vocab_set: set = set()
+    images: dict[str, dict] = {}
+    with open(probes_path) as f:
+        for line in f:
+            if '"glyph_id"' not in line:  # cheap prefilter; membership re-checked below
+                continue
+            row = json.loads(line)
+            if row["probe"] != "glyph_id":
+                continue
+            vocab_set.add(row["label"])
+            if row["image_id"] not in train_image_ids:
+                continue
+            rec = images.setdefault(row["image_id"], {"points": [], "labels": []})
+            rec["points"].append([float(row["point_xy"][0]), float(row["point_xy"][1])])
+            rec["labels"].append(row["label"])
+    vocab = sorted(vocab_set)
+    code = {lab: i for i, lab in enumerate(vocab)}
+    for rec in images.values():
+        rec["labels"] = [code[lab] for lab in rec["labels"]]
+    return {"vocab": vocab, "n_classes": len(vocab), "images": dict(sorted(images.items()))}
+
+
+def bilinear_readout(tokens, grid_hw: tuple[int, int], points_xy):
+    """sites.features_at's exact convention — patch centers at ((j+.5)/W,
+    (i+.5)/H), align_corners=False, zeros outside the grid — in explicit
+    gather math so the read is dtype-flexible (bf16 merger captures) and
+    stays inside autograd for the R4a aux loss. tokens [N, D], points_xy
+    [K, 2] normalized (x, y) -> [K, D] float32. Parity with features_at and
+    a numpy reference is pinned at 1e-5 in tests/test_phaseb_r4.py.
+    """
+    import torch
+
+    h, w = grid_hw
+    if tokens.shape[0] != h * w:
+        raise ValueError(f"{tokens.shape[0]} tokens cannot fill a {h}x{w} grid")
+    flat = tokens.reshape(h * w, -1).float()
+    pts = points_xy.to(device=flat.device, dtype=torch.float32)
+    fx, fy = pts[:, 0] * w - 0.5, pts[:, 1] * h - 0.5
+    x0, y0 = fx.floor(), fy.floor()
+    wx, wy = fx - x0, fy - y0
+    out = flat.new_zeros(pts.shape[0], flat.shape[1])
+    for dy in (0, 1):
+        for dx in (0, 1):
+            xi, yi = x0.long() + dx, y0.long() + dy
+            wgt = (wx if dx else 1.0 - wx) * (wy if dy else 1.0 - wy)
+            inside = ((xi >= 0) & (xi < w) & (yi >= 0) & (yi < h)).float()
+            idx = yi.clamp(0, h - 1) * w + xi.clamp(0, w - 1)
+            out = out + (wgt * inside).unsqueeze(1) * flat[idx]
+    return out
+
+
+def normalized_mse(pred, target, eps: float = 1e-6):
+    """R4b aux: MSE with each target dim standardized by its (detached) batch
+    std, so a mean predictor scores ~1.0 at any feature scale and lam is
+    scale-comparable to CE. The floor is RELATIVE (5% of the mean std + eps):
+    near-constant dims stop amplifying noise, and the loss stays exactly
+    invariant under a common rescale of pred+target."""
+    pred, target = pred.float(), target.float()
+    std = target.std(dim=0, unbiased=False)
+    std = std.clamp_min(0.05 * std.mean() + eps).detach()
+    return (((pred - target) / std) ** 2).mean()
+
+
+def percell_target(premerge, n_out: int, m2: int):
+    """Merger input -> R4b regression target [n_out, m2*D_pre]: each output
+    token's m2 pre-merge children concatenated in the merger's own view
+    order (flat input rows m2*i .. m2*i+m2-1 ARE output row i's cell — the
+    lineage's block-major pre-merge layout, qwen_vit._to_row_major's pinned
+    convention). Accepts the per-cell [n_out, m2, D_pre] form too; any other
+    factorization is a hard error, never a silent reshape."""
+    if premerge.dim() == 3:
+        n, m, d = premerge.shape
+        if (n, m) != (n_out, m2):
+            raise ValueError(
+                f"per-cell merger input {tuple(premerge.shape)} != [{n_out}, {m2}, D_pre]"
+            )
+        return premerge.reshape(n_out, m2 * d)
+    if premerge.dim() == 2 and premerge.shape[0] == n_out * m2:
+        return premerge.reshape(n_out, m2 * premerge.shape[1])
+    raise ValueError(
+        f"merger input {tuple(premerge.shape)} does not factor into "
+        f"{n_out} cells x {m2} patches"
+    )
+
+
 def _fmt_lr(lr: float) -> str:
     return f"{lr:g}"
 
 
-def arm_dir(arm: str, lr: float, smoke: bool = False) -> str:
-    """Relative (to /vol) checkpoint dir: phaseb/[smoke/]<arm>_<lr>."""
+def arm_dir(arm: str, knob: float, smoke: bool = False) -> str:
+    """Relative (to /vol) checkpoint dir: phaseb/[smoke/]<arm>_<knob>.
+
+    The knob is the arm's fan axis — lr for A/B, lam for R4 arms (whose lr
+    is fixed at R4_LR). The arm name prefixes the dir, so R4 dirs can never
+    collide with A_/B_ ones (pinned in tests/test_phaseb_r4.py)."""
     root = f"{PHASEB_ROOT}/smoke" if smoke else PHASEB_ROOT
-    return f"{root}/{arm}_{_fmt_lr(lr)}"
+    return f"{root}/{arm}_{_fmt_lr(knob)}"
+
+
+def arm_label(arm: str, knob: float) -> str:
+    """Eval/score identity: bare arm for A/B/C (one eval'd checkpoint each),
+    arm_<lam> for R4 arms (both lams are adjudication readouts)."""
+    return f"{arm}_{_fmt_lr(knob)}" if arm in R4_ARMS else arm
+
+
+def stats_label(stats: dict) -> str:
+    """arm_label of a train_stats.json record."""
+    knob = stats["lam"] if stats["arm"] in R4_ARMS else stats["lr"]
+    return arm_label(stats["arm"], knob)
 
 
 # --------------------------------------------------------------------------- #
@@ -355,6 +493,47 @@ def _token_ce(logits, labels):
     return F.cross_entropy(lg[mask].float(), lb[mask], reduction="mean")
 
 
+class _MergerTap:
+    """Live capture of one forward through the merger, autograd preserved:
+    hooks hand back the graph tensors themselves (no detach/copy), so aux
+    losses built on .inp/.out backprop into the trainable merger. .inp = the
+    floating-point tensor the merger receives (pre-merge patches), .out =
+    what it returns (merged tokens). Exactly one float input tensor and a
+    plain tensor return are asserted — a release that breaks either breaks
+    loudly, never trains on the wrong capture."""
+
+    def __init__(self, merger):
+        self.inp = self.out = None
+        self.handles = [
+            merger.register_forward_pre_hook(self._pre, with_kwargs=True),
+            merger.register_forward_hook(self._post),
+        ]
+
+    def clear(self):
+        self.inp = self.out = None
+
+    def _pre(self, _mod, args, kwargs):
+        import torch
+
+        floats = [t for t in (*args, *kwargs.values())
+                  if isinstance(t, torch.Tensor) and t.is_floating_point()]
+        assert len(floats) == 1, (
+            f"merger got {len(floats)} float tensor inputs "
+            f"{[tuple(t.shape) for t in floats]}; the R4 capture needs exactly one"
+        )
+        self.inp = floats[0]
+
+    def _post(self, _mod, _args, out):
+        import torch
+
+        assert isinstance(out, torch.Tensor), (
+            f"merger returned {type(out).__name__}, not a tensor — R4 capture "
+            "does not know which member is the merged-token stream"
+        )
+        self.out = out[0] if out.dim() == 3 and out.shape[0] == 1 else out
+        assert self.out.dim() == 2, f"merged tokens must be [N, D], got {tuple(out.shape)}"
+
+
 def _frozen_fingerprint(model, n_probes: int = 64):
     """Deterministic sample of frozen-param sums; exact-equality check after
     step 0 certifies the optimizer touched nothing frozen."""
@@ -376,26 +555,34 @@ def _frozen_fingerprint(model, n_probes: int = 64):
 def train_arm(
     arm: str,
     lr: float,
+    lam: float = 0.0,
     smoke: bool = False,
     epochs: int = EPOCHS,
     grad_accum: int = GRAD_ACCUM,
     seq_cap: int = SEQ_CAP,
     seed: int = 0,
 ) -> dict:
-    """One (arm, lr) training run -> /vol/phaseb/[smoke/]<arm>_<lr>/
+    """One (arm, knob) training run -> /vol/phaseb/[smoke/]<arm>_<knob>/
     (bridge.safetensors or adapter/, saved at every val improvement, +
-    train_stats.json). Arm A trains the merger only; arm B trains decoder
-    LoRA rank-matched to the merger count within 2x; both freeze everything
-    else and hard-assert it at step 0."""
+    train_stats.json; knob = lr for A/B, lam for R4). Arm A trains the merger
+    only; arm B trains decoder LoRA rank-matched to the merger count within
+    2x; R4 arms train the merger + a jointly-optimized aux head whose loss
+    (lam-weighted) is added to the LM CE — the head is saved separately
+    (aux_head.safetensors) and is NOT part of the bridge deliverable. All
+    arms freeze everything else and hard-assert it at step 0."""
     import time
 
     import torch
+    import torch.nn.functional as F
     from PIL import Image
     from safetensors.torch import save_file
 
+    from encoder_experiments.adapters.qwen_vit import _resolve_attr
     from modal_frontier import QWEN_PROMPT
 
-    assert arm in ("A", "B"), f"train_arm takes arm A or B, got {arm!r}"
+    is_r4 = arm in R4_ARMS
+    assert arm in ("A", "B") or is_r4, f"train_arm takes A, B, R4a or R4b, got {arm!r}"
+    assert (lam > 0) == is_r4, f"lam is the R4 knob: arm {arm} got lam={lam}"
     data_volume.reload()
 
     corpus = Path(VOL_PATH) / "corpus"
@@ -405,9 +592,25 @@ def train_arm(
     rows = [json.loads(line) for line in manifest.read_text().splitlines() if line.strip()]
     train_rows = [r for r in rows if r["split"] == "train"]
     val_rows = [r for r in rows if r["split"] == "val"]
+
+    glyphs = n_glyph_classes = None
+    if arm == "R4a":
+        sidecar_path = corpus / GLYPH_SIDECAR
+        if not sidecar_path.exists():
+            raise FileNotFoundError(f"{sidecar_path} not found — run --plan/--train locally first")
+        sidecar = json.loads(sidecar_path.read_text())
+        glyphs, n_glyph_classes = sidecar["images"], sidecar["n_classes"]
+
     if smoke:
-        train_rows = train_rows[:SMOKE_DOCS]
-        val_rows = val_rows[:SMOKE_VAL_DOCS]
+        if arm == "R4a":
+            # the plain [:SMOKE_DOCS] head of the sorted manifest is all
+            # chart docs with zero glyph rows; R4a's smoke must exercise the
+            # aux path, so slice the first glyph-covered docs instead
+            train_rows = [r for r in train_rows if r["image_id"] in glyphs][:SMOKE_DOCS]
+            val_rows = [r for r in val_rows if r["image_id"] in glyphs][:SMOKE_VAL_DOCS]
+        else:
+            train_rows = train_rows[:SMOKE_DOCS]
+            val_rows = val_rows[:SMOKE_VAL_DOCS]
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(seed)
@@ -423,7 +626,7 @@ def train_arm(
 
     model.requires_grad_(False)
     lora_rank = None
-    if arm == "A":
+    if arm != "B":  # A and both R4 arms train the merger
         merger.requires_grad_(True)
         merger_ids = {id(p) for p in merger.parameters()}
         trainable = {n: p for n, p in model.named_parameters() if id(p) in merger_ids}
@@ -463,7 +666,8 @@ def train_arm(
         f"trainable set drifted: +{sorted(actual_names - expected)[:5]} "
         f"-{sorted(expected - actual_names)[:5]}"
     )
-    print(f"[phaseb] arm {arm} lr={_fmt_lr(lr)}: bridge_params={bridge_params:,} "
+    print(f"[phaseb] arm {arm} lr={_fmt_lr(lr)}"
+          f"{f' lam={_fmt_lr(lam)}' if is_r4 else ''}: bridge_params={bridge_params:,} "
           f"trainable={trainable_params:,} (ratio {match_ratio:.2f}"
           f"{f', lora r={lora_rank}' if lora_rank else ''}) "
           f"train={len(train_rows)} val={len(val_rows)} docs")
@@ -511,42 +715,131 @@ def train_arm(
             inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
         return inputs.to(device), torch.tensor([labels], device=device)
 
+    # ---- R4: merger tap + jointly-trained aux head ----------------------- #
+    tap = aux_head = aux_kind = None
+    aux_head_params = merge = None
+    if is_r4:
+        visual = _resolve_attr(model, visual_prefix)
+        merge = int(getattr(visual, "spatial_merge_size", None)
+                    or getattr(getattr(visual, "config", None), "spatial_merge_size", 2))
+        tap = _MergerTap(merger)
+
+        def merged_grid(inputs, out):
+            """(h, w) of the merged token grid, asserted against the capture.
+            Merged sequence order is raster over it: the lineage's pre-merge
+            layout is block-major (h/m, w/m, m, m) — qwen_vit._to_row_major's
+            pinned convention — so the merger's [N/m^2, m^2*D] view walks
+            merged cells in raster order."""
+            assert "image_grid_thw" in inputs, "processor emitted no image_grid_thw"
+            t, h, w = (int(v) for v in inputs["image_grid_thw"][0])
+            hm, wm = h // merge, w // merge
+            assert t == 1 and out.shape[0] == hm * wm, (
+                f"merger capture/grid mismatch: thw={(t, h, w)} merge={merge} "
+                f"captured {tuple(out.shape)}"
+            )
+            return hm, wm
+
+        # one no-grad probe forward pins the merger's I/O dims + factorization
+        probe_enc = next((e for e in map(encode_row, train_rows) if e is not None), None)
+        assert probe_enc is not None, "no under-cap train row to probe merger dims"
+        model.eval()
+        with torch.no_grad():
+            model(**probe_enc[0])
+        model.train()
+        d_out = tap.out.shape[-1]
+        if arm == "R4a":
+            merged_grid(probe_enc[0], tap.out)
+            aux_head = torch.nn.Linear(d_out, n_glyph_classes)
+            aux_kind = "glyph_ce"
+        else:
+            target0 = percell_target(tap.inp, tap.out.shape[0], merge * merge)
+            aux_head = torch.nn.Linear(d_out, target0.shape[1])
+            aux_kind = "inverse_map_mse"
+        aux_head = aux_head.to(device=device, dtype=torch.float32)
+        aux_head.train()
+        aux_head_params = sum(p.numel() for p in aux_head.parameters())
+        tap.clear()
+        del probe_enc
+        print(f"[phaseb] {arm} aux head ({aux_kind}): "
+              f"{d_out} -> {aux_head.out_features}, params={aux_head_params:,}; "
+              f"optimizer = merger {trainable_params:,} + aux head "
+              f"{aux_head_params:,} (deliverable bridge.safetensors = merger only)")
+
+        def aux_loss(row, inputs):
+            """The lam-weighted aux term for one image, or None when it
+            carries no supervision (R4a doc without glyph rows)."""
+            out = tap.out
+            if arm == "R4a":
+                g = glyphs.get(row["image_id"])
+                if g is None:
+                    return None
+                grid_hw = merged_grid(inputs, out)
+                feats = bilinear_readout(
+                    out, grid_hw, torch.tensor(g["points"], dtype=torch.float32)
+                )
+                labels_t = torch.tensor(g["labels"], dtype=torch.long, device=feats.device)
+                return F.cross_entropy(aux_head(feats), labels_t)
+            target = percell_target(tap.inp, out.shape[0], merge * merge)
+            return normalized_mse(aux_head(out.float()), target.detach())
+
     micro_total = epochs * len(train_rows)
     if smoke:
         micro_total = min(micro_total, SMOKE_MICRO_STEPS)
     optim_total = max(1, math.ceil(micro_total / grad_accum))
-    optimizer = torch.optim.AdamW(trainable.values(), lr=lr, weight_decay=0.0)
+    optim_params = list(trainable.values()) + (list(aux_head.parameters()) if aux_head else [])
+    optimizer = torch.optim.AdamW(optim_params, lr=lr, weight_decay=0.0)
     from transformers import get_cosine_schedule_with_warmup
 
     warmup = min(20, max(1, optim_total // 10))
     scheduler = get_cosine_schedule_with_warmup(optimizer, warmup, optim_total)
 
-    out_dir = Path(VOL_PATH) / arm_dir(arm, lr, smoke=smoke)
+    out_dir = Path(VOL_PATH) / arm_dir(arm, lam if is_r4 else lr, smoke=smoke)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     def save_weights():
-        if arm == "A":
+        if arm == "B":
+            model.save_pretrained(str(out_dir / "adapter"))
+        else:
             save_file({k: v.detach().to("cpu", torch.float32) for k, v in
                        merger.state_dict().items()}, out_dir / "bridge.safetensors")
-        else:
-            model.save_pretrained(str(out_dir / "adapter"))
+            if aux_head is not None:
+                # record only — NOT the deliverable; eval and the b2 probe
+                # pipeline load bridge.safetensors alone
+                save_file({k: v.detach().to("cpu", torch.float32) for k, v in
+                           aux_head.state_dict().items()}, out_dir / "aux_head.safetensors")
         data_volume.commit()
 
     @torch.no_grad()
-    def val_loss():
+    def val_metrics():
+        """-> (lm_ce, aux or None, total). total is the selection metric:
+        the training objective lm + lam*aux for R4, plain lm for A/B."""
         model.eval()
-        losses = []
+        lm_losses, aux_losses = [], []
         for row in val_rows:
             enc = encode_row(row)
             if enc is None:
                 continue
             inputs, labels = enc
-            losses.append(float(_token_ce(model(**inputs).logits, labels).item()))
+            if is_r4:
+                tap.clear()
+            lm_losses.append(float(_token_ce(model(**inputs).logits, labels).item()))
+            if is_r4:
+                a = aux_loss(row, inputs)
+                if a is not None:
+                    aux_losses.append(float(a.item()))
         model.train()
-        return sum(losses) / len(losses) if losses else float("nan")
+        lm = sum(lm_losses) / len(lm_losses) if lm_losses else float("nan")
+        aux = sum(aux_losses) / len(aux_losses) if aux_losses else None
+        total = lm + lam * aux if (is_r4 and aux is not None) else lm
+        return lm, aux, total
 
     dropped: set[str] = set()
     val_curve: list[dict] = []
+    lm_ce_curve: list[float] = []
+    aux_curve: list[float | None] = []  # None = no supervised image in the window
+    win_lm: list[float] = []
+    win_aux: list[float] = []
+    n_no_aux = 0
     best_val = float("inf")
     micro = optim = 0
     frozen_checked = False
@@ -570,7 +863,23 @@ def train_arm(
                 dropped.add(row["image_id"])
                 continue
             inputs, labels = enc
-            loss = _token_ce(model(**inputs).logits, labels)
+            if is_r4:
+                tap.clear()
+            lm = _token_ce(model(**inputs).logits, labels)
+            loss = lm
+            aux = None
+            if is_r4:
+                assert tap.out is not None and tap.out.requires_grad, (
+                    "merger capture is outside autograd (checkpointed or "
+                    "no-grad forward) — the aux loss cannot shape the merger"
+                )
+                aux = aux_loss(row, inputs)
+                if aux is None:
+                    n_no_aux += 1
+                else:
+                    loss = lm + lam * aux
+                    win_aux.append(float(aux.item()))
+            win_lm.append(float(lm.item()))
             (loss / grad_accum).backward()
             micro += 1
             if micro % grad_accum == 0 or micro == micro_total:
@@ -578,6 +887,13 @@ def train_arm(
                 scheduler.step()
                 optimizer.zero_grad(set_to_none=True)
                 optim += 1
+                lm_ce_curve.append(round(sum(win_lm) / len(win_lm), 6))
+                win_lm = []
+                if is_r4:
+                    aux_curve.append(
+                        round(sum(win_aux) / len(win_aux), 6) if win_aux else None
+                    )
+                    win_aux = []
                 if not frozen_checked:
                     # step-0 frozen-set certification: no frozen grad, no drift
                     bad = [n for n, p in model.named_parameters()
@@ -590,12 +906,18 @@ def train_arm(
                     )
                     frozen_checked = True
                     print(f"[phaseb] step-0 frozen check passed "
-                          f"({len(fingerprint0)} fingerprints)")
+                          f"({len(fingerprint0)} fingerprints; trainable = "
+                          f"{'merger + aux head' if is_r4 else 'merger' if arm == 'A' else 'decoder LoRA'})")
             if micro % 25 == 0:
+                aux_s = f" aux={float(aux.item()):.4f}" if aux is not None else ""
                 print(f"[phaseb] {arm}_{_fmt_lr(lr)} micro {micro}/{micro_total} "
-                      f"loss={float(loss.item()):.4f}")
-        vl = val_loss()
-        val_curve.append({"epoch": epoch + 1, "optim_step": optim, "val_loss": round(vl, 6)})
+                      f"lm_ce={float(lm.item()):.4f}{aux_s}")
+        vl_lm, vl_aux, vl = val_metrics()
+        entry = {"epoch": epoch + 1, "optim_step": optim, "val_loss": round(vl, 6)}
+        if is_r4:
+            entry["val_lm_ce"] = round(vl_lm, 6)
+            entry["val_aux"] = round(vl_aux, 6) if vl_aux is not None else None
+        val_curve.append(entry)
         print(f"[phaseb] {arm}_{_fmt_lr(lr)} epoch {epoch + 1}: val_loss={vl:.4f}")
         if vl < best_val:
             best_val = vl
@@ -603,13 +925,24 @@ def train_arm(
         if micro >= micro_total:
             break
 
+    aux_pts = [v for v in aux_curve if v is not None]
     stats = {
         "arm": arm,
         "lr": lr,
+        "lam": lam if is_r4 else None,
         "smoke": smoke,
         "checkpoint": CHECKPOINT,
         "bridge_params": bridge_params,
         "trainable_params": trainable_params,
+        "aux_kind": aux_kind,
+        "aux_head_params": aux_head_params,
+        "n_no_aux_supervision": n_no_aux if is_r4 else None,
+        "lm_ce_curve": lm_ce_curve,
+        "lm_ce_final": (round(sum(lm_ce_curve[-5:]) / len(lm_ce_curve[-5:]), 6)
+                        if lm_ce_curve else None),
+        "aux_curve": aux_curve if is_r4 else None,
+        "aux_loss_final": (round(sum(aux_pts[-5:]) / len(aux_pts[-5:]), 6)
+                           if aux_pts else None),
         "match_ratio": round(match_ratio, 4),
         "lora_rank": lora_rank,
         "n_train": len(train_rows),
@@ -637,6 +970,15 @@ def train_arm(
     (out_dir / "train_stats.json").write_text(json.dumps(stats, indent=2) + "\n")
     data_volume.commit()
     print(f"[phaseb] {json.dumps({k: v for k, v in stats.items() if k != 'dropped_overlong'})}")
+    if smoke and is_r4:
+        # smoke contract: the aux objective must bind and the LM CE must
+        # survive it — asserted after stats land so a failure is inspectable
+        assert all(math.isfinite(v) for v in lm_ce_curve), (
+            f"lm_ce went non-finite under the aux loss: {lm_ce_curve}"
+        )
+        assert len(aux_pts) >= 2 and aux_pts[-1] < aux_pts[0], (
+            f"aux loss did not decrease over the smoke run: {aux_curve}"
+        )
     return stats
 
 
@@ -660,9 +1002,12 @@ def eval_arm(
 ) -> dict:
     """Greedy generation (modal_frontier's pattern: fixed QWEN_PROMPT, native
     resolution, fence-stripped) over the held-out docs for one arm ->
-    /vol/phaseb/[smoke/]eval/<arm>/<image_id>.md, resume-safe. Arm A loads
-    bridge.safetensors into the merger, arm B attaches the peft adapter,
-    arm C is the untouched base."""
+    /vol/phaseb/[smoke/]eval/<label>/<image_id>.md, resume-safe (label =
+    arm for A/B/C, <arm>_<lam> for R4). Arms A/R4a/R4b load
+    bridge.safetensors into the merger — for R4 that is merger-only BY
+    CONTRACT: the aux head is never loaded at eval. Arm B attaches the peft
+    adapter, arm C is the untouched base. For R4 arms the `lr` argument
+    carries the lam knob (the checkpoint-dir key)."""
     import time
     import traceback
 
@@ -673,8 +1018,8 @@ def eval_arm(
     from encoder_experiments.extract import safe_image_id
     from modal_frontier import QWEN_PROMPT, _strip_md_fence
 
-    assert arm in ("A", "B", "C"), f"unknown arm {arm!r}"
-    assert arm == "C" or lr > 0, f"arm {arm} needs the trained lr"
+    assert arm in ("A", "B", "C", *R4_ARMS), f"unknown arm {arm!r}"
+    assert arm == "C" or lr > 0, f"arm {arm} needs its trained knob (lr / lam)"
     data_volume.reload()
 
     corpus = Path(VOL_PATH) / "corpus"
@@ -689,7 +1034,7 @@ def eval_arm(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, processor = _load_model_and_processor(CHECKPOINT, device)
     weights_note = "base"
-    if arm == "A":
+    if arm in ("A", *R4_ARMS):
         merger, _ = _find_merger(model)
         path = Path(VOL_PATH) / arm_dir(arm, lr, smoke=smoke) / "bridge.safetensors"
         state = {k: v.to(torch.bfloat16) for k, v in load_file(str(path)).items()}
@@ -705,11 +1050,11 @@ def eval_arm(
     model.eval()
 
     root = Path(VOL_PATH) / PHASEB_ROOT / ("smoke/eval" if smoke else "eval")
-    out_dir = root / arm
+    out_dir = root / arm_label(arm, lr)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta_path = out_dir / f"meta.shard{shard}.jsonl"
     errors_path = out_dir / f"errors.shard{shard}.jsonl"
-    print(f"[phaseb-eval] arm {arm} ({weights_note}) shard {shard}/{nshards}: "
+    print(f"[phaseb-eval] arm {arm_label(arm, lr)} ({weights_note}) shard {shard}/{nshards}: "
           f"{len(rows)} docs -> {out_dir}")
 
     messages = [{
@@ -807,45 +1152,65 @@ def fetch_phaseb(prefixes: list[str], suffix: str) -> dict:
 # local entrypoint
 # --------------------------------------------------------------------------- #
 
-def _upload_manifests(train_rows: list[dict], eval_rows: list[dict]) -> None:
+def _upload_manifests(
+    train_rows: list[dict], eval_rows: list[dict], glyph_sidecar: dict
+) -> None:
     import tempfile
 
     with tempfile.TemporaryDirectory() as td:
         tp, ep = Path(td) / TRAIN_MANIFEST, Path(td) / EVAL_MANIFEST
+        gp = Path(td) / GLYPH_SIDECAR
         tp.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in train_rows))
         ep.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in eval_rows))
+        gp.write_text(json.dumps(glyph_sidecar, ensure_ascii=False, sort_keys=True) + "\n")
         with data_volume.batch_upload(force=True) as batch:
             batch.put_file(str(tp), f"/corpus/{TRAIN_MANIFEST}")
             batch.put_file(str(ep), f"/corpus/{EVAL_MANIFEST}")
+            batch.put_file(str(gp), f"/corpus/{GLYPH_SIDECAR}")
     print(f"[phaseb] uploaded /corpus/{TRAIN_MANIFEST} ({len(train_rows)} rows) + "
-          f"/corpus/{EVAL_MANIFEST} ({len(eval_rows)} rows)")
+          f"/corpus/{EVAL_MANIFEST} ({len(eval_rows)} rows) + "
+          f"/corpus/{GLYPH_SIDECAR} ({len(glyph_sidecar['images'])} images, "
+          f"{glyph_sidecar['n_classes']} classes)")
 
 
-def _pick_best_lrs(eval_lrs: str, smoke: bool) -> dict[str, float]:
-    """Best-val-loss LR per trained arm from the volume's train_stats.json
-    files; --eval-lrs 'A:0.0001,B:0.0003' overrides."""
+def _pick_eval_knobs(eval_lrs: str, smoke: bool) -> tuple[dict[str, float], dict[str, list[float]]]:
+    """-> (best-val-loss LR per B2 arm, ALL trained lams per R4 arm — both
+    lams are pre-registered adjudication readouts, no picking) from the
+    volume's train_stats.json files. --eval-lrs 'A:0.0001,R4a:1' pins
+    instead (R4 values are lams)."""
     if eval_lrs:
-        out = {}
+        best: dict[str, float] = {}
+        r4: dict[str, list[float]] = {}
         for part in eval_lrs.split(","):
-            arm_name, lr_s = part.split(":")
-            out[arm_name.strip()] = float(lr_s)
-        return out
+            arm_name, knob_s = part.split(":")
+            arm_name = arm_name.strip()
+            if arm_name in R4_ARMS:
+                r4.setdefault(arm_name, []).append(float(knob_s))
+            else:
+                best[arm_name] = float(knob_s)
+        return best, r4
     prefix = ["smoke"] if smoke else [""]
     stats = fetch_phaseb.remote(prefix, "train_stats.json")
-    best: dict[str, tuple[float, float]] = {}  # arm -> (val_loss, lr)
+    best_raw: dict[str, tuple[float, float]] = {}  # arm -> (val_loss, lr)
+    r4 = {}
     for rel, text in stats.items():
         if not smoke and rel.startswith(("smoke/", "eval/")):
             continue
         s = json.loads(text)
+        if s["arm"] in R4_ARMS:
+            r4.setdefault(s["arm"], []).append(s["lam"])
+            continue
         vl = s.get("best_val_loss")
         if vl is None:
             continue
-        if s["arm"] not in best or vl < best[s["arm"]][0]:
-            best[s["arm"]] = (vl, s["lr"])
-    picked = {a: lr for a, (vl, lr) in best.items()}
+        if s["arm"] not in best_raw or vl < best_raw[s["arm"]][0]:
+            best_raw[s["arm"]] = (vl, s["lr"])
+    picked = {a: lr for a, (vl, lr) in best_raw.items()}
+    r4 = {a: sorted(set(v)) for a, v in r4.items()}
     print(f"[phaseb] best-LR picks from train_stats: "
-          f"{ {a: (_fmt_lr(lr), best[a][0]) for a, lr in picked.items()} }")
-    return picked
+          f"{ {a: (_fmt_lr(lr), best_raw[a][0]) for a, lr in picked.items()} }"
+          + (f" ; R4 lams: { {a: [_fmt_lr(v) for v in vs] for a, vs in r4.items()} }" if r4 else ""))
+    return picked, r4
 
 
 def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
@@ -892,9 +1257,13 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
     train_stats = [json.loads(t) for rel, t in stats.items()
                    if smoke or not rel.startswith(("smoke/", "eval/"))]
 
+    from itertools import combinations
+
+    # all pairs over the requested labels — with the default A,B,C this is
+    # exactly the original A-B, A-C, B-C block
     contrasts = {
         f"{a}-{b}": contrast_block(arm_scores[a], arm_scores[b])
-        for a, b in (("A", "B"), ("A", "C"), ("B", "C"))
+        for a, b in combinations(arms, 2)
         if a in arm_scores and b in arm_scores
     }
     from datetime import datetime, timezone
@@ -910,9 +1279,10 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
             arm: {
                 "summary": arm_summaries[arm],
                 # raw stats for every trained LR of the arm; the eval'd
-                # checkpoint is the min-best_val_loss one (or --eval-lrs)
+                # checkpoint is the min-best_val_loss one (or --eval-lrs).
+                # R4 labels are arm_<lam>, so each matches its single run.
                 "train_stats": sorted(
-                    (s for s in train_stats if s["arm"] == arm),
+                    (s for s in train_stats if stats_label(s) == arm),
                     key=lambda s: s["lr"],
                 ) or None,
             }
@@ -937,6 +1307,7 @@ def main(
     score: bool = False,
     arms: str = "",
     lrs: str = "",
+    lam: str = "",
     eval_lrs: str = "",
     shards: int = 2,
     limit: int = 0,
@@ -944,11 +1315,13 @@ def main(
 ):
     """One mode per invocation: --plan | --smoke | --train | --eval | --score.
 
-    --arms restricts the arm set ("A,B" for train, "A,B,C" for eval/score);
-    --lrs overrides the training LR grid (comma floats, applied to every
-    trained arm); --eval-lrs "A:0.0001,B:0.0003" pins eval checkpoints
-    instead of the best-val-loss auto-pick; --smoke-artifacts points --eval/
-    --score at the smoke checkpoints/outputs.
+    --arms restricts the arm set ("A,B" for train — pass "R4a,R4b" for the
+    R4 fan — "A,B,C" for eval/score, where R4 entries are labeled
+    R4a_<lam>); --lrs overrides the A/B training LR grid (comma floats; R4
+    lr is fixed at R4_LR); --lam overrides the R4 lam grid the same way;
+    --eval-lrs "A:0.0001,R4a:1" pins eval checkpoints (R4 values are lams)
+    instead of the auto-pick; --smoke-artifacts points --eval/--score at the
+    smoke checkpoints/outputs.
     """
     if sum([plan, smoke, train, eval, score]) != 1:
         raise SystemExit("pass exactly one of --plan --smoke --train --eval --score")
@@ -959,14 +1332,18 @@ def main(
 
     if plan:
         train_jobs = [(a, lr) for a in ("A", "B") for lr in LR_GRID[a]]
+        r4_jobs = [(a, l) for a in R4_ARMS for l in LAM_GRID]
         print(json.dumps(counts, indent=2))
         print(f"[plan] gpu={GPU} seq_cap={SEQ_CAP} epochs={EPOCHS} accum={GRAD_ACCUM}")
         print(f"[plan] train jobs ({len(train_jobs)}): "
               f"{[f'{a}_{_fmt_lr(lr)}' for a, lr in train_jobs]}")
+        print(f"[plan] R4 jobs ({len(r4_jobs)}, lr={_fmt_lr(R4_LR)}, --arms R4a,R4b): "
+              f"{[f'{a}_{_fmt_lr(l)}' for a, l in r4_jobs]}")
         print(f"[plan] smoke: {SMOKE_DOCS} docs, {SMOKE_MICRO_STEPS} micro steps, "
-              f"lrs { {a: _fmt_lr(lr) for a, lr in SMOKE_LR.items()} }")
-        print(f"[plan] outputs: /vol/{PHASEB_ROOT}/<arm>_<lr>/ ; eval -> "
-              f"/vol/{PHASEB_ROOT}/eval/<arm>/ ; score -> validation/b2_pilot.json")
+              f"lrs { {a: _fmt_lr(lr) for a, lr in SMOKE_LR.items()} }, "
+              f"R4 lam {_fmt_lr(SMOKE_LAM)}")
+        print(f"[plan] outputs: /vol/{PHASEB_ROOT}/<arm>_<lr|lam>/ ; eval -> "
+              f"/vol/{PHASEB_ROOT}/eval/<label>/ ; score -> validation/b2_pilot.json")
         return
 
     if score:
@@ -974,33 +1351,51 @@ def main(
         _score_local(arm_list, manifests, smoke_artifacts)
         return
 
-    _upload_manifests(manifests["train_rows"], manifests["eval_rows"])
+    glyph_sidecar = build_glyph_sidecar(
+        dataset_root / "probes.jsonl",
+        {r["image_id"] for r in manifests["train_rows"]},  # train + val splits
+    )
+    _upload_manifests(manifests["train_rows"], manifests["eval_rows"], glyph_sidecar)
 
     if smoke:
-        jobs = [(a, SMOKE_LR[a]) for a in (arms or "A,B").split(",") if a in SMOKE_LR]
-        handles = [(f"{a}_{_fmt_lr(lr)}", train_arm.spawn(arm=a, lr=lr, smoke=True))
-                   for a, lr in jobs]
+        arm_list = [a for a in (arms or "A,B,R4a,R4b").split(",") if a in SMOKE_LR]
+        handles = []
+        for a in arm_list:
+            sl = SMOKE_LAM if a in R4_ARMS else 0.0
+            label = f"{a}_{_fmt_lr(SMOKE_LR[a])}" + (f"_lam{_fmt_lr(sl)}" if sl else "")
+            handles.append((label, train_arm.spawn(arm=a, lr=SMOKE_LR[a], lam=sl, smoke=True)))
     elif train:
         lr_override = [float(x) for x in lrs.split(",") if x.strip()]
-        jobs = [(a, lr) for a in (arms or "A,B").split(",") if a in LR_GRID
-                for lr in (lr_override or LR_GRID[a])]
-        handles = [(f"{a}_{_fmt_lr(lr)}", train_arm.spawn(arm=a, lr=lr))
-                   for a, lr in jobs]
+        lam_override = [float(x) for x in lam.split(",") if x.strip()]
+        handles = []
+        for a in (arms or "A,B").split(","):
+            if a in R4_ARMS:
+                for l in (lam_override or LAM_GRID):
+                    handles.append((f"{a}_lam{_fmt_lr(l)}",
+                                    train_arm.spawn(arm=a, lr=R4_LR, lam=l)))
+            elif a in LR_GRID:
+                for lr in (lr_override or LR_GRID[a]):
+                    handles.append((f"{a}_{_fmt_lr(lr)}", train_arm.spawn(arm=a, lr=lr)))
     else:  # eval
-        picked = _pick_best_lrs(eval_lrs, smoke_artifacts)
+        picked, r4_lams = _pick_eval_knobs(eval_lrs, smoke_artifacts)
         arm_list = [a for a in (arms or "A,B,C").split(",") if a]
-        missing = [a for a in arm_list if a != "C" and a not in picked]
+        missing = [a for a in arm_list if a != "C"
+                   and a not in (r4_lams if a in R4_ARMS else picked)]
         if missing:
             raise SystemExit(f"no train_stats for arms {missing}; train first or pass --eval-lrs")
         handles = []
         for a in arm_list:
-            lr = 0.0 if a == "C" else picked[a]
-            for shard in range(shards):
-                handles.append((
-                    f"eval {a}{'@' + _fmt_lr(lr) if lr else ''} shard {shard}",
-                    eval_arm.spawn(arm=a, lr=lr, shard=shard, nshards=shards,
-                                   limit=limit, smoke=smoke_artifacts),
-                ))
+            knobs = [0.0] if a == "C" else r4_lams[a] if a in R4_ARMS else [picked[a]]
+            for knob in knobs:
+                lbl = arm_label(a, knob)
+                if a not in R4_ARMS and knob:
+                    lbl += "@" + _fmt_lr(knob)
+                for shard in range(shards):
+                    handles.append((
+                        f"eval {lbl} shard {shard}",
+                        eval_arm.spawn(arm=a, lr=knob, shard=shard, nshards=shards,
+                                       limit=limit, smoke=smoke_artifacts),
+                    ))
 
     print(f"[phaseb] launched {len(handles)} jobs (gpu={GPU})")
     ok = 0

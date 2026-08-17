@@ -24,14 +24,15 @@ trust_remote_code, AutoProcessor + the generation-capable auto class, same
 deepstack/image_token_id guards); generation is bf16 like modal_frontier
 (served regime — the fp32 contract only binds probe-feature extraction).
 
-Outputs, resume-safe (existing .md files are skipped):
-    /vol/patch_b1/<condition>/<image_id>.md
-    /vol/patch_b1/<condition>/meta.shard<k>.jsonl
-    /vol/patch_b1/errors.shard<k>.jsonl
+Outputs, resume-safe (existing .md files are skipped), under
+/vol/<out-root> (default patch_b1):
+    /vol/<out-root>/<condition>/<image_id>.md
+    /vol/<out-root>/<condition>/meta.shard<k>.jsonl
+    /vol/<out-root>/errors.shard<k>.jsonl
 
 Prereqs on the encoder-anatomy-pilot volume (see make_b1_twins.py docstring):
-    /corpus/images_twins_b1_modal.jsonl, /corpus/images/degraded_b1/, and the
-    clean images already at /corpus/images/clean/.
+    /corpus/<twins-subpath> (a *_modal.jsonl manifest), its degraded images
+    dir, and the clean images already at /corpus/images/clean/.
 
 Run (100 pairs x 6 conditions; ~4 shards keeps a shard well under the
 timeout even at worst-case gen times):
@@ -41,6 +42,11 @@ timeout even at worst-case gen times):
 Smoke:
 
     uv run modal run modal_patch.py --limit 2
+
+Floor probe (condition subset, separate output root):
+
+    uv run modal run modal_patch.py --limit 10 --conditions anchor,floor \
+        --twins-subpath images_twins_b1_rs2x_modal.jsonl --out-root probe_x
 
 Fetch for scoring (run_b1_patching.py):
 
@@ -98,6 +104,8 @@ def patch_shard(
     checkpoint: str = CHECKPOINT,
     limit: int = 0,
     overwrite: bool = False,
+    conditions: str = "",
+    out_root: str = OUT_SUBDIR,
 ) -> dict:
     import json
     import time
@@ -110,14 +118,16 @@ def patch_shard(
 
     from encoder_experiments.extract import safe_image_id
     from encoder_experiments.patching import (
-        CONDITIONS,
         PrefillCapture,
         PrefillPatch,
         find_decoder_layers,
         image_token_positions,
+        parse_conditions,
         partner_map,
         strip_md_fence,
     )
+
+    active = parse_conditions(conditions)
 
     data_volume.reload()
 
@@ -137,8 +147,8 @@ def patch_shard(
     )
     by_id = {r["image_id"]: r for r in rows}
 
-    out_root = Path(VOL_PATH) / OUT_SUBDIR
-    for cond in CONDITIONS:
+    out_root = Path(VOL_PATH) / out_root
+    for cond in active:
         (out_root / cond).mkdir(parents=True, exist_ok=True)
     errors_path = out_root / f"errors.shard{shard}.jsonl"
 
@@ -228,7 +238,7 @@ def patch_shard(
     since_commit = 0
     for row in rows:
         sid = safe_image_id(row["image_id"])
-        need = [c for c in CONDITIONS
+        need = [c for c in active
                 if overwrite or not (out_root / c / f"{sid}.md").exists()]
         if not need:
             skipped += 1
@@ -322,11 +332,14 @@ def main(
     checkpoint: str = CHECKPOINT,
     limit: int = 0,
     overwrite: bool = False,
+    conditions: str = "",
+    out_root: str = OUT_SUBDIR,
 ):
     handles = [
         patch_shard.spawn(
             shard=s, nshards=shards, twins_subpath=twins_subpath,
             checkpoint=checkpoint, limit=limit, overwrite=overwrite,
+            conditions=conditions, out_root=out_root,
         )
         for s in range(shards)
     ]

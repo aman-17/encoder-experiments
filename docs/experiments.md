@@ -557,3 +557,44 @@ production-efficiency comparison against DeepSeek until its crop path is
 measured. No claim beyond document-domain stacks. Benchmark gaps contain
 non-perceptual components (eval strictness, formatting, degradation); this work
 bounds the perceptual share only.
+
+---
+
+# R4 — diagnosis-supervised bridge training (pre-registered 2026-08-16, authorized)
+
+The reserved design change for the failed-G1 branch, now promoted to run.
+Question: is the bridge residual *inert* (the decoder never needed what the
+projector discards) or *unreached* (CE gave the bridge no gradient pressure)?
+B2 established that CE-only training leaves the merger's feature geometry
+untouched (probe Δ +.0007); R4 adds the diagnosis itself as training signal.
+
+**Arms** (all: B2 arm-A recipe — full merger trainable, encoder+decoder
+frozen, same 775-doc train split, same schedule, LR 3e-4 = arm A's winner):
+
+- **R4a (glyph-probe aux)**: CE + λ · cross-entropy of a jointly-trained
+  linear head reading S2 at the training images' glyph probe points
+  (probes.jsonl, train docs only; torch bilinear readout on the merged
+  grid). Pressure: make S2 carry glyph-discriminative features.
+- **R4b (inverse-map aux)**: CE + λ · MSE of a jointly-trained linear head
+  reconstructing the merger's own input (pre-merge patches, free in the
+  same forward) from its output. Pressure: make the projection invertible —
+  targets the 44% reconstruction residual directly.
+- λ ∈ {0.1, 1.0} per arm (4 jobs). Aux heads are discarded at eval; they
+  exist only to shape the merger.
+
+**Readouts (both, never merged):** (1) probe-space — the b2_probe_readout
+pipeline on each arm's repaired S2 (independently refit heads; stock
+reference .4386 linear / .5029 mlp); (2) task-space — the 211-doc eval +
+score, text/math slice and overall.
+
+**Pre-registered adjudication:**
+
+| probe-space | task-space | reading |
+|---|---|---|
+| lifts (CI-separated) | flat | residual is INERT — projector functionally exonerated; the loss it causes is signal the decoder never learned to use. TMLR story strengthens. |
+| lifts | lifts (text/math) | repair path is LIVE — CE was the wrong tool; method paper revives with R4 as §5. |
+| flat | any | aux loss failed to bind at this scale; report and stop — no further repair spend without new design. |
+
+Guards: new checkpoint dirs /vol/phaseb/R4{a,b}_<lam>/ (B2 arms untouched);
+frozen-set certification as in B2; aux-loss curves logged so "failed to
+bind" is distinguishable from "bound but didn't transfer".

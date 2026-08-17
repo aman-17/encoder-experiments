@@ -16,6 +16,15 @@ grid (h, w), i.e. merge^2 = 4x the merged token count — instead of the
 default site=postmerge merged tokens. The budget guard scales by merge^2
 accordingly, and cache_tag/extra_meta carry the site so feature caches never
 collide with postmerge ones.
+
+Bridge knob (B2 additional readout): --adapter-arg bridge_weights=<path>
+loads a trained merger state_dict (modal_phaseb_train arm A's
+bridge.safetensors) into the tower's merger after model load, strict key
+match — the repaired-S2 feature space. cache_tag gains __<bridge_tag>
+(bridge_tag defaults to "bridgeA"; set it per weights file) the same way
+__premerge separates sites, so stock caches are never touched. premerge +
+bridge_weights is refused: the capture sits upstream of the merger and the
+cache would duplicate stock premerge.
 """
 
 from __future__ import annotations
@@ -53,12 +62,33 @@ class Qwen35Vit(EncoderAdapter):
         return site
 
     @property
+    def bridge_weights(self) -> str:
+        path = str(self.adapter_args.get("bridge_weights", "") or "")
+        if path and self.site == "premerge":
+            raise ValueError(
+                f"{self.name}: bridge_weights with site=premerge is refused — the "
+                "premerge capture sits upstream of the merger, so the cache would "
+                "duplicate stock premerge features"
+            )
+        return path
+
+    @property
+    def bridge_tag(self) -> str:
+        return str(self.adapter_args.get("bridge_tag", "bridgeA"))
+
+    @property
     def cache_tag(self) -> str:
-        return self.name if self.site == "postmerge" else f"{self.name}__{self.site}"
+        tag = self.name if self.site == "postmerge" else f"{self.name}__{self.site}"
+        if self.bridge_weights:
+            tag = f"{tag}__{self.bridge_tag}"
+        return tag
 
     @property
     def extra_meta(self) -> dict[str, str]:
-        return {} if self.site == "postmerge" else {"site": self.site}
+        meta = {} if self.site == "postmerge" else {"site": self.site}
+        if self.bridge_weights:
+            meta["bridge_weights"] = self.bridge_weights
+        return meta
 
     @property
     def budget_multiplier(self) -> int:
@@ -67,7 +97,8 @@ class Qwen35Vit(EncoderAdapter):
     def load(self) -> None:
         from transformers import AutoModel, AutoProcessor
 
-        site = self.site  # validate the knob before paying for the checkpoint
+        site = self.site  # validate the knobs before paying for the checkpoint
+        bridge_weights = self.bridge_weights
         self.checkpoint = self._arg("checkpoint", self.checkpoint)
         self.max_pixels = self._arg("max_pixels", 0)  # 0 -> processor default
         self.min_pixels = self._arg("min_pixels", 0)
@@ -98,8 +129,33 @@ class Qwen35Vit(EncoderAdapter):
         gc.collect()
         if self.device.type == "cuda":
             torch.cuda.empty_cache()
+        if bridge_weights:
+            self._load_bridge_weights(bridge_weights)
         if site == "premerge":
             self._install_premerge_capture()
+
+    def _load_bridge_weights(self, path: str) -> None:
+        """Load a trained merger state_dict (fp32 safetensors from
+        modal_phaseb_train.save_weights) into the tower's merger, strict key
+        match — a saved file that does not exactly describe THIS merger fails
+        loudly instead of silently repairing nothing. load_state_dict's copy_
+        casts into the module's resident dtype."""
+        from safetensors.torch import load_file
+
+        merger = getattr(self.visual, "merger", None)
+        if merger is None:
+            raise RuntimeError(
+                f"{self.name}: bridge_weights={path!r} but the vision tower has no "
+                f"`merger` module; children: "
+                f"{[n for n, _ in self.visual.named_children()]}"
+            )
+        try:
+            merger.load_state_dict(load_file(path), strict=True)
+        except RuntimeError as exc:
+            raise RuntimeError(
+                f"{self.name}: bridge_weights={path!r} does not match the merger's "
+                f"state_dict: {exc}"
+            ) from exc
 
     def _install_premerge_capture(self) -> None:
         """Forward pre-hook on the merger module: captures its input — the

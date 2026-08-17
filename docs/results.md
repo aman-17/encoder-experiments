@@ -407,3 +407,154 @@ decoder-LoRA control** — held for an explicit go decision (training spend;
 the validity battery (experiments.md) still has OOD + counterfactual items
 open). S3's native gap additionally motivates including the decoder-LoRA
 control arm rather than treating bridge-only as the foregone winner.
+
+---
+
+# B2 — bridge-only pilot vs decoder-LoRA control (2026-08-16, gate G1)
+
+Pre-registration: experiments.md §B2. 6/6 training jobs (2 arms × 3 LRs,
+A100-80GB), best-val LR = 3e-4 for both arms; frozen-set certification passed
+every job; 775 usable train docs (14 no-gold), 25 replicator docs dropped
+overlong; eval = 211 held-out docs (201 scored, 10 no-gold), greedy, native.
+Raw bundle: validation/b2_pilot.json.
+
+| arm | trainable params | overall [95% CI] | charts | math | replicator | tables | text |
+|---|---|---|---|---|---|---|---|
+| A bridge-only | 27.3M (full merger) | .608 [.551, .665] | .165 | .993 | .260 | .812 | .880 |
+| B decoder-LoRA r16 | 21.2M | **.678 [.622, .733]** | .265 | .961 | .440 | .891 | .989 |
+| C frozen anchor | 0 | .287 [.244, .330] | .079 | .236 | .321 | .610 | .337 |
+
+Contrasts (doc-bootstrap 95% CI): **A−B overall −.070 [−.095, −.041]**;
+A−C +.321 [+.265, +.380]; B−C +.391 [+.337, +.444]. Per-family A−B:
+math **+.032 [+.002, +.072]** (A wins, CI excludes 0); text −.109; charts
+−.099; tables −.079; replicator −.180.
+
+**Pre-registered adjudication (G1, primary = overall per the authored
+table): B > A beyond CI → hypothesis functionally unsupported at this
+scale/data; fallback row applies (TMLR framing; compute moves to decoder
+adaptation; do not spend the 20k on the repair as-is).**
+
+Recorded observations (raw, not adjudication):
+
+- Both arms gain enormously over the anchor (+.32/+.39), with the largest
+  jumps on math (.24→.96/.99) and text (.34→.88/.99) — consistent with a
+  large output-format-adaptation component in the metric (the anchor does
+  not emit the generators' markdown/LaTeX conventions). The task-space
+  contrast therefore conflates formatting with perception; the
+  pre-registered probe-space readout (glyph probe on arm A's repaired S2,
+  experiments.md §B2 "additional readout") is running and reports
+  separately.
+- math — the most format-constrained, glyph-dense family — is the single
+  family where A beats B with a CI excluding zero (+.032), the
+  diagnosis-predicted direction.
+- The 2-epoch / 775-doc scale is the pilot's floor, pre-registered as such;
+  the fallback row's "may need a design change, not more compute" reading
+  applies to the repair design, not to the diagnosis (exp2a §3 stands).
+
+## B2 probe-space readout (2026-08-16) — repaired S2 vs stock S2
+
+Pre-registered "additional readout" (experiments.md §B2). Arm A's best
+bridge (A_0.0003) loaded into the tower; glyph_id at native, point readout,
+capacity-match 512, calibrated MLP — the exp2a S2 cell's exact recipe, both
+arms fit in the same run. Raw: validation/b2_probe_readout.json.
+
+| arm | linear [95% CI] | mlp [95% CI] |
+|---|---|---|
+| stock S2 | .4386 [.418, .462] | .5029 [.480, .526] |
+| repaired S2 (arm A) | .4393 [.419, .460] | .4830 [.461, .506] |
+| **delta** | **+.0007** | **−.0199** |
+
+The bridge finetune left glyph accessibility unchanged (CIs fully overlap;
+S1 reference .797). Combined with the task-space result (B > A overall),
+the G1 record completes: arm A's +.32 task gain over the anchor was output
+adaptation, not perception; CE-only training at this scale exerts no
+measurable pressure on the merger's feature geometry. G1 fallback stands.
+The §3 diagnosis (the 44% residual) is untouched by this outcome. The
+pre-registration's reserved design change for exactly this branch is R4
+(diagnosis-supervised bridge training); it has not been run and is not
+launched under the failed gate.
+
+---
+
+# B1 v2 — activation patching on resolution-damaged twins (2026-08-16)
+
+Pre-registration: experiments.md §B1. v1 (sev-2 photometric) was an
+instrument-validation run: damage +.016 n.s. — attack too mild; controls
+perfect. v2 uses rs3x twins (3× bilinear down / Lanczos up, identical pixel
+dims → token-identical grids; damage ladder measured on 10-pair probes:
+sev3 +.010, rs2x +.025, rs3x +.083). 100 pairs × 6 conditions, greedy,
+native. Raw: validation/b1_patching_v2.json.
+
+| condition | mean edit-sim |
+|---|---|
+| clean anchor | .2946 |
+| degraded floor (rs3x) | .1961 |
+| + clean S2 patch (LM input) | .2946 |
+| + clean S3 patch (layer 16) | .2109 |
+| mismatched-page patch | .1563 |
+| self-patch | .2946 (byte-exact no-op) |
+
+Damage +.0985 [+.077, +.121]. **Restoration: S2 = 1.000 [1.0, 1.0]
+(structural upper anchor — full clean prefill reconstruction); S3 = 0.150
+[0.008, 0.283]**; mismatch −.403 (destroys further — patches are causally
+potent).
+
+Licensed causal statements (per §B1 pre-registered readings):
+
+1. **The decoder is exonerated as a reader of what it is given**:
+   restoring clean LM-input image embeddings restores transcription
+   exactly — resolution-induced reading loss is entirely upstream of the
+   LM input.
+2. **Only 15% of the recoverable signal is still patch-usable at
+   mid-decoder**: the decoder's extraction of visual evidence into text
+   positions concentrates in its first half (layers 0–16); by layer 16 the
+   damage is committed. This is the causal counterpart of the S2→S3 probe
+   gap and carries the same scope: degradation-loss localization, not a
+   bridge claim (S1-patch ≡ S2-patch by merger cell-independence).
+
+---
+
+# R4 — diagnosis-supervised bridge training (2026-08-16, adjudicated)
+
+Pre-registration: experiments.md §R4. 4/4 jobs (R4a glyph-aux / R4b
+inverse-aux × λ {0.1, 1.0}, arm-A recipe, LR 3e-4). Both objectives BOUND:
+glyph aux CE 4.389→2.643 (λ=1; well below the ln(80) random floor — point
+readout alignment confirmed), inverse-map normalized MSE 2.21→0.69 (λ=1;
+mean-predictor baseline 1.0). LM CE healthy in all arms (~0.19 final).
+Raw: validation/b2_pilot.json (7-arm task bundle),
+validation/b2_probe_readout_R4*.json.
+
+## Probe-space (repaired S2 glyph vs stock .4388 linear / .5035 mlp)
+
+| arm | linear Δ | mlp Δ |
+|---|---|---|
+| R4a λ=0.1 | +.0074 | −.022 |
+| R4a λ=1.0 | +.0172 (CIs overlap) | −.042 |
+| R4b λ=1.0 | +.0028 | −.045 |
+| R4b λ=0.1 | +.0043 | −.022 |
+
+Best lift = +.017 ≈ 5% of the .358 residual toward S1's .797, not
+CI-separated. MLP drops in every arm while linear inches up: accessibility
+is RE-ALLOCATED, not added — a conservation signature consistent with an
+information-saturated projector output.
+
+## Task-space (overall, 201 docs; A = CE-only bridge .6082)
+
+R4a_0.1 .6212 (A−R4a_0.1 −.013 n.s.); R4a_1 .5857 (A wins +.022 CI>0);
+R4b_0.1 .5958 (n.s.); R4b_1 .5698 (A wins +.038 CI>0). Higher λ taxes CE
+without task payoff. All R4 arms ≫ anchor C (.287).
+
+## Adjudication (pre-registered table)
+
+Probe-space: NOT lifted with CI separation. Task-space: flat-to-negative.
+Neither "lifts" row is met; the sharper-than-anticipated outcome is
+**bound-but-did-not-transfer**: the objectives demonstrably moved the
+merger's geometry (reconstruction loss −69%) yet an independent probe
+recovers at most ~5% more glyph signal and the task none. Per the table:
+**no further repair spend without a new design.** Combined record: the
+projector's residual exists (§3), the loss is upstream of the LM input
+(§4), and it resists repair at LoRA scale under THREE objectives — CE,
+direct glyph supervision, and invertibility (§5). The remaining lever is
+the interface itself (token count / multi-path injection à la DeepStack —
+prior art, not ours), not the learned map. Venue per gates: TMLR fallback
+with the complete negative arc.

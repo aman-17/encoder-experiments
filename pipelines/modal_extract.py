@@ -141,6 +141,11 @@ def extract_encoder(
     and sites-mode is mandatory — probes_subpath must name the probes.jsonl
     (or sites manifest) whose marked points define the site readouts (full
     grids at 9 rungs x towers would blow the volume).
+
+    probes_subpath WITHOUT a budget = native sites-mode (the decoder_mid
+    native precedent): .sites.safetensors under /vol/features/<tag>/ with
+    mechanism=native, knob=native. Full-grid native extraction (empty
+    probes_subpath, no budget) is byte-unchanged.
     """
     import json
     import time
@@ -171,15 +176,15 @@ def extract_encoder(
         )
 
     site_specs: dict | None = None
-    if budget:
-        if not probes_subpath:
-            raise ValueError(
-                "sweep runs (budget > 0) require sites-mode: pass probes_subpath "
-                "so site features can be sampled instead of caching full grids"
-            )
+    if budget and not probes_subpath:
+        raise ValueError(
+            "sweep runs (budget > 0) require sites-mode: pass probes_subpath "
+            "so site features can be sampled instead of caching full grids"
+        )
+    if probes_subpath:
         probes_path = corpus / probes_subpath
         if not probes_path.exists():
-            raise FileNotFoundError(f"{probes_path} not found (sweep sites source)")
+            raise FileNotFoundError(f"{probes_path} not found (sites source)")
         site_specs = load_site_manifest(probes_path)["images"]
 
     device = resolve_device("auto")
@@ -230,6 +235,9 @@ def extract_encoder(
             "knob": ";".join(f"{k}={v}" for k, v in sorted(knob_args.items())),
             "budget_nominal": str(budget),
         })
+    elif site_specs is not None:
+        # native sites-mode: same contract fields the decoder_mid native writes
+        meta.update({"mechanism": "native", "knob": "native"})
     # pre-merge captures store per-point child vectors (concat4/mean4 readouts)
     child_merge = (
         int(getattr(adapter, "merge", 2)) if meta.get("site") == "premerge" else None
@@ -266,6 +274,7 @@ def extract_encoder(
                         f"tokens > {allowed} allowed — knob did not take"
                     )
                     realized_tokens.append(n_tokens)
+                if site_specs is not None:
                     save_sites(out_path, feats, spec["points"], meta, child_merge=child_merge)
                 else:
                     save_features(out_path, feats, meta)
@@ -314,7 +323,7 @@ def extract_encoder(
         "done": done,
         "skipped": skipped,
         "failed": failed,
-        "no_sites": no_sites if budget else None,
+        "no_sites": no_sites if site_specs is not None else None,
         "load_s": round(load_s, 2),
         "mean_image_s": round(sum(per_image_s) / len(per_image_s), 3) if per_image_s else None,
         "first_image": first_shape,
@@ -754,6 +763,7 @@ def main(
     rungs: str = "",
     out_tower: str = "",
     decoder_mid: bool = False,
+    sites: bool = False,
 ):
     """Fan out extract_encoder over (encoder x shard) — or, with --fit, run
     the probe_fit pipeline on already-extracted features instead (extraction
@@ -767,6 +777,9 @@ def main(
     --decoder-mid runs the S3 extract_decoder_mid function instead
     (--encoders must be qwen35_decoder_mid[@checkpoint=...]; --budget is the
     merged-token ladder, empty = native).
+    --sites stores native extractions as .sites.safetensors against
+    --probes-subpath instead of full grids (sweep rungs are sites-mode
+    regardless).
     """
     if fit:
         import json as _json
@@ -852,7 +865,7 @@ def main(
             for shard in range(shards):
                 jobs.append((name, random_init, images_subpath, shard, shards,
                              adapter_args, overwrite, dtype, b,
-                             probes_subpath if b else ""))
+                             probes_subpath if (b or sites) else ""))
 
     print(f"[modal_extract] launching {len(jobs)} jobs "
           f"({len(encoders.split(','))} encoders x {len(budgets)} budgets x {shards} shards)")

@@ -31,6 +31,19 @@ CONDITIONS = (
 )
 
 
+def parse_conditions(spec: str) -> tuple[str, ...]:
+    """CONDITIONS subset from a comma list ('' -> all), normalized to
+    CONDITIONS order; unknown names raise (a typo must not silently run
+    the full six-condition sweep)."""
+    names = [s.strip() for s in spec.split(",") if s.strip()]
+    if not names:
+        return CONDITIONS
+    unknown = [n for n in names if n not in CONDITIONS]
+    if unknown:
+        raise ValueError(f"unknown conditions {unknown}; valid: {CONDITIONS}")
+    return tuple(c for c in CONDITIONS if c in names)
+
+
 def image_token_positions(input_ids_row, image_token_id: int):
     """1-D LongTensor of positions in one sequence holding image tokens.
     Raises if there are none (a patch with no target is a silent no-op bug)."""

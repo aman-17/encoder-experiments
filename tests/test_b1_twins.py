@@ -131,6 +131,58 @@ def test_build_twins_end_to_end(dataset):
     assert before == after
 
 
+def test_twin_key_and_manifest_paths(tmp_path):
+    assert twins.twin_key("degrade", 2, 2) == "sev2ng"
+    assert twins.twin_key("degrade", 3, 2) == "sev3ng"
+    assert twins.twin_key("resample", 2, 2) == "rs2x"
+    assert twins.twin_key("resample", 2, 3) == "rs3x"
+    with pytest.raises(ValueError):
+        twins.twin_key("warp", 2, 2)
+    # v1 config keeps the untagged v1 names; every other variant is tagged
+    local, modal = twins.manifest_paths(tmp_path, "sev2ng")
+    assert (local.name, modal.name) == (
+        "images_twins_b1.jsonl", "images_twins_b1_modal.jsonl")
+    local, modal = twins.manifest_paths(tmp_path, "rs2x")
+    assert (local.name, modal.name) == (
+        "images_twins_b1_rs2x.jsonl", "images_twins_b1_rs2x_modal.jsonl")
+
+
+def test_build_twins_resample_mode(dataset):
+    local_rows, modal_rows = twins.build_twins(
+        dataset / "images.jsonl", 4, 2, 0,
+        mode="resample", factor=2, out_name="degraded_b1_v2")
+    assert len(local_rows) == len(modal_rows) == 4
+
+    import cv2
+
+    for lr, mr in zip(local_rows, modal_rows):
+        clean = cv2.imread(lr["clean_path"], cv2.IMREAD_COLOR)
+        deg = cv2.imread(lr["degraded_path"], cv2.IMREAD_COLOR)
+        assert deg.shape == clean.shape                     # identical pixel dims
+        assert (deg != clean).any()                         # actually degraded
+        assert lr["severity_key"] == "rs2x"
+        assert lr["degraded_path"].endswith("__rs2x.png")
+        assert mr["degraded_path"].startswith("images/degraded_b1_v2/")
+        meta = json.loads(Path(
+            lr["degraded_path"].replace(".png", ".resample.json")).read_text())
+        assert meta["mode"] == "resample" and meta["factor"] == 2
+
+    # same-pages contract: every variant selects the identical page set
+    degrade_rows, _ = twins.build_twins(dataset / "images.jsonl", 4, 3, 0,
+                                        out_name="degraded_b1_v2")
+    assert ([r["image_id"] for r in degrade_rows]
+            == [r["image_id"] for r in local_rows])
+    assert degrade_rows[0]["degraded_path"].endswith("__sev3ng.png")
+
+    # determinism: rebuilding produces byte-identical twins
+    before = {r["image_id"]: Path(r["degraded_path"]).read_bytes() for r in local_rows}
+    local2, _ = twins.build_twins(dataset / "images.jsonl", 4, 2, 0,
+                                  mode="resample", factor=2,
+                                  out_name="degraded_b1_v2")
+    after = {r["image_id"]: Path(r["degraded_path"]).read_bytes() for r in local2}
+    assert before == after
+
+
 def test_assembler_end_to_end(dataset, tmp_path):
     local_rows, _ = twins.build_twins(dataset / "images.jsonl", 4, 2, 0)
     manifest = dataset / "images_twins_b1.jsonl"

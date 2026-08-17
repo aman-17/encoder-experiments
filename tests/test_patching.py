@@ -12,6 +12,7 @@ from encoder_experiments.patching import (
     bootstrap_restoration,
     find_decoder_layers,
     image_token_positions,
+    parse_conditions,
     partner_map,
     restoration_fraction,
     strip_md_fence,
@@ -180,3 +181,13 @@ def test_conditions_registry():
     assert CONDITIONS[:2] == ("anchor", "floor")
     assert set(CONDITIONS) >= {"patch_s2", "patch_s3",
                                "control_mismatch", "control_selfpatch"}
+
+
+def test_parse_conditions():
+    assert parse_conditions("") == CONDITIONS
+    assert parse_conditions("  ") == CONDITIONS
+    assert parse_conditions("anchor,floor") == ("anchor", "floor")
+    assert parse_conditions("floor, anchor") == ("anchor", "floor")  # canonical order
+    assert parse_conditions("patch_s2") == ("patch_s2",)
+    with pytest.raises(ValueError, match="unknown conditions"):
+        parse_conditions("anchor,flor")

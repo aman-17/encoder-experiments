@@ -165,6 +165,76 @@ def test_site_plumbing(tower):
                  adapter_args=adapter_args).cache_tag == "qwen35_vit__premerge"
 
 
+def test_bridge_plumbing():
+    bridged = build("qwen35_vit", torch.device("cpu"), torch.float32,
+                    adapter_args={"bridge_weights": "/vol/phaseb/A_0.0003/bridge.safetensors"})
+    assert bridged.cache_tag == "qwen35_vit__bridgeA"
+    assert bridged.extra_meta == {
+        "bridge_weights": "/vol/phaseb/A_0.0003/bridge.safetensors"
+    }
+
+    tagged = build("qwen35_vit", torch.device("cpu"), torch.float32,
+                   adapter_args={"bridge_weights": "/w.safetensors", "bridge_tag": "bridgeX"})
+    assert tagged.cache_tag == "qwen35_vit__bridgeX"
+
+    default = build("qwen35_vit", torch.device("cpu"), torch.float32)
+    assert default.cache_tag == "qwen35_vit"  # stock caches keep their dir
+    assert default.extra_meta == {}
+
+    with pytest.raises(ValueError, match="premerge"):
+        _ = Qwen35Vit(torch.device("cpu"), torch.float32,
+                      site="premerge", bridge_weights="/w.safetensors").cache_tag
+
+    spec_path = Path(__file__).parents[1] / "pipelines" / "modal_extract.py"
+    spec = importlib.util.spec_from_file_location("modal_extract", spec_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    name, random_init, adapter_args = mod.parse_encoder_spec(
+        "qwen35_vit@bridge_weights=/vol/phaseb/A_0.0003/bridge.safetensors"
+    )
+    assert build(name, torch.device("cpu"), torch.float32, random_init=random_init,
+                 adapter_args=adapter_args).cache_tag == "qwen35_vit__bridgeA"
+
+
+def test_bridge_weights_load(tower, image, tmp_path):
+    """Loaded merger weights change the postmerge features; restoring the
+    stock weights restores them bit-identically; a wrong state_dict is a loud
+    strict-match error."""
+    import copy
+
+    from safetensors.torch import save_file
+
+    my_tower = copy.deepcopy(tower)
+    stock_state = {k: v.detach().clone() for k, v in my_tower.merger.state_dict().items()}
+    repaired_state = {k: v + 0.05 * torch.randn_like(v) for k, v in stock_state.items()}
+    stock_path, repaired_path = tmp_path / "stock.safetensors", tmp_path / "rep.safetensors"
+    save_file(stock_state, stock_path)
+    save_file(repaired_state, repaired_path)
+
+    adapter = make_adapter(my_tower)
+    with torch.inference_mode():
+        before = adapter.encode(image)
+    adapter._load_bridge_weights(str(repaired_path))
+    with torch.inference_mode():
+        repaired = adapter.encode(image)
+    adapter._load_bridge_weights(str(stock_path))
+    with torch.inference_mode():
+        restored = adapter.encode(image)
+
+    assert not torch.equal(repaired.tokens, before.tokens)
+    assert torch.equal(restored.tokens, before.tokens)
+    # same grid either way — the bridge changes values, not the interface
+    assert repaired.grid_hw == before.grid_hw
+    assert repaired.tokens.shape == before.tokens.shape
+
+    bad = dict(stock_state)
+    bad.pop(sorted(bad)[0])
+    bad_path = tmp_path / "bad.safetensors"
+    save_file(bad, bad_path)
+    with pytest.raises(RuntimeError, match="does not match the merger"):
+        adapter._load_bridge_weights(str(bad_path))
+
+
 def _processed(image, tower):
     from transformers import Qwen2VLImageProcessor
 
