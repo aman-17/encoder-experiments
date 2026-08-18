@@ -82,6 +82,19 @@ no conclusion prose) to validation/b2_pilot.json. Retro-scoring the §R5
 content metric over ALREADY-fetched eval outputs (no volume access) is
 pipelines/retro_content_metric.py.
 
+Blind control (--no-image): the same eval with the visual input removed, so
+the share of the task score that is language prior rather than perception is
+measurable. Two variants — `withheld` (no image part in the message at all,
+no image tokens) and `blank` (a white page of the same size, so the image-token
+span is preserved and only its information is gone). Prompt string, greedy
+decoding, max_new_tokens, manifest and scorer are identical to the sighted
+eval; only the pixels change. Blind generations land under
+/vol/phaseb/eval_blind/<label>__<variant>/, disjoint from the sighted
+/vol/phaseb/eval/<label>/ outputs the B2/R4/R5 records were scored from.
+`--score --no-image ...` scores sighted and blind with the one scorer and
+writes the doc-paired sighted-blind gain (raw score and content_edit_sim,
+overall + per family, bootstrap CIs) to validation/blind_control.json.
+
 The train/eval manifests (gold markdown inline; ~2.5 MB) are rebuilt locally
 and re-uploaded to /vol/corpus/phaseb_{train,eval}.jsonl on every --smoke/
 --train run — content is deterministic, so the upload is idempotent.
@@ -135,6 +148,12 @@ R5_LAM = 1.0  # glyph aux weight, fixed: R4a's lam=1 recipe
 R5_LORA_RANK = 16
 GLYPH_AUX_ARMS = ("R4a", *R5_ARMS)  # arms whose aux is the glyph-probe head
 CORPUS_TAGS = {"pilot": "700", "r5": "5k"}  # --train-corpus -> checkpoint-dir key
+# eval may additionally target frozen snapshots of a trained cell (§R5's
+# 1-epoch R5b_5k_ep1); those dirs carry weights but no train_stats.json, so
+# they are reachable only via an explicit --eval-lrs pin, never the auto-pick
+EVAL_CORPUS_TAGS = (*CORPUS_TAGS.values(), "5k_ep1")
+BLIND_VARIANTS = ("withheld", "blank")  # --no-image values
+BLIND_ROOT = "eval_blind"  # under /vol/phaseb — disjoint from eval/
 R5_CORPUS_DIR = "corpus_r5"  # under /vol; built by the §R5 corpus job, read-only here
 R5_IMAGES = "images_r5_modal.jsonl"
 R5_PROBES = "probes_r5.jsonl"
@@ -543,6 +562,129 @@ def stats_label(stats: dict) -> str:
     return arm_label(stats["arm"], knob)
 
 
+def check_blind(blind: str) -> str:
+    """Validate a --no-image variant ("" = sighted). An unknown value is a
+    hard error: a typo must never fall through to a sighted generation that
+    then lands under a blind label."""
+    if blind and blind not in BLIND_VARIANTS:
+        raise ValueError(f"--no-image takes {list(BLIND_VARIANTS)}, got {blind!r}")
+    return blind
+
+
+def blind_variants(spec: str) -> list[str]:
+    """--no-image value -> variant list in BLIND_VARIANTS order ("all" = every
+    variant, "" = sighted, i.e. no blind run). Deduplicated, so repeating a
+    variant cannot double-spawn its generation jobs."""
+    if not spec.strip():
+        return []
+    if spec.strip() == "all":
+        return list(BLIND_VARIANTS)
+    picked = {check_blind(p.strip()) for p in spec.split(",") if p.strip()}
+    if not picked:
+        raise ValueError(f"--no-image got no variant in {spec!r}")
+    return [v for v in BLIND_VARIANTS if v in picked]
+
+
+def eval_label(arm: str, knob: float | str, blind: str = "") -> str:
+    """Generation identity: arm_label for the sighted eval, suffixed
+    <label>__<variant> for a blind one."""
+    return f"{arm_label(arm, knob)}__{check_blind(blind)}" if blind else arm_label(arm, knob)
+
+
+def eval_dir(arm: str, knob: float | str, blind: str = "", smoke: bool = False) -> str:
+    """Relative (to /vol) generation dir. Blind runs live under a separate
+    phaseb/eval_blind/ root AND carry a suffixed label, so they can neither
+    overwrite nor be mistaken for the sighted phaseb/eval/<label>/ outputs the
+    B2/R4/R5 records were scored from."""
+    root = f"{PHASEB_ROOT}/smoke" if smoke else PHASEB_ROOT
+    sub = BLIND_ROOT if check_blind(blind) else "eval"
+    return f"{root}/{sub}/{eval_label(arm, knob, blind)}"
+
+
+def blind_messages(prompt: str, blind: str = "") -> list[dict]:
+    """Chat messages for one variant. `withheld` drops the image part entirely
+    (no image tokens reach the decoder); `blank` and sighted share the SAME
+    message list — that variant changes pixels, not the token span. The prompt
+    string is identical in all three by construction."""
+    check_blind(blind)
+    content: list[dict] = [{"type": "text", "text": prompt}]
+    if blind != "withheld":
+        content.insert(0, {"type": "image"})
+    return [{"role": "user", "content": content}]
+
+
+def blind_image(img, blind: str = ""):
+    """Pixels handed to the processor: a white page of the SAME size for
+    `blank` (identical image-token span, no information), the page itself
+    otherwise. `withheld` passes no image at all and must not reach here."""
+    if check_blind(blind) == "withheld":
+        raise ValueError("the withheld variant passes no image to the processor")
+    if blind == "blank":
+        from PIL import Image
+
+        return Image.new("RGB", img.size, (255, 255, 255))
+    return img
+
+
+def gain_block(
+    sighted: dict[str, dict], blind: dict[str, dict],
+    keys: tuple[str, ...] = ("score", "content_edit_sim"),
+    n_boot: int = 2000, seed: int = 0,
+) -> dict:
+    """Doc-paired sighted-blind gain per metric: contrast_block for each key
+    (overall + per family). Positive = the image helped."""
+    return {k: contrast_block(sighted, blind, n_boot=n_boot, seed=seed, key=k) for k in keys}
+
+
+def summary_mean(summary: dict, slice_: str, metric: str) -> float | None:
+    """One cell of a frontier_score summary: `slice_` is "overall" or a family
+    name, `metric` is "score" (the family's primary) or "content_edit_sim".
+    None when the slice carries no such readout (chart docs have no gold
+    markdown, so charts have no content_edit_sim)."""
+    block = summary["overall"] if slice_ == "overall" else summary["families"].get(slice_)
+    if block is None:
+        return None
+    if metric == "score":
+        return block.get("mean")
+    if slice_ == "overall":
+        return summary.get("content_edit_sim", {}).get("mean")
+    return block.get(metric, {}).get("mean")
+
+
+def blind_table(bundle: dict, metric: str = "score") -> str:
+    """Markdown table of one blind_control bundle metric: a row per (arm,
+    slice) with the sighted mean, each variant's blind mean and the doc-paired
+    gain + 95% CI. Slices are overall then FAMILY_ORDER; cells with no readout
+    for the metric print as an em dash."""
+    from encoder_experiments.frontier_score import FAMILY_ORDER
+
+    variants = list(bundle["variants"])
+    head = ["arm", "slice", "sighted"]
+    for v in variants:
+        head += [v, f"gain vs {v} [95% CI]"]
+    lines = ["| " + " | ".join(head) + " |",
+             "|" + "|".join(["---"] * len(head)) + "|"]
+
+    def fmt(x):
+        return "—" if x is None else f"{x:.4f}"
+
+    for arm, blocks in bundle["arms"].items():
+        sighted_sum = blocks["sighted"]["summary"]
+        fams = [f for f in FAMILY_ORDER if f in sighted_sum["families"]]
+        for slice_ in ("overall", *fams):
+            row = [arm, slice_, fmt(summary_mean(sighted_sum, slice_, metric))]
+            for v in variants:
+                blind = blocks[v]
+                row.append(fmt(summary_mean(blind["summary"], slice_, metric)))
+                g = blind["gain"][metric]
+                cell = g["overall"] if slice_ == "overall" else g["families"].get(slice_)
+                row.append("—" if cell is None else
+                           f"{cell['mean_diff']:+.4f} [{cell['ci95_lo']:+.4f}, "
+                           f"{cell['ci95_hi']:+.4f}] (n={cell['n_docs']})")
+            lines.append("| " + " | ".join(row) + " |")
+    return "\n".join(lines)
+
+
 # --------------------------------------------------------------------------- #
 # remote helpers (image-side imports only)
 # --------------------------------------------------------------------------- #
@@ -676,7 +818,7 @@ def _frozen_fingerprint(model, n_probes: int = 64):
 @app.function(
     image=image,
     gpu=GPU,
-    timeout=3600 * 12,
+    timeout=3600 * 24,
     volumes={VOL_PATH: data_volume, HF_CACHE_PATH: hf_cache_volume},
 )
 def train_arm(
@@ -1201,6 +1343,7 @@ def eval_arm(
     nshards: int = 1,
     limit: int = 0,
     smoke: bool = False,
+    blind: str = "",
 ) -> dict:
     """Greedy generation (modal_frontier's pattern: fixed QWEN_PROMPT, native
     resolution, fence-stripped) over the held-out docs for one arm ->
@@ -1212,7 +1355,12 @@ def eval_arm(
     generation: bridge.safetensors into the merger AND the peft adapter
     (the b2 probe readout, by contrast, consumes bridge.safetensors alone —
     the merger half suffices there). For R4 arms the `lr` argument carries
-    the lam knob; for R5 arms `corpus` (700|5k) is the checkpoint-dir key.
+    the lam knob; for R5 arms `corpus` (700|5k, or a frozen snapshot tag)
+    is the checkpoint-dir key.
+
+    `blind` runs the image-withheld control: same weights, prompt, decoding
+    and manifest, with the visual input removed (see blind_messages /
+    blind_image) -> /vol/phaseb/[smoke/]eval_blind/<label>__<variant>/.
 
     Every arm generates over the SAME pilot eval manifest (211 held-out
     docs) regardless of its train corpus — §R5's fixed-eval contract."""
@@ -1227,9 +1375,10 @@ def eval_arm(
     from modal_frontier import QWEN_PROMPT, _strip_md_fence
 
     assert arm in ("A", "B", "C", *R4_ARMS, *R5_ARMS), f"unknown arm {arm!r}"
+    check_blind(blind)
     if arm in R5_ARMS:
-        assert corpus in CORPUS_TAGS.values(), (
-            f"arm {arm} needs corpus in {sorted(CORPUS_TAGS.values())}, got {corpus!r}"
+        assert corpus in EVAL_CORPUS_TAGS, (
+            f"arm {arm} needs corpus in {sorted(EVAL_CORPUS_TAGS)}, got {corpus!r}"
         )
         knob: float | str = corpus
     else:
@@ -1237,8 +1386,8 @@ def eval_arm(
         knob = lr
     data_volume.reload()
 
-    corpus = Path(VOL_PATH) / "corpus"
-    manifest = corpus / EVAL_MANIFEST
+    corpus_dir = Path(VOL_PATH) / "corpus"
+    manifest = corpus_dir / EVAL_MANIFEST
     if not manifest.exists():
         raise FileNotFoundError(f"{manifest} not found — run --plan/--train locally first")
     rows = [json.loads(line) for line in manifest.read_text().splitlines() if line.strip()]
@@ -1270,20 +1419,15 @@ def eval_arm(
         weights_note = str(path)
     model.eval()
 
-    root = Path(VOL_PATH) / PHASEB_ROOT / ("smoke/eval" if smoke else "eval")
-    out_dir = root / arm_label(arm, knob)
+    out_dir = Path(VOL_PATH) / eval_dir(arm, knob, blind=blind, smoke=smoke)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta_path = out_dir / f"meta.shard{shard}.jsonl"
     errors_path = out_dir / f"errors.shard{shard}.jsonl"
-    print(f"[phaseb-eval] arm {arm_label(arm, knob)} ({weights_note}) shard {shard}/{nshards}: "
-          f"{len(rows)} docs -> {out_dir}")
+    print(f"[phaseb-eval] arm {eval_label(arm, knob, blind)} ({weights_note}) "
+          f"shard {shard}/{nshards}: {len(rows)} docs -> {out_dir}")
 
-    messages = [{
-        "role": "user",
-        "content": [{"type": "image"}, {"type": "text", "text": QWEN_PROMPT}],
-    }]
     chat_text = processor.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
+        blind_messages(QWEN_PROMPT, blind), tokenize=False, add_generation_prompt=True
     )
 
     done = skipped = failed = 0
@@ -1297,8 +1441,11 @@ def eval_arm(
             continue
         try:
             t0 = time.monotonic()
-            img = Image.open(corpus / row["image_path"]).convert("RGB")
-            inputs = processor(text=[chat_text], images=[img], return_tensors="pt")
+            proc_kwargs: dict = {"text": [chat_text], "return_tensors": "pt"}
+            if blind != "withheld":
+                img = Image.open(corpus_dir / row["image_path"]).convert("RGB")
+                proc_kwargs["images"] = [blind_image(img, blind)]
+            inputs = processor(**proc_kwargs)
             if "pixel_values" in inputs:
                 inputs["pixel_values"] = inputs["pixel_values"].to(torch.bfloat16)
             inputs = inputs.to(device)
@@ -1336,7 +1483,8 @@ def eval_arm(
 
     data_volume.commit()
     stats = {
-        "arm": arm, "lr": lr or None, "corpus": corpus or None,
+        "arm": arm, "label": eval_label(arm, knob, blind),
+        "lr": lr or None, "corpus": corpus or None, "blind": blind or None,
         "shard": shard, "nshards": nshards,
         "done": done, "skipped": skipped, "failed": failed,
         "mean_gen_s": round(sum(gen_times) / len(gen_times), 2) if gen_times else None,
@@ -1411,7 +1559,7 @@ def _pick_eval_knobs(
             arm_name, knob_s = part.split(":")
             arm_name, knob_s = arm_name.strip(), knob_s.strip()
             if arm_name in R5_ARMS:
-                assert knob_s in CORPUS_TAGS.values(), f"bad R5 corpus tag {knob_s!r}"
+                assert knob_s in EVAL_CORPUS_TAGS, f"bad R5 corpus tag {knob_s!r}"
                 r5.setdefault(arm_name, []).append(knob_s)
             elif arm_name in R4_ARMS:
                 r4.setdefault(arm_name, []).append(float(knob_s))
@@ -1448,45 +1596,59 @@ def _pick_eval_knobs(
     return picked, r4, r5
 
 
-def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
-    from encoder_experiments.frontier_score import score_pred_dir
-
-    repo = Path(__file__).resolve().parents[1]
-    dataset_root = repo / "data" / "pilot_1k"
-    out_root = repo / "validation" / ("phaseb_eval_smoke" if smoke else "phaseb_eval")
-    out_root.mkdir(parents=True, exist_ok=True)
-
-    # scorer contract: images jsonl must live in the dataset root so gold
-    # resolves relative to it (precedent: images_frontier_e2e60.jsonl)
+def _write_eval_images(manifests: dict, dataset_root: Path) -> Path:
+    """The scorer's images jsonl. Contract: it must live in the dataset root so
+    gold resolves relative to it (precedent: images_frontier_e2e60.jsonl)."""
     eval_images = dataset_root / "images_phaseb_eval.jsonl"
     eval_images.write_text("".join(
         json.dumps(r, ensure_ascii=False) + "\n" for r in manifests["eval_rows"]
     ))
+    return eval_images
 
-    fetched = fetch_phaseb.remote(
-        [f"{'smoke/eval' if smoke else 'eval'}/{a}" for a in arms], ".md"
-    )
-    arm_summaries: dict[str, dict] = {}
-    arm_scores: dict[str, dict[str, dict]] = {}
-    for arm in arms:
-        pred_dir = out_root / arm
+
+def _score_labels(
+    prefixes: dict[str, str], eval_images: Path, out_root: Path, only_preds: bool
+) -> tuple[dict[str, dict], dict[str, dict[str, dict]]]:
+    """Fetch each label's predictions from its /vol/phaseb prefix in ONE remote
+    call and score them all with the one scorer -> (summary per label,
+    {label: {image_id: scores.jsonl record}})."""
+    from encoder_experiments.frontier_score import score_pred_dir
+
+    fetched = fetch_phaseb.remote(sorted(set(prefixes.values())), ".md")
+    summaries: dict[str, dict] = {}
+    scores: dict[str, dict[str, dict]] = {}
+    for label, prefix in prefixes.items():
+        pred_dir = out_root / label
         pred_dir.mkdir(parents=True, exist_ok=True)
         n = 0
         for rel, text in fetched.items():
-            if Path(rel).parts[-2] == arm:
+            if str(Path(rel).parent) == prefix:
                 (pred_dir / Path(rel).name).write_text(text, encoding="utf-8")
                 n += 1
-        print(f"[phaseb-score] arm {arm}: fetched {n} predictions")
-        summary = score_pred_dir(
-            pred_dir, eval_images, out_root / f"{arm}_scores", only_preds=smoke
+        print(f"[phaseb-score] {label}: fetched {n} predictions from {prefix}")
+        summaries[label] = score_pred_dir(
+            pred_dir, eval_images, out_root / f"{label}_scores", only_preds=only_preds
         )
-        arm_summaries[arm] = summary
-        arm_scores[arm] = {
+        scores[label] = {
             rec["image_id"]: rec
             for rec in (json.loads(line) for line in
-                        (out_root / f"{arm}_scores" / "scores.jsonl").read_text().splitlines()
+                        (out_root / f"{label}_scores" / "scores.jsonl").read_text().splitlines()
                         if line.strip())
         }
+    return summaries, scores
+
+
+def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
+    repo = Path(__file__).resolve().parents[1]
+    dataset_root = repo / "data" / "pilot_1k"
+    out_root = repo / "validation" / ("phaseb_eval_smoke" if smoke else "phaseb_eval")
+    out_root.mkdir(parents=True, exist_ok=True)
+    eval_images = _write_eval_images(manifests, dataset_root)
+
+    eval_prefix = "smoke/eval" if smoke else "eval"
+    arm_summaries, arm_scores = _score_labels(
+        {a: f"{eval_prefix}/{a}" for a in arms}, eval_images, out_root, only_preds=smoke
+    )
 
     stats = fetch_phaseb.remote(["smoke"] if smoke else [""], "train_stats.json")
     train_stats = [json.loads(t) for rel, t in stats.items()
@@ -1545,6 +1707,77 @@ def _score_local(arms: list[str], manifests: dict, smoke: bool) -> None:
         print(f"[phaseb-score] {name} content_edit_sim overall: {c['overall']}")
 
 
+def _score_blind(
+    labels: list[str], variants: list[str], manifests: dict, smoke: bool
+) -> None:
+    """The image-withheld control -> validation/blind_control.json.
+
+    Scores each label's sighted eval (/vol/phaseb/eval/<label>) and its blind
+    twins (/vol/phaseb/eval_blind/<label>__<variant>) with the SAME scorer and
+    reports the doc-paired sighted-blind gain — raw score and content_edit_sim,
+    overall and per family, percentile bootstrap over documents. Predictions
+    and per-doc scores land under validation/phaseb_eval_blind/ so the sighted
+    validation/phaseb_eval/ artifacts of the B2/R4/R5 records are untouched."""
+    from datetime import datetime, timezone
+
+    from modal_frontier import QWEN_PROMPT
+
+    assert variants, "--score --no-image needs at least one variant"
+    repo = Path(__file__).resolve().parents[1]
+    dataset_root = repo / "data" / "pilot_1k"
+    out_root = repo / "validation" / (
+        "phaseb_eval_blind_smoke" if smoke else "phaseb_eval_blind")
+    out_root.mkdir(parents=True, exist_ok=True)
+    eval_images = _write_eval_images(manifests, dataset_root)
+
+    eval_prefix = "smoke/eval" if smoke else "eval"
+    blind_prefix = f"smoke/{BLIND_ROOT}" if smoke else BLIND_ROOT
+    prefixes = {f"{lab}__sighted": f"{eval_prefix}/{lab}" for lab in labels}
+    prefixes.update({f"{lab}__{v}": f"{blind_prefix}/{lab}__{v}"
+                     for lab in labels for v in variants})
+    summaries, scores = _score_labels(prefixes, eval_images, out_root, only_preds=smoke)
+
+    bundle = {
+        "experiment": "blind_control",
+        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        "checkpoint": CHECKPOINT,
+        "smoke": smoke,
+        "counts": manifests["counts"],
+        "variants": variants,
+        "variant_definitions": {
+            "withheld": "message carries the text prompt only — no image part, "
+                        "no image tokens",
+            "blank": "a plain white page of the same dimensions as the document, "
+                     "so the image-token span is unchanged",
+        },
+        "held_fixed": {
+            "prompt": QWEN_PROMPT,
+            "decoding": "greedy (do_sample=False)",
+            "max_new_tokens": MAX_NEW_TOKENS,
+            "eval_manifest": EVAL_MANIFEST,
+            "scorer": "encoder_experiments.frontier_score.score_pred_dir",
+        },
+        "metrics": ["score", "content_edit_sim"],
+        "arms": {
+            lab: {
+                "sighted": {"summary": summaries[f"{lab}__sighted"]},
+                **{v: {
+                    "summary": summaries[f"{lab}__{v}"],
+                    "gain": gain_block(scores[f"{lab}__sighted"], scores[f"{lab}__{v}"]),
+                } for v in variants},
+            }
+            for lab in labels
+        },
+        "bootstrap": {"n_resamples": 2000, "unit": "document", "seed": 0},
+    }
+    out_path = repo / "validation" / (
+        "blind_control_smoke.json" if smoke else "blind_control.json")
+    out_path.write_text(json.dumps(bundle, indent=2, sort_keys=True) + "\n")
+    print(f"[phaseb-blind] wrote {out_path}")
+    for metric in bundle["metrics"]:
+        print(f"\n[phaseb-blind] {metric}\n{blind_table(bundle, metric)}")
+
+
 @app.local_entrypoint()
 def main(
     plan: bool = False,
@@ -1560,6 +1793,8 @@ def main(
     shards: int = 2,
     limit: int = 0,
     smoke_artifacts: bool = False,
+    no_image: str = "",
+    reuse_manifests: bool = False,
 ):
     """One mode per invocation: --plan | --smoke | --train | --eval | --score.
 
@@ -1573,11 +1808,25 @@ def main(
     (R4 values are lams, R5 values are corpus tags) instead of the
     auto-pick; --smoke-artifacts points --eval/--score at the smoke
     checkpoints/outputs.
+
+    --no-image "withheld|blank|withheld,blank|all" is the blind control: with
+    --eval it generates the blind twins of the selected arms into
+    /vol/phaseb/eval_blind/, with --score it scores sighted vs blind and
+    writes validation/blind_control.json. --reuse-manifests skips the
+    manifest rebuild+upload when the volume already carries them (the upload
+    takes a volume layer, which the server refuses while many generation
+    shards commit concurrently); only safe when split and corpus are unchanged.
     """
     if sum([plan, smoke, train, eval, score]) != 1:
         raise SystemExit("pass exactly one of --plan --smoke --train --eval --score")
     if train_corpus not in CORPUS_TAGS:
         raise SystemExit(f"--train-corpus takes {sorted(CORPUS_TAGS)}, got {train_corpus!r}")
+    try:
+        variants = blind_variants(no_image)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+    if variants and not (eval or score):
+        raise SystemExit("--no-image pairs with --eval (generate) or --score (report)")
 
     dataset_root = Path(__file__).resolve().parents[1] / "data" / "pilot_1k"
     manifests = build_manifests(dataset_root)
@@ -1601,18 +1850,33 @@ def main(
               f"aux lam {_fmt_lr(SMOKE_LAM)}")
         print(f"[plan] outputs: /vol/{PHASEB_ROOT}/<arm>_<lr|lam|corpus>/ ; eval -> "
               f"/vol/{PHASEB_ROOT}/eval/<label>/ ; score -> validation/b2_pilot.json")
+        print(f"[plan] blind control (--no-image {'|'.join(BLIND_VARIANTS)}|all): "
+              f"/vol/{PHASEB_ROOT}/{BLIND_ROOT}/<label>__<variant>/ ; "
+              f"score -> validation/blind_control.json")
         return
 
     if score:
         arm_list = [a for a in (arms or "A,B,C").split(",") if a]
-        _score_local(arm_list, manifests, smoke_artifacts)
+        if variants:
+            _score_blind(arm_list, variants, manifests, smoke_artifacts)
+        else:
+            _score_local(arm_list, manifests, smoke_artifacts)
         return
 
-    glyph_sidecar = build_glyph_sidecar(
-        dataset_root / "probes.jsonl",
-        {r["image_id"] for r in manifests["train_rows"]},  # train + val splits
-    )
-    _upload_manifests(manifests["train_rows"], manifests["eval_rows"], glyph_sidecar)
+    if reuse_manifests:
+        # ops escape hatch: batch_upload takes a volume layer, which the server
+        # refuses once enough concurrent generation shards are committing
+        # ("too many layers in volume"). The manifests are deterministic in the
+        # local corpus, so an --eval whose manifests are already on the volume
+        # can skip the write. NEVER skip it after changing the split or corpus.
+        print("[phaseb] --reuse-manifests: keeping the volume's existing "
+              f"/corpus/{TRAIN_MANIFEST}, /corpus/{EVAL_MANIFEST}, /corpus/{GLYPH_SIDECAR}")
+    else:
+        glyph_sidecar = build_glyph_sidecar(
+            dataset_root / "probes.jsonl",
+            {r["image_id"] for r in manifests["train_rows"]},  # train + val splits
+        )
+        _upload_manifests(manifests["train_rows"], manifests["eval_rows"], glyph_sidecar)
 
     if smoke:
         # smoke always exercises the pilot slice — R5j included (§R5: joint
@@ -1662,19 +1926,21 @@ def main(
             else:
                 knobs = [picked[a]]
             for knob in knobs:
-                lbl = arm_label(a, knob)
-                if a not in (*R4_ARMS, *R5_ARMS) and knob:
-                    lbl += "@" + _fmt_lr(knob)
                 is_r5_arm = a in R5_ARMS
-                for shard in range(shards):
-                    handles.append((
-                        f"eval {lbl} shard {shard}",
-                        eval_arm.spawn(arm=a,
-                                       lr=0.0 if is_r5_arm else knob,
-                                       corpus=knob if is_r5_arm else "",
-                                       shard=shard, nshards=shards,
-                                       limit=limit, smoke=smoke_artifacts),
-                    ))
+                for variant in (variants or [""]):
+                    lbl = eval_label(a, knob, variant)
+                    if a not in (*R4_ARMS, *R5_ARMS) and knob:
+                        lbl += "@" + _fmt_lr(knob)
+                    for shard in range(shards):
+                        handles.append((
+                            f"eval {lbl} shard {shard}",
+                            eval_arm.spawn(arm=a,
+                                           lr=0.0 if is_r5_arm else knob,
+                                           corpus=knob if is_r5_arm else "",
+                                           shard=shard, nshards=shards,
+                                           limit=limit, smoke=smoke_artifacts,
+                                           blind=variant),
+                        ))
 
     print(f"[phaseb] launched {len(handles)} jobs (gpu={GPU})")
     ok = 0

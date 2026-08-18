@@ -535,8 +535,15 @@ validation/b2_probe_readout_R4*.json.
 
 Best lift = +.017 ≈ 5% of the .358 residual toward S1's .797, not
 CI-separated. MLP drops in every arm while linear inches up: accessibility
-is RE-ALLOCATED, not added — a conservation signature consistent with an
-information-saturated projector output.
+is RE-ALLOCATED, not added.
+
+> **SUPERSEDED 2026-08-17 by §R5.** The measurements above stand; the
+> *interpretation* below them ("information-saturated projector") does not.
+> Holding this objective fixed and raising the glyph supervision 10× (700 →
+> 5,000 docs) produces a CI-separated +.083 linear AND +.045 MLP lift — both
+> heads rising, i.e. information added, not re-allocated. R4's nulls were a
+> DOSE artifact of 31.5k glyph points over ~180 optimizer steps, not a
+> property of the projector.
 
 ## Task-space (overall, 201 docs; A = CE-only bridge .6082)
 
@@ -547,14 +554,547 @@ without task payoff. All R4 arms ≫ anchor C (.287).
 ## Adjudication (pre-registered table)
 
 Probe-space: NOT lifted with CI separation. Task-space: flat-to-negative.
-Neither "lifts" row is met; the sharper-than-anticipated outcome is
-**bound-but-did-not-transfer**: the objectives demonstrably moved the
-merger's geometry (reconstruction loss −69%) yet an independent probe
-recovers at most ~5% more glyph signal and the task none. Per the table:
-**no further repair spend without a new design.** Combined record: the
-projector's residual exists (§3), the loss is upstream of the LM input
-(§4), and it resists repair at LoRA scale under THREE objectives — CE,
-direct glyph supervision, and invertibility (§5). The remaining lever is
-the interface itself (token count / multi-path injection à la DeepStack —
-prior art, not ours), not the learned map. Venue per gates: TMLR fallback
-with the complete negative arc.
+Neither "lifts" row is met at 700 docs; outcome recorded at the time as
+**bound-but-did-not-transfer** — the objectives moved the merger's geometry
+(reconstruction loss −69%) yet an independent probe recovered ≤5% of the
+residual and the task none.
+
+> **The verdict drawn from this at the time — "no further repair spend
+> without a new design", "information-saturated projector", "the remaining
+> lever is the interface, not the learned map", TMLR fallback — is
+> WITHDRAWN (2026-08-17).** §R5 holds the objective fixed and raises only
+> the data, and the repair works. What R4 actually established is narrower
+> and still useful: *at ~700 documents / ~180 optimizer steps, diagnosis-
+> supervised bridge training does not move the residual, under any of three
+> objectives.* The bound-but-did-not-transfer framing was a real
+> observation at that dose; generalizing it to the projector's capacity was
+> an over-read of a null. Retained here as the record of what was measured
+> and what was wrongly concluded from it.
+
+---
+
+# R5 — the pin-vs-scale 2×2 (2026-08-17) `[KEEP — headline]`
+
+Pre-registration: experiments.md §R5. Question: was R4's null caused by the
+frozen decoder PINNING the merger, or by supervision underdose? Objective
+held fixed (CE + λ=1 glyph aux, LR 3e-4); only the decoder's freedom and the
+data scale vary. Eval/probe substrate unchanged (pilot corpus, 211 held-out
+docs; stock S2 reference .4388 linear [.418,.462] / .5035 mlp).
+
+## Probe-space: repaired-S2 glyph accessibility
+
+| cell | data | decoder | linear [95% CI] | Δ | mlp | Δ |
+|---|---|---|---|---|---|---|
+| R4a_1 | 700 | frozen | .4560 [.435,.479] | +.017 | .4617 | −.042 |
+| R5j_700 | 700 | LoRA r16 | .4494 [.428,.471] | +.011 | .4641 | −.039 |
+| **R5b_5k** | **5,000** | frozen | **.5211 [.498,.545]** | **+.083** | **.5478** | **+.045** |
+| **R5j_5k** | **5,000** | LoRA r16 | **.5196 [.496,.542]** | **+.081** | **.5442** | **+.041** |
+
+(5k cells are ~1-epoch checkpoints — both 5k jobs hit the 12h function
+timeout at micro 5375/9920; timeout raised to 24h and full 2-epoch runs
+relaunched. The lift below is therefore a LOWER bound on the spec run.)
+
+**Two axes, cleanly separated:**
+
+1. **Scale is the live axis.** 700 → 5,000 docs (31.5k → 300k glyph points,
+   ~180 → ~670 optimizer steps) turns a non-significant +.017 into a
+   CI-separated **+.083 linear** — repaired CIs do not overlap stock's —
+   recovering ~23% of the .358 S1−S2 residual. Training-loss corroboration:
+   glyph aux CE reaches ~1.0 at 5k vs 2.64 at 700.
+2. **MLP rises with linear for the first time in the program** (+.045,
+   +.041 vs −.039…−.045 in every 700-doc arm). Both heads up = information
+   ADDED at S2, not re-allocated between heads. This is the measurement
+   that overturns R4's saturation reading.
+3. **The pin hypothesis is dead.** Bridge-only +.083 ≈ joint +.081 at 5k,
+   and at 700 the joint arm was *worse* (+.011 vs +.017); joint aux CE 2.69
+   vs frozen 2.64. Freeing the decoder never mattered for perception.
+
+## Task-space (211 held-out pilot docs, unchanged eval)
+
+| arm | overall | text | math |
+|---|---|---|---|
+| C anchor | .287 | .337 | .236 |
+| R4a_1 (bridge, 700) | .586 | .788 | .989 |
+| A (bridge CE-only, 700) | .608 | .880 | .993 |
+| R5j_700 (joint, 700) | .651 | .955 | .999 |
+| B (decoder-LoRA, 700) | .678 | .989 | .961 |
+| R5b_5k / R5j_5k | *pending* | | |
+
+R5j_700 vs its frozen twin R4a_1: **+.065 [+.039,+.093]** — but paired with
+its *lower* probe-space delta, so the joint arm's task gain is decoder-side
+output quality, not perception. Content-normalized metric (markdown/LaTeX
+stripped) halves B's lead over A (+.070 → +.034) without erasing it.
+
+## H4 specificity — does the repair move ONLY text?
+
+Pre-registered falsification test: a repair that lifts everything is generic
+capacity, not a bridge repair. `pl1_class` (layout class at the marked point)
+under the IDENTICAL config as its stock reference (exp2a S2 native cell:
+capacity_match 512, calibrated MLP, same doc split, n_test 28,992 both):
+
+| probe | stock S2 | R5b_5k (repaired) | Δ |
+|---|---|---|---|
+| glyph_id | .4388 | .5211 | **+.083** |
+| pl1_class | .815 linear / .8443 mlp | .812 / .827 | **−.003 / −.017** |
+
+R5j_5k (joint arm) agrees: pl1 .8103 linear / .8230 mlp (Δ −.005 / −.021)
+against glyph +.081.
+
+Layout accessibility is flat (slightly negative) in BOTH 5k arms while glyph
+rises with CI separation. **The effect is signal-specific**, matching the
+diagnosis it was derived from — the pre-registered falsification test for
+our own mechanism story did not fire.
+
+## Status of the adjudication
+
+Pre-registered rows: "both ↑ only at 5k → dose story; scale further" is the
+row met **in probe space**. G1′ conditions (ideas.md §Gates): (a)
+CI-separated lift on both heads — **MET**; (b) `pl1_class` flat — **MET**
+(−.003); (c) task-space movement on glyph-dependent metrics — outstanding.
+Also outstanding: 5k task-space eval on the pilot held-out set, the full
+2-epoch runs (current cells are ~1 epoch), and the external-benchmark
+comparison (stock vs repaired on olmOCR-bench / OmniDocBench /
+PulseBench-Tab), which is the readout that decides whether this ships.
+
+## WITHDRAWN (2026-08-17, same day): the repair does not transfer
+
+> The probe measurements in this section stand. **The conclusion drawn from
+> them — that the projector was repaired — is withdrawn**, by the external
+> benchmark run below (§External OCR benchmarks): the same checkpoint that
+> produces +.083 glyph accessibility on our corpus **loses 21–23 points on
+> every public benchmark** (olmOCR 71.0→48.0, OmniDoc 81.2→59.7, PulseBench
+> mean .719→.368, coverage −23pp).
+>
+> **What the +.083 actually was.** The repaired projector's main weight moved
+> with relative Frobenius norm **0.796** — an ~80% rewrite, not a nudge —
+> while LM loss fell to ~0.002 on an ~11-template corpus. The gain is
+> distribution-specific: more glyph signal recoverable *on pages drawn from
+> the training renderer*, at the cost of handing the frozen decoder a feature
+> distribution it cannot read anywhere else. The English-vs-Chinese split in
+> the OmniDoc slices (+.036 vs +.434/+.484 edit distance) matches the
+> latin-only training corpus exactly.
+>
+> **The methodological finding this establishes**, which outlives the failed
+> repair: *a CI-separated, specificity-passing, both-heads probe improvement
+> is NOT sufficient evidence of a repair.* Our own pre-registered G1′ rule
+> listed probe lift + specificity + task movement as three conditions; the
+> first two passed and the third failed catastrophically. Any future claim of
+> this shape needs the external number before, not after, the write-up.
+>
+> This also confirms the failure mode named in the original Phase-B
+> pre-registration: "a frozen decoder reading a re-packed format is an
+> independent failure risk the pilot exists to expose."
+
+## Corpus caveat (binding on how far this generalizes)
+
+The 5k corpus is 5,000 pages but only 6 latin text templates × 500 seeds +
+5 math styles; LM CE falls to ~0.002 (near-memorization). It scales glyph
+*supervision*, not layout diversity. "Scale further" therefore means more
+DIVERSE data, and the next scale-up must add template/rendering variety,
+not more seeds of the same families.
+
+---
+
+# External OCR benchmarks — stock vs repaired projector (2026-08-17)
+
+Raw bundle: `validation/extbench_base_vs_repaired.json`; tensor-diff record:
+`validation/extbench_arms_verify.json`. Runner: `pipelines/modal_extbench_bridge.py`.
+
+## Method
+
+The `ocr_postraining/extbench` apps serve a checkpoint DIRECTORY with vLLM, so both arms
+are full serving checkpoints on `ocr-rl-trainer-models-0` and nothing about the
+benchmark path is forked (their official scorers run unchanged):
+
+| arm | served dir | weights |
+|---|---|---|
+| stock | `/models/hf_exports/qwen35_4b_stock` | `Qwen/Qwen3.5-4B` snapshot, unmodified |
+| repaired_ep1 | `/models/hf_exports/qwen35_4b_R5b_5k` | same files, vision-merger tensors overwritten from `/vol/phaseb/R5b_5k_ep1/bridge.safetensors` (sha256 `5886aaff…`, the frozen 1-epoch R5b_5k checkpoint — byte-identical to the file the §R5 probe readout used) |
+
+Tensor-level diff over both directories: **738 tensors, 733 byte-identical, 5 changed**
+(27,270,656 of the merger's 27,271,680 params). Every non-shard file (config, tokenizer,
+chat template, preprocessor) is byte-identical; shard 1 is byte-identical as a whole
+file; shard 2 was rewritten and each of its non-merger tensors is byte-identical by
+sha256 over its safetensors byte range. Per merger tensor (relative Frobenius change vs
+stock, at the served bf16):
+
+| tensor | params | rel. Frobenius Δ | max abs Δ |
+|---|---|---|---|
+| linear_fc1.weight | 16,777,216 | .7962 | .0556 |
+| linear_fc2.weight | 10,485,760 | .7478 | .0404 |
+| linear_fc2.bias | 2,560 | .2412 | .0111 |
+| linear_fc1.bias | 4,096 | .1813 | .0245 |
+| norm.bias | 1,024 | .0074 | .0160 |
+| norm.weight | 1,024 | 0 | 0 |
+
+`norm.weight` is byte-identical to stock and its trained fp32 value equals stock exactly:
+under bf16 training every update to that LayerNorm gain (values ≈1, ULP ≈2⁻⁸) fell below
+the representable step, while the same-magnitude updates survived on the near-zero
+`norm.bias`.
+
+Inference is extbench's own for both arms: production cost_effective prompt
+(sha256 `19395f4c…`), greedy, `enable_thinking=false`, official renders (olmOCR 1288px
+page 1, OmniDoc 2048px cap, Pulse 2560px table crops), official scorers
+(`olmocr.bench.benchmark`; OmniDocBench repro container, quick_match; `tlag_scorer.py`).
+Both arms produced the full page set on every benchmark: 1,403 / 1,651 / 1,820
+predictions each.
+
+## olmOCR-bench — official scorer, 1,403 pages (pass rate %)
+
+| slice | stock | repaired_ep1 | Δ |
+|---|---|---|---|
+| **overall** (macro over jsonls) | 71.0 | 48.0 | -23.0 |
+| absent (n=823) | 48.4 | 56.7 | +8.3 |
+| baseline (n=1403) | 96.7 | 95.8 | -0.9 |
+| math (n=3385) | 78.2 | 39.8 | -38.4 |
+| order (n=1061) | 68.8 | 38.3 | -30.5 |
+| present (n=721) | 62.0 | 19.7 | -42.3 |
+| table (n=1020) | 80.3 | 52.0 | -28.3 |
+| arxiv_math.jsonl | 79.3 | 37.5 | -41.8 |
+| baseline | 96.7 | 95.8 | -0.9 |
+| headers_footers.jsonl | 46.4 | 54.9 | +8.5 |
+| long_tiny_text.jsonl | 77.4 | 18.8 | -58.6 |
+| multi_column.jsonl | 76.5 | 42.3 | -34.2 |
+| old_scans.jsonl | 40.1 | 27.9 | -12.2 |
+| old_scans_math.jsonl | 71.4 | 54.6 | -16.8 |
+| table_tests.jsonl | 80.3 | 52.1 | -28.2 |
+
+## OmniDocBench v1.6 — official repro container, 1,651 pages
+
+| slice | stock | repaired_ep1 | Δ |
+|---|---|---|---|
+| overall | 81.2397 | 59.6649 | -21.5748 |
+| text_block_edit | 0.1628 | 0.3998 | +0.2370 |
+| table_teds | 0.6992 | 0.3739 | -0.3253 |
+| table_teds_structure_only | 0.7363 | 0.4514 | -0.2849 |
+| table_edit | 0.2183 | 0.5536 | +0.3353 |
+| display_formula_cdm | 0.9008 | 0.8158 | -0.0850 |
+| display_formula_edit | 0.1739 | 0.2987 | +0.1248 |
+| reading_order_edit | 0.2053 | 0.2933 | +0.0880 |
+
+## PulseBench-Tab — official T-LAG scorer, 1,820 tables
+
+| slice | stock | repaired_ep1 | Δ |
+|---|---|---|---|
+| mean | 0.7191 | 0.3676 | -0.3515 |
+| median | 0.8163 | 0.3479 | -0.4684 |
+| coverage_pct | 92.1000 | 69.2000 | -22.9000 |
+| n_scored | 1677 | 1260 | -417 |
+| n_missing | 143 | 560 | +417 |
+| perfect_count | 235 | 12 | -223 |
+| lang: arabic | 0.5622 | 0.2854 | -0.2768 |
+| lang: chinese | 0.8179 | 0.4081 | -0.4098 |
+| lang: english | 0.7139 | 0.4011 | -0.3128 |
+| lang: french | 0.7946 | 0.4989 | -0.2957 |
+| lang: german | 0.7023 | 0.2831 | -0.4192 |
+| lang: greek | 0.5455 | 0.1310 | -0.4145 |
+| lang: japanese | 0.7474 | 0.3385 | -0.4089 |
+| lang: korean | 0.6657 | 0.1392 | -0.5265 |
+| lang: russian | 0.7582 | 0.2866 | -0.4716 |
+| lang: spanish | 0.7732 | 0.4578 | -0.3154 |
+
+## OmniDocBench sub-slices (page-level, from the same result file)
+
+Text-block edit distance (lower = better) by page language, and table TEDS by page
+language — the full slice set is in the bundle:
+
+| slice | stock | repaired_ep1 | Δ |
+|---|---|---|---|
+| text edit — english | 0.1180 | 0.1537 | +0.0357 |
+| text edit — other | 0.2435 | 0.2691 | +0.0256 |
+| text edit — en_ch_mixed | 0.2449 | 0.5087 | +0.2638 |
+| text edit — simplified_chinese | 0.1947 | 0.6281 | +0.4335 |
+| text edit — traditional_chinese | 0.1968 | 0.6812 | +0.4844 |
+| text edit — layout: three_column | 0.0695 | 0.1208 | +0.0513 |
+| text edit — layout: double_column | 0.1262 | 0.3270 | +0.2008 |
+| text edit — layout: 1andmore_column | 0.0769 | 0.2979 | +0.2211 |
+| text edit — layout: single_column | 0.1791 | 0.4018 | +0.2227 |
+| text edit — layout: other_layout | 0.1954 | 0.5152 | +0.3199 |
+| table TEDS — english | 0.6857 | 0.4401 | −0.2456 |
+| table TEDS — traditional_chinese | 0.6114 | 0.3249 | −0.2865 |
+| table TEDS — simplified_chinese | 0.7840 | 0.4039 | −0.3801 |
+| table TEDS — en_ch_mixed | 0.7542 | 0.3654 | −0.3888 |
+
+## Caveats
+
+- Both arms are BASE Qwen3.5-4B — no OCR post-training, no markdown-convention
+  training. Absolute values are not comparable to the leaderboards or to our
+  post-trained soup reference (olmOCR 72.3 / OmniDoc 86.33 / PulseTab .794); only the
+  stock↔repaired_ep1 contrast is the measurement here.
+- repaired_ep1 is the ~1-epoch R5b_5k checkpoint (results.md §R5: the 5k cells are
+  1-epoch, timeout-truncated). The 2-epoch retrain of the same arm was still running
+  when these were measured and is a separate arm (`--repaired-dir`/`--repaired-arm`).
+- The bridge's train corpus is 5,000 pages of 6 latin text templates × 500 seeds + 5
+  math styles (§R5 corpus caveat). Chinese/Japanese/Korean/Greek/Russian/Arabic pages,
+  every table slice, and scanned pages are out of distribution for it.
+- olmOCR's `absent` family scores a model for NOT emitting text; `headers_footers`
+  contains `absent`-style tests. Both rise here while every transcription family falls.
+- Greedy, one sample per page, no repeats. olmOCR ships a ±95% CI over tests
+  (stock 71.0 ± 1.1, repaired_ep1 48.0 ± 1.2); the OmniDocBench and T-LAG numbers carry
+  no CI. PulseBench-Tab excludes missing predictions from its mean, so the mean is only
+  readable next to Coverage (92.1% vs 69.2%).
+- OmniDoc `overall` is ((1 − text_block edit) + table TEDS + formula CDM)/3 × 100, the
+  leaderboard's own composite, computed from the scorer's own result file.
+
+# Item-level forensics — stock vs repaired projector (2026-08-18) `[KEEP]`
+
+Raw bundle: `validation/extbench_item_level.json`. Runner:
+`uv run modal run modal_extbench_bridge.py --items` (pure parts unit-tested in
+`tests/test_extbench_bridge.py`). Same two serving checkpoints and the same already-
+scored predictions as the section above — nothing was re-inferred.
+
+## Method
+
+olmOCR-bench publishes no per-test pass file, so the per-item vector is reconstructed
+from the scorer's own artifacts on `ocr-rl-trainer-data-0`: the 7 category jsonls (7,019
+tests) plus one auto-generated baseline test for each pdf that no jsonl already covers
+with a baseline of its own (1,394) = the 8,413 tests the scorer counts, minus each arm's
+`reports/<candidate>/failed.jsonl`. The reconstruction is **checked against the scorer's
+own printed tables** rather than trusted: every by-file (total, passed) pair and every
+by-type pass rate falls out of the confusion exactly, both arms (`confusion_checks`,
+14/14 true per arm).
+
+Per-prediction statistics are computed on the generated files themselves
+(`olmocr/bench_data/<candidate>/**/*.md`, `omnidoc/preds/<candidate>/*.md`,
+`pulse/preds/<candidate>/*.html`), tokenized with the served checkpoint's own
+`tokenizer.json`.
+
+- `repetition` = share of a prediction's word 10-grams (character 30-grams for scripts
+  that do not space-separate) that repeat an earlier one: 0 when every gram is unique,
+  →1 for a loop of any period. Floor for the "looping" flag = 0.10; the bundle carries
+  the whole threshold sweep (0.05/0.1/0.25/0.5/0.9).
+- `at cap` = post-processed token count ≥ 0.98 × that bench's `max_tokens`
+  (8,192 olmOCR/OmniDoc, 16,384 Pulse).
+- Failure labels: page-level generation pathology first (empty → looping → at-cap →
+  refusal), then the scorer's own printed reason for what it could not find, with a
+  mostly-read text (fuzzy ratio ≥ 0.60) split off from a miss.
+
+## olmOCR-bench item-level confusion (8,413 tests)
+
+| slice | n | P→P | P→F | F→P | F→F | net | stock % | repaired % |
+|---|---|---|---|---|---|---|---|---|
+| **overall** | 8413 | 3916 | 2483 | 320 | 1694 | -2163 | 76.1 | 50.4 |
+| type: absent | 823 | 322 | 76 | 145 | 280 | +69 | 48.4 | 56.7 |
+| type: baseline | 1403 | 1308 | 49 | 36 | 10 | -13 | 96.7 | 95.8 |
+| type: math | 3385 | 1271 | 1377 | 76 | 661 | -1301 | 78.2 | 39.8 |
+| type: order | 1061 | 380 | 350 | 26 | 305 | -324 | 68.8 | 38.3 |
+| type: present | 721 | 139 | 308 | 3 | 271 | -305 | 62.0 | 19.7 |
+| type: table | 1020 | 496 | 323 | 34 | 167 | -289 | 80.3 | 52.0 |
+| file: arxiv_math.jsonl | 2927 | 1054 | 1267 | 43 | 563 | -1224 | 79.3 | 37.5 |
+| file: baseline | 1394 | 1300 | 48 | 36 | 10 | -12 | 96.7 | 95.8 |
+| file: headers_footers.jsonl | 760 | 276 | 77 | 141 | 266 | +64 | 46.4 | 54.9 |
+| file: long_tiny_text.jsonl | 442 | 83 | 259 | 0 | 100 | -259 | 77.4 | 18.8 |
+| file: multi_column.jsonl | 884 | 350 | 326 | 24 | 184 | -302 | 76.5 | 42.3 |
+| file: old_scans.jsonl | 526 | 138 | 73 | 9 | 306 | -64 | 40.1 | 27.9 |
+| file: old_scans_math.jsonl | 458 | 217 | 110 | 33 | 98 | -77 | 71.4 | 54.6 |
+| file: table_tests.jsonl | 1022 | 498 | 323 | 34 | 167 | -289 | 80.3 | 52.1 |
+
+
+Silico's Qwen3-8B report's comparable line was 745 wrong→right / 339 right→wrong, net
++406 of 5,000. Here: 320 fail→pass / 2,483 pass→fail, net **−2,163 of 8,413**.
+`long_tiny_text.jsonl` has **0** fail→pass items in 442 tests.
+
+## Failure modes over the 2,483 pass→fail items
+
+| mode | n | % of pass→fail | stock arm, all failures |
+|---|---|---|---|
+| math_not_found | 921 | 37.1 | 699 |
+| repetition | 893 | 36.0 | 250 |
+| order_anchor_missing | 227 | 9.1 | 297 |
+| text_partial | 139 | 5.6 | 604 |
+| table_cell_missing | 89 | 3.6 | 66 |
+| truncated_at_cap | 82 | 3.3 | 9 |
+| table_structure | 65 | 2.6 | 54 |
+| table_dropped | 59 | 2.4 | 24 |
+| text_not_found | 5 | 0.2 | 10 |
+| disallowed_characters | 3 | 0.1 | 1 |
+
+
+`empty_output` = 0 and `refusal` = 0 in both arms. Per test family (pass→fail only):
+
+| family | dominant modes |
+|---|---|
+| math (1,377) | math_not_found 921, repetition 416, truncated_at_cap 40 |
+| order (350) | order_anchor_missing 227, repetition 110, truncated_at_cap 13 |
+| present (308) | repetition 224, text_partial 68, truncated_at_cap 11, text_not_found 5 |
+| table (323) | repetition 98, table_cell_missing 89, table_structure 65, table_dropped 59, truncated_at_cap 12 |
+| absent (76) | text_partial 71, repetition 5 |
+| baseline (49) | repetition 40, truncated_at_cap 6, disallowed_characters 3 |
+
+## Read pass→fail items — 32 of the 59 stratified samples, classified by hand
+
+`samples` in the bundle carries all 59 (gold, both arms' predictions, both arms'
+length/repetition/cap flags, the scorer's reason). Hand labels over the 32 read:
+
+| read label | n | agrees with the automatic label |
+|---|---|---|
+| loop / degeneration to the cap | 8 | 8 |
+| symbol- or word-level misread | 11 | 11 (as `math_not_found` / `text_partial` / `table_cell_missing`) |
+| omission or reading-order change | 4 | 4 (as `order_anchor_missing`) |
+| format switch (page or table emitted as fenced HTML, checkbox list, tabs) | 4 | 4 (as `table_dropped` / `table_cell_missing`) |
+| hallucinated content not on the page | 2 | 2 (as `math_not_found`) |
+| correct text relocated + wrapped in decoration | 1 | 1 (as `text_partial`) |
+| header/footer newly emitted (`absent` family) | 2 | 2 (as `text_partial`) |
+| empty output / refusal / script breakdown | 0 | — |
+
+### Quoted examples (predictions truncated; both arms same page, same prompt)
+
+**1 — math symbol misread** (`2503.04415_pg2_math_000`, stock pass → repaired fail).
+Gold `\sigma\in[0,\frac{1-\gamma}{2})`. Stock: `$\sigma \in [0, \frac{1-\gamma}{2})$`.
+Repaired: `$\sigma \in [0, \frac{1}{\sqrt{2}}]$`.
+
+**2 — math symbol misread** (`2503.04612_pg8_math_003`). Gold
+`\int \left| \log \sin \angle (\mathbf{E}_1, \mathbf{E}_2) \right| \, d\mu`. Repaired:
+`$\int \log \sin \mathbb{Z}(\mathbf{E}_1, \mathbf{E}_2) \, d\mu$` — the angle sign
+becomes `\mathbb{Z}` and the absolute-value bars are dropped. Same page: `PABLO LESSA`
+→ `PALO LESSA`, `cocycles` → `coccyles`, `projective space` → `projection space`.
+
+**3 — math symbol misread** (`2503.08553_pg25_math_000`). Gold
+`S^2\setminus B(p_+, r_1)`. Repaired: `\operatorname{arccot}` → `\operatorname{arcct}`,
+`B(p_+, r_1)` → `B(p_0, r_1)`, `\eta` → `\mathcal{S}`, `B(p_+, 2r_1)` → `B(p_4, 2r_1)`.
+
+**4 — loop to the cap** (`11_pg146_pg1_text_27`, 5,279 → 22,244 chars, at cap). Tail:
+`- **PRESIDENTIAL**` repeated to the token limit.
+
+**5 — loop to the cap, table** (`3d780cdcc987c65fdc7e1628c6a32af33d5d_pg22_table_03`,
+1,890 → 12,370 chars, at cap). Tail: `|  |  |  |  |  |  |  | …` — empty pipe cells to the
+limit; the scorer then reports `No tables found in the content`.
+
+**6 — loop the scorer itself flags** (`arxiv_math/2503.05360_pg2.pdf_baseline`, 3,574 →
+12,796 chars). Tail: `\! \! \! \! \! …`; scorer reason
+`Text ends with 3970 repeating 3-grams, invalid`.
+
+**7 — proper-noun garbling in prose** (`multi_column/06ba2a90…_page_14`, a reference
+list). Stock `Jenun PA, Stray-Pedersen B, Melby KK … *Toxoplasma gondii* … *J Clin
+Microbiol* 1998;**36**:2900–2906`. Repaired `Jenun PA, Straw-Pedersen B, Melboi KK …
+Tuxoplaxa gondii … J Clin Biobal 1998:36:2900-2906`, then loops the last entry.
+
+**8 — hallucinated content** (`2503.06110_pg13_math_008`, an arXiv page). Repaired tail:
+`**Index** — Approximation: 1, 3, 5 — Cantor Set: 2, 4, 6 … **End of Document**`.
+Sibling case `2503.04620_pg35_math_002` invents a bibliography:
+`[5] S. White, "Advanced Topics in Optimization," *Mathematical Analysis*, vol. 25,
+no. 6, pp. 156-178, 2024.`
+
+**9 — format switch** (`acd61dce…_pg1_table_04`, scorer:
+`No tables found in the content`). Repaired opens with an ```` ```html ```` fence and
+emits the whole page as an HTML document —
+`<html><body><h2>NOTES FROM THE CURRICULUM …</h2><p>July 17, 2003 …</p>` — using
+`<h2>`/`<p>` and no `<table>`. In `cefac431…_pg49_table_04` the table becomes a
+checkbox list: `- [x] ~~driverTypeAddress~~ Address of the Driver Type`. In
+`26076dc3…_pg3_table_14` it becomes fenced HTML carrying layout attributes:
+`<table border="1" data-bbox="102 101 880 363">`.
+
+**10 — correct text, relocated and decorated** (`17_115907`, scorer: threshold 0.984,
+best match ratio 0.806). Gold `Very sincerely yours George Brokaw Compton Executive
+Secretary`. Repaired emits the name at the top of the letterhead inside strikethrough:
+`~~George Brokaw Compton, '09, '13 I. / Executive Secretary~~`.
+
+**11 — handwriting** (`old_scans/76`, 239 → 258 chars). Stock: `I enclose these
+clippings from the V. papers to have you see what obstacles I have fought against and
+overcome. Nothing dies, but error and untruth`. Repaired: `I envision the *liftings*
+from MIT V- papers to have you see what obstacles I have fought, against and
+*precisely* ~~Nothing~~ *died*, but error and *mist*`.
+
+**12 — `absent` newly failed** (`b2ca8e00…_page_2_header_00`, gold forbidden string
+`P. Tarvainen et al.`). Stock omits the running head; repaired opens with
+`98 / P. Tarvainen et al.` and inserts `security~~[1]~~ vulnerabilities`,
+`precaution` → `precocious`.
+
+## Degeneration over every prediction (both arms, all three benches)
+
+| bench | arm | n | mean chars | mean tokens | empty | at cap | repetition ≥ floor | pages with table markup | markdown marks /1k chars |
+|---|---|---|---|---|---|---|---|---|---|
+| olmocr | stock | 1403 | 4431.2 | 1474.0 | 0 (0.0%) | 80 (5.7%) | 105 (7.48%) | 341 | 10.89 |
+| olmocr | repaired_ep1 | 1403 | 8347.8 | 2853.8 | 0 (0.0%) | 352 (25.09%) | 358 (25.52%) | 229 | 20.2 |
+| omnidoc | stock | 1651 | 4199.7 | 1808.2 | 0 (0.0%) | 137 (8.3%) | 175 (10.6%) | 580 | 16.88 |
+| omnidoc | repaired_ep1 | 1651 | 9053.7 | 3844.4 | 0 (0.0%) | 600 (36.34%) | 617 (37.37%) | 375 | 26.99 |
+| pulse | stock | 1820 | 4465.1 | 1494.7 | 143 (7.86%) | 35 (1.92%) | 179 (9.84%) | 1677 | 4.37 |
+| pulse | repaired_ep1 | 1820 | 6842.9 | 3137.7 | 560 (30.77%) | 162 (8.9%) | 332 (18.24%) | 1260 | 18.45 |
+
+PulseBench-Tab per-sample transitions over all 1,820 samples: scored→scored 1231, scored→missing 446, missing→missing 114, missing→scored 29.
+
+## Format-artifact check — the scorer's own threshold, decoration removed
+
+| test family | n | our ratio vs scorer's | mean scorer ratio | mean ratio, decoration stripped | recovered |
+|---|---|---|---|---|---|
+| absent | 76 | ±0.0078 | 0.9988 | 0.9957 | 3 |
+| present | 308 | ±0.0219 | 0.6279 | 0.6372 | 0 |
+
+
+`empty` on olmOCR and OmniDoc is the whole generated page (0 of 1,403 and 0 of 1,651 in
+BOTH arms); `empty` on Pulse is the extracted `<table>` block, which is the only thing
+`bench_pulse.infer` persists — a page whose generation carried no table markup writes an
+empty file and the scorer counts it missing. Repaired-arm table markup falls by the same
+proportion on the two benches where the full text IS kept: olmOCR 341 → 229 pages
+(−32.8%), OmniDoc 580 → 375 (−35.3%), Pulse 1,677 → 1,260 (−24.9%).
+
+The format-artifact check re-scores every fuzzy text failure against the scorer's OWN
+printed threshold after markdown emphasis/strike/code marks are removed from both gold
+and prediction. Our `partial_ratio` reproduces the scorer's printed ratio to ±0.022 over
+308 `present` items, so the stripped ratio is comparable to the same threshold.
+Decoration density did roughly double (10.89 → 20.20 marks per 1k chars on olmOCR;
+4.37 → 18.45 on Pulse); **0 of the 308** `present` failures cross their threshold when it
+is removed, at a mean scorer ratio of 0.628.
+
+## `absent` slice — the one family that rose
+
+| cell | items | pages | stock mean chars | repaired mean chars | repaired shorter | repaired empty | repaired looping | stock holds the forbidden string | repaired holds it |
+|---|---|---|---|---|---|---|---|---|---|
+| pass_pass | 322 | 225 | 4400.3 | 7528.0 | 125 | 0 | 85 | 0.79 | 0.777 |
+| pass_fail | 76 | 58 | 5168.6 | 3657.0 | 33 | 0 | 5 | 0.709 | 0.991 |
+| fail_pass | 145 | 97 | 3978.1 | 9542.1 | 59 | 0 | 41 | 0.995 | 0.705 |
+| fail_fail | 280 | 182 | 3670.7 | 5438.1 | 128 | 0 | 44 | 0.997 | 0.991 |
+
+"holds the forbidden string" = `rapidfuzz.partial_ratio(gold, page)`, the same
+instrument as the format check above (±0.008 against the scorer's own printed ratio on
+the 76 `absent` failures it prints one for). `pass_pass` is its floor: 0.777 mean and
+180/322 items ≥ 0.9 on pages BOTH arms pass, because many forbidden strings are short
+(`♦ 1-1`, `FOR HUMANITY`) and match somewhere by chance. The readable quantity is
+therefore the paired stock→repaired change inside a cell, not the absolute level.
+
+On the 145 items the repaired arm newly passes:
+
+- the page is **longer**, not shorter: 3,978 → 9,542 mean chars, 86/145 longer,
+  **0 empty**, 47/145 at the generation cap, 41/145 looping;
+- fidelity to the forbidden string drops on exactly those items: stock 0.995 →
+  repaired 0.705, while it stays at 0.991–0.997 in `pass_fail` and `fail_fail`;
+- 110/145 repaired pages still hold a ≥ 0.5 fuzzy copy of the forbidden string, 79 hold
+  ≥ 0.7, 57 hold ≥ 0.9; only 9 fall below 0.3;
+- 7/145 of those pages fail their own baseline (non-degenerate, non-empty) test.
+
+Per-item examples from `absent.fail_pass_pages`: gold `Downtown Campus-Main`, stock
+1.000 → repaired 0.500; gold `Dr. P. MARIAYYAH`, stock 1.000 → repaired 0.938; gold
+`Comunicar, nº 33, v. XVII, 2009, Revista Cie…`, stock 0.981 → repaired 0.885.
+
+The 76 items in the other direction are the same mechanism reversed: stock 0.709 →
+repaired 0.991, i.e. the repaired arm newly emits running heads the stock arm skipped
+(`98 / P. Tarvainen et al.`; and on `c0d59815…_page_1_header_01`, a banner stock omits
+entirely — `**AGENDA FOR HUMANITY** / 5 CORE RESPONSIBILITIES / 24 TRANSFORMATIONS`).
+
+**Answer to the pre-registered question:** neither "correctly identifies absence" nor
+"emits less text". The repaired arm's `absent` pages are 2.4× longer and never empty;
+the flips in both directions track the fuzzy fidelity of the forbidden string
+(−0.29 where it starts passing, +0.28 where it starts failing).
+
+## Caveats on the instruments
+
+- `repetition` is blind to loops whose repeated unit changes each cycle. Example
+  `04af23cb…_page_5` ends `…-506000-m-506500-m-507000-m…` — an incrementing counter, so
+  its 10-grams are all distinct and it scores 0.0; the cap flag catches it instead
+  (labelled `truncated_at_cap`). Loop counts here are therefore lower bounds.
+- `at cap` is a lower bound for the same reason as in the method note: post-processing
+  strips think tags and code fences off the served text, so a run that stopped at
+  `max_tokens` can land just under the 0.98 line.
+- `bench_pulse.infer` writes only the extracted `<table>` block, so PulseBench "missing"
+  cannot separate "generated nothing" from "generated no table" on its own. The
+  0-empty and table-markup numbers above come from the 3,054 olmOCR + OmniDoc pages
+  where the whole generation IS persisted; the Pulse raw text is not on the volume.
+- Both benches' `_postprocess` intends to strip the prompt's
+  `<page_full_transcription>` wrapper but the pattern is written `r"…>\\s*"`, which
+  matches a literal backslash — so the tag survives in every prediction, in BOTH arms
+  (visible in the quoted examples). It cancels in the stock↔repaired contrast and was
+  present for all previously reported numbers; it is not corrected here.
+- The failure labels are one per item with page-level pathology taking precedence, so a
+  looping page contributes `repetition` for every test on it rather than splitting
+  across the scorer's reasons. The per-reason view without that precedence is
+  recoverable from `samples[].scorer_reason` and the bundle's raw counts.

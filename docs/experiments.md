@@ -634,3 +634,90 @@ underdose (31.5k glyph points, 180 optimizer steps). The 2×2 isolates them:
   All flat incl. joint@5k → saturation/interface claim is airtight; TMLR
   negative arc final. Probe-space primary; content-metric co-primary on
   task side; CI discipline as everywhere.
+
+---
+
+# S1–S3 — the Silico-informed follow-ups (pre-registered 2026-08-18, running)
+
+Prompted by Goodfire/Silico's "Giving Qwen3-8B vision" report
+(docs.goodfire.com/examples/qwen3-8b-vision-report), which trains a LLaVA-style
+projector onto a text-only Qwen3-8B. Their setup differs from ours in a way
+that matters: their decoder had NO prior vision interface, so a retrained
+projector cannot break an expectation that never existed — the failure mode
+that killed our repair (0.796 rel-Frobenius drift → −23 benchmark points)
+is structurally impossible there. What transfers is their method, not their
+project. All three items below need **zero training**.
+
+## S1 — Blind control ("image withheld") on our task eval
+
+Their control: run the trained model on the same questions with the image
+removed, identical answer formatting. It exposed their MMMU win as language
+priors (44.56 sighted vs 43.0 blind — the image was worth 1.6 points). We
+have shortcut baselines on the probe side but **nothing equivalent on the
+task side**, and our corpus is templated, so priors + format may carry more
+of our task scores than we assume.
+
+**Design.** Arms C (anchor), A (bridge CE), B (decoder-LoRA) on the same 211
+held-out docs, same prompt, same greedy decoding, same scorers (raw +
+content_edit_sim). Two variants: image withheld (no image at all) and blank
+white page (keeps the image-token span — separates "no visual input" from "no
+information in the visual input"). Readout: sighted − blind = **gain from the
+image**, per arm and per family, with doc-bootstrap CIs.
+
+**What it can overturn.** If blind ≈ sighted on any arm, that arm's task
+score is not measuring perception, and every G1/R4/R5 task-space comparison
+built on it is re-scoped accordingly. This is a check that can embarrass our
+own earlier readings, which is why it is worth running now rather than never.
+
+## S2 — Vision token budget vs external benchmarks (stock model only)
+
+Their decisive ablation: every tile token (3,977) vs 4× pixel-shuffle
+(1,009), same pixels, same geometry, same recipe → **+7.126 TextVQA at 11.07
+standard errors**, and ≤ +0.74 on every non-reading benchmark. Cost: ~4×
+inference on the image span, stage-2 training 24.5h vs 7.9h.
+
+Note their own restraint, which we adopt: their compressed arm changed **two**
+things (token count AND projector input width 1,152 → 4,608), so they claim
+only "this compressor loses the gain", not "compression must". Our sweep
+changes only the budget knob, so it is the cleaner version of the same
+question — provided the serving path actually honors the knob, which the run
+must VERIFY by logging realized image-token counts (a silently-ignored
+max_pixels would invalidate everything).
+
+**Design.** Stock Qwen3.5-4B, olmOCR-bench (1,403 pages), 4–5 budgets
+including the current default (the 71.0 baseline), reporting all sub-slices,
+**realized** token counts, and per-page generation cost. OmniDoc at the two
+extremes if the trend is clear.
+
+**Why it matters most.** It is the only experiment here with a deployable
+answer, and it tests the alternative hypothesis our whole repair program was
+built against: that the fix is *fewer bottlenecked tokens*, not a better map.
+
+## S3 — Item-level forensics on the −23-point collapse
+
+Their model: 745 items wrong→right, 339 right→wrong, and reading the actual
+predictions revealed several "regressions" were exact-match scorer artifacts
+("25 paisa" vs reference "25"), not misreadings.
+
+**Design.** Item-level confusion (pass→pass / pass→fail / fail→pass /
+fail→fail) for stock vs repaired on olmOCR, per test_type and per file;
+failure-mode classification from **reading ~30 pass→fail predictions**
+(empty / truncated / repetition / hallucination / format / script breakdown);
+degeneration statistics over all predictions (mean length, empty fraction,
+cap-hit fraction, repetition measure); and a direct test of whether the
+`absent` slice (+8.3) rose because the model correctly identifies absence or
+merely emits less.
+
+**What it settles.** Whether the collapse is uniform degradation or a specific
+generation failure — which determines whether an anchored retrain is worth
+running at all.
+
+## Not doing, and why
+
+**Building a from-scratch adapter (their actual project).** Their recipe is
+558,128 caption pairs + 742,400 instruction samples on 8 GPUs, and it lands
+at **70.72 TextVQA vs the official model's 83.56** — 12.8 points short, which
+they attribute to training-data scale. Document OCR needs more data than
+TextVQA, not less. We would spend heavily to produce a model worse than the
+one we already serve, and trade a measurement contribution for a second-tier
+VLM. Explicitly out of scope.

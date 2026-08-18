@@ -10,6 +10,14 @@ we ran it, and what it licenses us to say. [docs/results.md](docs/results.md) â€
 the measurement record, refuted findings included. **This file** â€” tooling and
 contracts only, no findings.
 
+Three explainers sit alongside them for people joining the work, not adding to
+it: [docs/speaker-notes.md](docs/speaker-notes.md) (the whole arc in plain
+language), [docs/evaluation-by-example.md](docs/evaluation-by-example.md) (one
+real page, one real character, followed through every step of how a number is
+produced), and [docs/data-annotation.md](docs/data-annotation.md) (where the
+pages and their ground truth come from, followed through one real document).
+They restate; they never hold a finding of their own.
+
 ## Layout
 
 ```

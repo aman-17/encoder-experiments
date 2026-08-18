@@ -242,10 +242,30 @@ Real data is eval-only and never probe substrate (no latent labels).
 ~13 weeks to the deadline. The gates exist so that a failure is discovered in
 week 2, not week 11.
 
-**G1 — the go/no-go (weeks 1–2). Run before anything else is committed.**
-B1 activation patching + the B2 pilot, both already coded
-([run_b1_patching.py](../pipelines/run_b1_patching.py), [modal_phaseb_train.py](../pipelines/modal_phaseb_train.py)),
-decided by the pre-registered rule in [experiments.md](experiments.md) §B2.
+**G1 — RESOLVED, then CORRECTED (2026-08-16 → 17). Read this before citing
+any G1 verdict.**
+
+G1 as pre-registered ran on 700 documents and returned **B > A** (decoder-LoRA
+.678 vs bridge .608), with the pre-registered probe-space readout flat
+(+.0007). Both fallback rows were invoked and the project was briefly
+re-framed as a TMLR negative. **That verdict is withdrawn.** §R5 held the
+objective fixed and raised only the training data (700 → 5,000 glyph-heavy
+docs): repaired-S2 glyph accessibility rises **+.083 linear with CI
+separation, and +.045 MLP** — both heads, i.e. information added rather than
+re-allocated (results.md §R5).
+
+What G1 actually tested, in hindsight, was *the bridge at 700 documents and
+~180 optimizer steps* — a dose, not the hypothesis. The design flaw was
+pre-registering a decision rule on an arm whose training budget was never
+itself validated. **Correction adopted:** any future repair gate must
+demonstrate the training objective is FIT (aux loss well below its random
+floor on held-out data) before its null is read as evidence about the
+architecture. A null from an unfit objective adjudicates nothing.
+
+Live decision state: the method framing is **alive again**, on probe-space
+evidence, pending the 5k task-space and H4 specificity readouts (running).
+Venue is re-opened, not re-decided; the fallback rows below stand only if
+the completed §R5 readouts fail.
 
 - **A > B beyond CI** → the bridge is the recoverable stage. Build R2. This paper.
 - **A ≈ B > C** → adaptation helps but is not stage-specific. The method framing
@@ -253,6 +273,34 @@ decided by the pre-registered rule in [experiments.md](experiments.md) §B2.
   stage-specific" → TMLR/COLM. Do not spend the 20k.
 - **A ≈ C** → LoRA-scale capacity cannot move it. Report as such; TMLR.
 - **B > A** → hypothesis unsupported. TMLR, and the compute moves to decoder work.
+
+**G1′ (supersedes G1 for the method claim).** Repair counts iff, at a dose
+where the aux objective is demonstrably fit: (a) probe-space glyph lift is
+CI-separated from stock **on both heads**, (b) `pl1_class` stays
+approximately flat (H4 specificity — else it is generic capacity), and (c)
+task-space moves on glyph-dependent, format-normalized metrics.
+
+**G1′ RESOLVED (2026-08-17): (a) MET, (b) MET, (c) FAILED HARD.** External
+benchmarks on the same checkpoint: olmOCR 71.0→48.0, OmniDoc 81.2→59.7,
+PulseBench .719→.368 with coverage −23pp (results.md §External OCR
+benchmarks). The bridge-only repair at this recipe is **rejected**: it
+overfits the training renderer (projector weight moved 80% rel-Frobenius, LM
+loss ~0.002 on ~11 templates) and hands the frozen decoder an unreadable
+feature distribution off-distribution.
+
+**The rule this replaces both G1 and G1′ with, for any future repair claim:**
+the external-benchmark delta is the FIRST gate, not the last. Probe-space
+evidence — even CI-separated, both-heads, specificity-passing evidence —
+ranks as a mechanism hypothesis, never as a result. We now have a clean
+demonstration that the two can point in opposite directions by >20 benchmark
+points.
+
+**Venue state:** the method framing is dead at this recipe. What survives for
+publication is the diagnosis (§3), the causal localization (§4), and a
+methodologically strong negative (§5): the residual is real, causal, and NOT
+repairable by LoRA-scale bridge training on synthetic data — with the
+probe-vs-benchmark divergence as a cautionary result in its own right. That
+is a TMLR/COLM paper, and an honest one.
 
 **G2 — OOD transfer of the *diagnosis* (weeks 2–4).** Re-run the S1/S2 glyph gap
 and the reconstruction test on real annotated pages (OmniDocBench word-level
