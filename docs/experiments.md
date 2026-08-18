@@ -6,8 +6,8 @@ us to say**. Replaces `exp2a-bridge-localization.md`, `phase-b-causal.md`,
 `measurement-validation.md`, and `data.md` (all removed 2026-08-15; recoverable
 at commit `6ff7aa0`).
 
-Paper framing: [ideas.md](ideas.md). Measurement record with per-item paper
-tags: [results.md](results.md). Tooling and contracts: [README.md](../README.md).
+Framing and what currently stands: [ideas.md](ideas.md). Measurement record:
+[results.md](results.md). Tooling and contracts: [README.md](../README.md).
 
 ---
 
@@ -26,9 +26,18 @@ end-task quality — it does not, which is what pointed us past the encoder.
 one module, with a reconstruction test that put a number on it: 44% of the
 pre-merge glyph readout is unrecoverable from post-merge features.
 
-That number is the pivot. Everything after it (**V0 → B1 → B2 → B4 → B5**)
-exists to confirm the localization causally and then repair it. The paper is
-the repair; Exp 1–3 are how we know where to aim.
+**V0 → B1** confirmed that localization causally (patching at the projector
+output fully restores transcription; at decoder mid-layer only 15%).
+**B2 → R4 → R5** then tried to repair the module and failed three times, the
+last time spectacularly: a probe gain that passed every internal control cost
+21–23 points on every public benchmark. **S1–S3** are the post-mortem plus the
+one intervention that did work — raising the vision token budget, which needs
+no training at all.
+
+So the arc is: localize (stands) → confirm causally (stands) → attempt repair
+(failed, mechanism identified) → find the lever that actually moves benchmarks
+(the budget). Read the decision rules below as they were written *before* each
+result, which is what makes the negatives worth anything.
 
 ---
 
@@ -57,20 +66,23 @@ prose is not evidence and stays out of results bundles.
 
 ## Experiment map
 
-| id | asks | status | paper role |
-|---|---|---|---|
-| **Exp 1** | Which towers retain which document signals? | run (pilot_v1) | mostly cut; 2 of 8 probe families survive |
-| **Exp 1b** | Are the probes measuring signal or shortcuts? | run (validation_v1) | **appendix — makes §3 credible** |
-| **Exp 2** | How does retention scale with token budget? | run (448 pairs) | one motivation figure |
-| **Exp 3** | Does retention predict end-task utility? | run (7 configs) | one intro sentence + cost inset |
-| **Exp 2a** | Where in the stack does text signal stop being recoverable? | run (exp2a_v1) | **§3 — the diagnosis** |
-| **V0** | Does the merger concatenate or pool? | **not run — BLOCKING** | stated architecture fact |
-| **B1** | Is the localization causal? | coded, not run | **§4 — the causal experiment** |
-| **B2** | Can bridge adaptation recover what decoder adaptation can't? | coded, not run | **GATE G1 — decides paper vs venue** |
-| **B3** | Never-captured or captured-then-discarded? | run | appendix, optional |
-| **B4** | Can a LoRA-scale residual repair it? | not built | **§5 — the contribution** |
-| **B5** | Does the repair hold on real documents? | not started | **§6 — the headline table** |
-| **G2** | Does the *diagnosis* reproduce on real documents? | not started — **BLOCKING** | validity of the whole premise |
+| id | asks | outcome |
+|---|---|---|
+| **Exp 1** | Which towers retain which document signals? | run. Only one tower reads; 2 of 8 probe families survived the audit |
+| **Exp 1b** | Are the probes measuring signal or shortcuts? | run. Refuted 4 families; **this is what makes everything downstream credible** |
+| **Exp 2** | How does retention scale with token budget? | run. Reading steeply budget-bound, structure flat — later confirmed end-to-end by S2 |
+| **Exp 3** | Does retention predict end-task utility? | run. No — retention and utility diverge |
+| **Exp 2a** | Where does text signal stop being recoverable? | run. **44% functional residual across the projector. Stands.** |
+| **V0** | Does the merger concatenate or pool? | verified: concatenation (Qwen2-VL-lineage `PatchMerger`) |
+| **B1** | Is the localization causal? | run (v2, rs3x twins). **Yes: projector-output patch restores fully, decoder-mid only 15%. Stands.** |
+| **B2** | Can bridge adaptation beat decoder adaptation? | run. **No — gate G1 FAILED** (decoder-LoRA .678 vs bridge .608; probe unmoved) |
+| **B3** | Never-captured or captured-then-discarded? | run. Pooling a native encode beats downscaling at matched tokens |
+| **R4** | Does diagnosis-supervised training move it? | run. Objectives bound; nothing transferred at 700 docs |
+| **R5** | Was R4 a dose or a pin problem? | run. Dose — probe +.083 at 5k docs, **but the checkpoint collapses on external benchmarks** |
+| **S1** | Is our task metric image-driven or priors? | run. **Image-driven** (all arms fall to ~.061 blind) |
+| **S2** | Does the vision token budget move real benchmarks? | run. **Yes: +3.0 overall, +12.7 fine-text, no training. Stands.** |
+| **S3** | What exactly broke in the collapse? | run. Rambling not silence; `long_tiny_text` 0/442 fixed |
+| **G2** | Does the *diagnosis* reproduce on real documents? | **never run.** Still the largest open question |
 
 ---
 
@@ -272,11 +284,15 @@ and **G2**.
 
 ---
 
-# Part II — causal confirmation and repair (the paper)
+# Part II — causal confirmation and the repair attempts
 
-Order: **V0 → B1 → B2 → (gate G1) → B4 → B5.**
+Ran in order **V0 → B1 → B2 (gate G1) → R4 → R5 → S1–S3**. The causal work
+stands; every repair attempt failed. B4 (the residual-path design) and B5 (the
+real-benchmark headline for a working repair) were never built — G1 and G1′
+failed first, and the designs below are kept as the record of what was planned
+and pre-registered, not as pending work.
 
-## V0 — Merger architecture verification `BLOCKING, ~1 hour`
+## V0 — Merger architecture verification `verified`
 
 **Asks.** Does `visual.merger` concatenate the 2×2 patch states along the
 channel axis, or average/pool them?
@@ -365,14 +381,24 @@ retrain.
 *repaired* S2 features — the first estimate of "share of the 44% residual
 recovered", and the number that ties §3 to §5. Probe-space statement; label it.
 
-**Pre-registered decision — this selects the venue:**
+**Pre-registered decision rule (written before the run):**
 
-| outcome | reading | action |
-|---|---|---|
-| **A > B beyond CI** | bridge confirmed as the recoverable stage | build B4. This is the CVPR paper |
-| A ≈ B > C | adaptation helps but is not stage-specific | method framing dead → TMLR/COLM with the corrected measurement. **Do not spend the 20k** |
-| A ≈ C | LoRA-scale capacity cannot move it | report as such; TMLR. Do not escalate compute without a design change |
-| B > A | hypothesis functionally unsupported | TMLR; compute moves to decoder adaptation |
+| outcome | reading |
+|---|---|
+| A > B beyond CI | bridge confirmed as the recoverable stage → build the repair |
+| A ≈ B > C | adaptation helps but is not stage-specific → method framing dead |
+| A ≈ C | LoRA-scale capacity cannot move it → do not escalate compute without a design change |
+| **B > A** | **hypothesis functionally unsupported → compute moves to decoder work** |
+
+**Outcome: the last row.** Decoder-LoRA .6777 vs bridge .6082 (A−B −.070
+[−.095, −.041]), with the probe-space readout flat (+.0007). Gate G1 failed.
+
+**But note how this verdict was itself wrong-headed, which is the lesson.** G1
+adjudicated a hypothesis using an arm whose training budget was never
+validated: 700 docs / ~180 optimizer steps, with the auxiliary objective only
+half-fit. R5 later showed the dose was the binding constraint. **A null only
+adjudicates if the objective is demonstrably fit at that dose** — that rule
+came out of this failure and now governs every gate we write.
 
 ## B4 — The repair (§5, the contribution)
 
@@ -637,7 +663,19 @@ underdose (31.5k glyph points, 180 optimizer steps). The 2×2 isolates them:
 
 ---
 
-# S1–S3 — the Silico-informed follow-ups (pre-registered 2026-08-18, running)
+# S1–S3 — the Silico-informed follow-ups (pre-registered 2026-08-18; all run)
+
+**Outcomes** (details in [results.md](results.md)): **S1** — every arm falls to
+~.061 blind, so our task metric is image-driven, not priors; the "image
+withheld" variant turned out to be *degenerate* for bridge-only arms (no image
+tokens → the merger never runs → byte-identical to base), so the blank-page
+variant is the load-bearing one. **S2** — the token budget moves real
+benchmarks: 280→38.8, 560→56.8, ~1120 default→71.0, 2240→74.0 overall, with
+`long_tiny_text` 1.4→90.5; doubling above the default buys +3.0 overall and
++12.7 fine-text for inference cost alone. **S3** — the collapse is rambling,
+not silence (looping 7.5%→25.5%, cap-hits 5.7%→25.1%, zero empty outputs), net
+−2,163 of 8,413 tests, `long_tiny_text` 0/442 fixed, and the two slices that
+"improved" reward not emitting text.
 
 Prompted by Goodfire/Silico's "Giving Qwen3-8B vision" report
 (docs.goodfire.com/examples/qwen3-8b-vision-report), which trains a LLaVA-style

@@ -1,34 +1,35 @@
 # encoder-experiments
 
-Tooling for the bridge-repair paper: frozen-encoder feature extraction, a probe
-harness, site-wise localization inside the Qwen3.5-4B stack, activation
-patching, and the Phase-B bridge trainer.
+Tooling for the document-VLM signal-localization work: frozen-encoder feature
+extraction, a probe harness, site-wise localization inside the Qwen3.5-4B
+stack, activation patching, a bridge trainer, and token-budget sweeps against
+external OCR benchmarks.
 
-**Four docs, no more.** [docs/ideas.md](docs/ideas.md) — the paper.
-[docs/experiments.md](docs/experiments.md) — every experiment: what it asks, why
-we ran it, and what it licenses us to say. [docs/results.md](docs/results.md) —
-the measurement record, refuted findings included. **This file** — tooling and
-contracts only, no findings.
+**Four docs, no more.** [docs/ideas.md](docs/ideas.md) — the write-up framing
+and what currently stands. [docs/experiments.md](docs/experiments.md) — every
+experiment: what it asks, its pre-registered decision rule, and its outcome.
+[docs/results.md](docs/results.md) — the measurement record, refuted findings
+included. **This file** — tooling and contracts only, no findings.
 
 Three explainers sit alongside them for people joining the work, not adding to
 it: [docs/speaker-notes.md](docs/speaker-notes.md) (the whole arc in plain
-language), [docs/evaluation-by-example.md](docs/evaluation-by-example.md) (one
-real page, one real character, followed through every step of how a number is
-produced), and [docs/data-annotation.md](docs/data-annotation.md) (where the
-pages and their ground truth come from, followed through one real document).
-They restate; they never hold a finding of their own.
+language), [docs/evaluations.md](docs/evaluations.md) (one real page, one real
+character, followed through every step of how a number is produced), and
+[docs/data-annotation.md](docs/data-annotation.md) (where the pages and their
+ground truth come from, followed through one real document). They restate; they
+never hold a finding of their own.
 
 ## Layout
 
 ```
-docs/         ideas.md (the paper) · experiments.md (designs + licenses) · results.md (the record)
+docs/         ideas.md (framing) · experiments.md (designs + decision rules) · results.md (the record)
 pipelines/    Modal apps (modal_*.py, run with `modal run`) + local assemblers (run_*.py and friends)
 src/
   encoder_experiments/   the importable package — adapters, extraction, probes, heads, reconstruction
   data/                  corpus generators (node) + degradation + sidecar tooling
 tests/        193 passing; no downloads, no GPU
 validation/   raw result bundles and one-off baseline scripts
-figures/      paper figures + tidy curve data
+figures/      figures + tidy curve data
 ```
 
 Everything in `pipelines/` is a **sibling-import group** — `modal_phaseb_train`
@@ -38,24 +39,22 @@ Keep them in one directory, or fix the imports deliberately.
 
 ## Scope: what is live and what is scaffolding
 
-The repo is wider than the paper. Most of this README describes machinery built
-for the survival-curve framing that was retired 2026-08-15; it still runs and is
-still supported, but it is not what the current work uses. Read the tags.
+The repo is wider than the current work. Much of this README describes
+machinery built for the earlier eight-tower survival-curve framing; it still
+runs and is still supported, but it is not what the current work uses. The
+table below says which is which.
 
 | surface | status |
 |---|---|
-| `qwen35_vit` (incl. `site=premerge`), `deepseek_ocr` | **live** — the two towers in the paper |
+| `qwen35_vit` (incl. `site=premerge`), `deepseek_ocr` | **live** — the two towers that carry current work |
 | `glyph_id`, `pl1_class` probes | **live** — headline signal + specificity contrast |
-| exp2a site grid, reconstruction, patching, Phase-B trainer | **live** — the paper |
-| CLIP / SigLIP2 / NaFlex / SAM + random-init floors | appendix — one table |
-| `series_id`, `cell_row`, `cell_col`, `pl2_extent`, `pl3_summary` | appendix; cut as findings |
+| exp2a site grid, reconstruction, patching, Phase-B trainer | **live** |
+| token-budget sweep on external benchmarks (`modal_extbench_bridge.py`) | **live** — the current positive result |
+| CLIP / SigLIP2 / NaFlex / SAM + random-init floors | supporting only |
+| `series_id`, `cell_row`, `cell_col`, `pl2_extent`, `pl3_summary` | runnable, but **not reportable as findings** — see the validity addendum in [docs/results.md](docs/results.md) |
 | `point_value` | **broken** — negative R² everywhere, both heads. Do not run |
 | P-L4 reading order | never built. Not planned |
-| budget sweep / `derive_pooled` | appendix — one motivation figure |
-| `difficulty_tagger.py` | implemented and tested, but **nothing in the paper stratifies on it** — tags come out ~100% `hard` on dense pages |
-
-**Gate G1 ([docs/experiments.md](docs/experiments.md) §B2) decides paper vs venue. Run it
-before any scale-up.**
+| `difficulty_tagger.py` | implemented and tested, but nothing stratifies on it — tags come out ~100% `hard` on dense pages |
 
 ## Quickstart
 
@@ -101,7 +100,7 @@ at import time:
 | `derive_pooled.py` | CLI. Adaptive-pool cached grids down to budget rungs (merge mechanism). |
 | `budgets.py` | The token ladder and per-tower knob mapping. |
 | `registry.py` / `adapters/` | Encoder registry; one adapter per tower. |
-| `difficulty_tagger.py` | Difficulty rules v1. Implemented, tested, unused by the paper. |
+| `difficulty_tagger.py` | Difficulty rules v1. Implemented, tested, unused — tags saturate at `hard`. |
 
 **Modal drivers** (repo root) — each is a separate app; invoke through *this
 repo's* venv (`uv run modal ...`; the module is mounted from the invoking
@@ -375,5 +374,5 @@ Subclass `EncoderAdapter` in `adapters/`, set `name` / `checkpoint` /
 padding stripped, row-major), register in `registry.py`. Keep transformers
 imports inside `load()` so the CLI stays importable without heavy deps.
 
-**The paper adds no encoders** ([docs/ideas.md](docs/ideas.md) §Non-goals) — this is here
-for reuse, not for scope growth.
+**No new encoders** ([docs/ideas.md](docs/ideas.md) §Non-goals) — this is here for
+reuse, not for scope growth.

@@ -390,6 +390,48 @@ def verify_knob(model: str, prompt: str, engine_size: dict | None = None) -> dic
     }
 
 
+score_image = (modal.Image.debian_slim(python_version="3.12")
+               .apt_install("poppler-utils")
+               .pip_install("olmocr[bench]", "numpy")
+               .env({"PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright"})
+               .run_commands("playwright install-deps chromium",
+                             "playwright install chromium"))
+
+
+@app.function(image=score_image, cpu=16.0, memory=32768, timeout=6 * 60 * 60,
+              volumes={DATA_PATH: data_volume})
+def score_olmocr(candidate: str) -> str:
+    """`python -m olmocr.bench.benchmark` — the OFFICIAL scorer, unmodified, invoked
+    with a container-LOCAL HOME.
+
+    extbench's own score() points HOME at the data volume so the KaTeX equation-render
+    cache persists. Five candidates scoring concurrently then hammer one volume path
+    with small-file writes and the run does not finish inside its 3h timeout; a local
+    HOME trades cache reuse for a filesystem that keeps up. Reports land in extbench's
+    own layout, so nothing downstream distinguishes the two paths.
+    """
+    import os
+    import subprocess
+    from pathlib import Path
+
+    root = Path(DATA_PATH) / "extbench" / "olmocr"
+    home = Path("/tmp/olmocr_home")
+    home.mkdir(parents=True, exist_ok=True)
+    rep_dir = root / "reports" / candidate
+    rep_dir.mkdir(parents=True, exist_ok=True)
+    proc = subprocess.run(
+        ["python", "-m", "olmocr.bench.benchmark", "--dir", str(root / "bench_data"),
+         "--candidate", candidate, "--test_report", str(rep_dir / "report.html"),
+         "--output_failed", str(rep_dir / "failed.jsonl")],
+        capture_output=True, text=True, env=dict(os.environ, HOME=str(home)))
+    (rep_dir / "summary.txt").write_text(proc.stdout)
+    data_volume.commit()
+    if proc.returncode != 0:
+        print("STDERR:", proc.stderr[-2000:])
+        raise RuntimeError(f"benchmark failed rc={proc.returncode}")
+    return proc.stdout[-3000:]
+
+
 @app.function(image=collect_image, cpu=2.0, timeout=1800,
               volumes={DATA_PATH: data_volume})
 def diff_predictions(left: str, right: str) -> dict:
@@ -520,7 +562,8 @@ def markdown_tables(bundle: dict) -> str:
 @app.local_entrypoint()
 def main(bench: str = "", rung: str = "", model: str = STOCK_DIR, collect: bool = False,
          rungs: str = ",".join(RUNGS), benches: str = ",".join(BENCHES),
-         launch: bool = False, diff_against: str = "", verify: bool = False):
+         launch: bool = False, diff_against: str = "", verify: bool = False,
+         score: bool = False):
     import hashlib
 
     prompt_path = EXTBENCH_DIR / "prompt_cost_effective.json"
@@ -538,6 +581,8 @@ def main(bench: str = "", rung: str = "", model: str = STOCK_DIR, collect: bool 
         print(f"[budget] wrote {KNOB_PATH}")
     if bench and rung:
         print(json.dumps(infer.remote(bench, rung, model, prompt), indent=2))
+    if score:
+        print(score_olmocr.remote(candidate_name(rung, model)))
     if launch:
         for b in bench_list:
             script = f"bench_{'olmocr' if b == 'olmocr' else 'omnidoc'}.py"

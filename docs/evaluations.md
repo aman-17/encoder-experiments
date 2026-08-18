@@ -263,11 +263,25 @@ PulseBench-Tab — with identical prompts, decoding, and page sets.
 To guarantee the comparison is clean, the repaired checkpoint is built by
 copying the stock checkpoint and overwriting **only** the 27.3M projector
 tensors, then verifying tensor-by-tensor that every other weight is
-byte-identical. Whatever difference appears is attributable to those weights
-and nothing else.
+byte-identical (738 tensors, 733 confirmed unchanged, 5 merger tensors
+changed). Whatever difference appears is attributable to those weights and
+nothing else.
 
-That run is in flight. Its result — not any number above — is what decides
-whether this ships.
+**That run happened, and it is why this document exists.** olmOCR 71.0 → 48.0,
+OmniDoc 81.2 → 59.7, PulseBench .719 → .368. The checkpoint that scored +.083
+on our probe — with CI separation, on both heads, passing its own specificity
+control — lost 21–23 points on every public benchmark. It had overfit our
+renderer: the projector's main weight moved 80% in relative Frobenius norm
+while the language-model loss fell to ~0.002 on an 11-template corpus.
+
+Meanwhile the intervention that *did* help touched no weights at all: doubling
+the vision token budget on the stock model gained +3.0 overall and +12.7 on
+olmOCR's fine-text slice.
+
+So the honest summary of this whole document: the internal instruments above
+are good for finding out **where** something happens and **why**. They are not
+evidence that a change **works**. Only the external number is, and it goes
+first.
 
 ---
 
@@ -278,11 +292,18 @@ whether this ships.
 | .797 | characters readable pre-projector | .091 | linear probe, 8,612 held-out points |
 | .4388 | characters readable post-projector | .091 | same, same split, equal capacity |
 | .350 | signal not recoverable by an inverse | — | reconstruct → re-probe, 20,230 test pairs |
-| +.083 | repair gain, post-projector | CIs disjoint | stock vs repaired, identical pipeline |
-| −.003 | layout change under repair | — | specificity control, 28,992 points |
-| .608 → | task score, our synthetic held-out | .287 (untrained) | greedy generation, 211 unseen docs |
-| pending | **external benchmarks** | — | public data, official scorers |
+| +.083 | probe gain from the bridge finetune | CIs disjoint | stock vs repaired, identical pipeline |
+| −.003 | layout change under the same finetune | — | specificity control, 28,992 points |
+| .608 | task score, our synthetic held-out | .287 (untrained), ~.061 (blind) | greedy generation, 211 unseen docs |
+| **−23.0** | **that same checkpoint on olmOCR-bench** | — | public data, official scorer, 8,413 tests |
+| **+12.7** | fine-text gain from doubling vision tokens | — | stock model, no training, same scorer |
 
-**Three rules we hold ourselves to:** split by document, never by sample;
+**The last two rows are the point of this document.** A probe gain of +.083
+that passed every internal control came with a **−23-point** external
+regression, while an intervention that touched no weights at all bought
+**+12.7** on the same reading slice. Internal metrics explain mechanisms;
+external benchmarks decide whether anything works.
+
+**Four rules we hold ourselves to:** split by document, never by sample;
 measure the floor, never assume it; report probe and task together, never one
-alone.
+alone; and run the external benchmark *first*, not last.

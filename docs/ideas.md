@@ -1,12 +1,14 @@
-# The Bridge is the Bottleneck: Localizing and Repairing Text-Signal Loss in Vision–Language Projectors
+# What Survives the Bridge? Text-Signal Loss in a Production Document VLM
 
-*(Alternatives: "Concatenation is Lossless, Projection is Not"; "Where Document
-Text Dies in VLM Bridges — and a Drop-in Repair")*
+*Working title. Companion docs: [results.md](results.md) is the measurement
+record, [experiments.md](experiments.md) the designs and decision rules,
+[speaker-notes.md](speaker-notes.md) the plain-language walkthrough.*
 
-**Target:** CVPR 2027, deadline ~mid-November 2026 (**VERIFY the exact date**).
-**Fallback:** TMLR / COLM — taken automatically if gate G1 fails (§Gates).
-**Decision date:** 2026-08-15 (Aman). This file supersedes the survival-curve
-framing; see §Supersession for what changed and what was kept.
+**Status (2026-08-18).** The diagnosis stands, three attempts to repair it
+failed, and the lever that actually moves benchmarks turned out to be the
+token budget. That is the paper. Venue: TMLR / COLM — a method paper is not
+available to us on this evidence, and we say so rather than dress up a
+negative.
 
 ---
 
@@ -14,428 +16,205 @@ framing; see §Supersession for what changed and what was kept.
 
 We say *signal retention*, *probe accessibility*, *stage-wise attenuation*,
 *downstream utility*. We do not say information "dies", "is lost", or "is
-destroyed" anywhere unless an intervention (reconstruction test or activation
-patching) demonstrates irrecoverability. Probing establishes accessibility to a
-probe of stated capacity — never information-theoretic absence.
+destroyed" unless an intervention — the reconstruction test or activation
+patching — demonstrates irrecoverability. Probing establishes accessibility to
+a probe of stated capacity, never information-theoretic absence.
 
-**Extension for the method sections (new, binding).** A repair claim requires a
-held-out *benchmark* delta with a doc-bootstrap CI against a
-trainable-parameter-matched control. "Recovers X% of the bridge residual" is a
-probe-space statement and must be labeled as such; it never stands in for a
-task-level claim. The two are reported side by side and never merged into one
-number.
-
----
-
-## Thesis
-
-Production document VLMs concatenate their pre-merge patch features losslessly
-and then discard a large, *signal-specific* share of them in the projector's
-learned map. The loss is (a) localized to one module, (b) quantified by a
-reconstruction test, (c) confirmed causally by activation patching, and (d)
-recoverable by a LoRA-scale residual path that requires no change to the
-bridge's output interface and no retraining of encoder or decoder.
-
-The claim that carries the paper is (d). Everything in §3–§4 exists to earn the
-right to make it.
+**For repair claims:** a repair requires a held-out *benchmark* delta with a
+doc-bootstrap CI against a trainable-parameter-matched control. "Recovers X%
+of the residual" is a probe-space statement and is labelled as such. The two
+are reported side by side and never merged. We learned this the hard way; see
+§The result that outlives the failure.
 
 ---
 
-## Why this is a CVPR paper and the previous framing was not
+## What we set out to ask
 
-The survival-curve paper ended at "here is a corrected measurement." That is a
-TMLR contribution. CVPR buys a *method*, and the measurement is the thing that
-tells you which method to build and gives you a number to beat. The pivot is
-structural, not experimental — §3 and §4 below are already run.
+Production document VLMs plateau in the high-80s / low-90s. A three-stage
+stack — encoder → projector ("bridge") → decoder — gives three candidate
+places for the missing information to go. The projector is the suspicious one:
+it merges each 2×2 block of patch features into one token, so it must discard
+something, and fine text is the natural casualty. If that were the whole
+story, retraining ~27M projector parameters with the encoder and decoder
+frozen would be a cheap, large win.
 
-| | old framing | this paper |
+We tested that, and it is not the whole story.
+
+---
+
+## Findings
+
+### 1. The projector discards recoverable text signal (stands)
+
+On the frozen production Qwen3.5-4B, with capacity-matched probes, document
+splits, measured floors and shuffled-label controls:
+
+- A linear readout on a single **pre-merge** patch identifies characters at
+  **.797** (measured majority floor .091).
+- **Post-merge**, the same readout gets **.44**.
+- An inverse map trained to reconstruct pre-merge features from post-merge
+  ones supports only **.447** — a functional residual of **+.350, CI
+  [+.336, +.364]**, i.e. **~44% of the readable text signal is not
+  recoverable** by inverses of stated capacity (ridge and early-stopped MLP).
+  The instrument was validated on synthetic cases where the answer is known
+  (invertible rotation → ~1.0, no gap; deliberately lossy projection →
+  reproduces the observed gap).
+- The effect is **signal-specific**: layout-class accessibility is unaffected.
+
+The probe suite that produced this survived a shortcut audit that killed four
+of our eight original probe families — that audit is why this number is
+credible, and it belongs in the paper as such.
+
+### 2. The loss is upstream of the LM input, and reading happens early (stands)
+
+Activation patching on geometry-aligned clean/damaged twins (identical token
+grids), with mismatched-page and self-patch controls:
+
+- Patching clean features at the **projector output** restores transcription
+  **fully** — the decoder is a competent reader of whatever it is handed.
+- Patching at **decoder mid-layer** restores only **15%** [0.008, 0.283]. By
+  that depth the damage is committed; visual evidence is consumed in the
+  decoder's first half.
+
+### 3. LoRA-scale repair of the projector fails — three ways (stands)
+
+| attempt | probe-space | task / benchmark |
 |---|---|---|
-| contribution | 8-tower probe atlas | one localized defect + a repair |
-| headline number | Qwen glyph .466 vs .091 floor | benchmark Δ vs param-matched control |
-| towers | 7 + random-init floors | 2 (Qwen3.5 production, DeepSeek contrast) |
-| probe families | 8 | 2 (`glyph_id`, `pl1_class`) |
-| eval data | synthetic, ours | real benchmarks; synthetic is training + diagnostic |
-| survival curves | the result | one motivation figure |
+| CE-only, 700 docs | +.0007 (nothing) | task up, but it was task-adaptation, not perception |
+| diagnosis-supervised (glyph-aux, inverse-aux), 700 docs | ≤ +.017, n.s.; MLP head *drops* | flat to negative |
+| diagnosis-supervised, 5k docs | **+.083, CI-separated, both heads, specificity passes** | **olmOCR 71.0→48.0, OmniDoc 81.2→59.7, PulseBench .719→.368** |
 
----
+The mechanism is identified: the projector's main weight moved **0.796
+relative Frobenius** (vs 0.14–0.19 for every arm trained on our more diverse
+corpus) while LM loss fell to ~0.002 on an ~11-template corpus. It learned a
+private dialect for our renderer and handed the frozen decoder a distribution
+it cannot read elsewhere — damage tracking the training distribution exactly
+(English edit +.036 vs Chinese +.434). Item-level: net **−2,163 of 8,413**
+tests; **`long_tiny_text` fixed 0 of 442** — the slice the repair targeted.
+Failure mode is rambling, not silence (looping 7.5%→25.5%, cap-hits
+5.7%→25.1%, zero empty outputs).
 
-## Abstract (skeleton)
+Untried and still plausible: anchoring drift (weight or output KL) so the map
+improves without being rewritten; a real-document training mix; decoder
+co-adaptation at a data scale comparable to the field's working recipes.
 
-Vision–language models for document understanding compress a high-resolution
-page into a small vision-token budget through a projector ("bridge") that merges
-neighboring patch features. We show that in the production Qwen3.5-4B stack this
-merge is **not** where the information is lost — the merger's 2×2 concatenation
-is lossless by construction — and that the loss instead occurs in the projector's
-learned map, is specific to fine-grained text signal, and is *not recoverable*
-by inverses of substantial capacity: **44% of the pre-merge glyph readout is
-unrecoverable from post-merge features at native resolution** (functional
-residual +.350, CI [+.336, +.364]). Activation patching confirms the stage
-causally. We then show the loss is largely *repairable*: a rank-r residual path
-from the merger's input to its output, trained at LoRA scale with encoder and
-decoder frozen and the bridge's output interface unchanged, recovers [X]% of the
-measured residual and improves [benchmarks] by [Δ] over a
-trainable-parameter-matched decoder-LoRA control. Structural signals (layout
-class) show neither the loss nor the gain, making the effect signal-specific
-rather than a general capacity increase.
+### 4. The token budget is the lever that works (stands, deployable)
 
-**Numbers in brackets are slots. No numeric threshold is asserted pre-data.**
+Stock model, **no training**, olmOCR-bench with its official scorer, only the
+vision token budget varied:
 
----
-
-## The paper in four questions (the spine)
-
-1. **Where does document text signal become inaccessible?** Site-wise probing
-   across pre-merge (S1) → post-merge (S2) → decoder mid-layer (S3), with
-   capacity-matched heads and a reconstruction test. — *run (exp2a_v1)*
-2. **Is that localization causal, or an artifact of probe capacity?**
-   Activation patching: clean/degraded twins, patch at one site, measure
-   end-task restoration. — *coded (B1), not run*
-3. **Can it be repaired without touching encoder or decoder?** A drop-in
-   residual projector at LoRA scale, against a trainable-parameter-matched
-   decoder-LoRA control. — *B2 arms exist; the method (R2) is new*
-4. **Does the repair transfer off our rendering distribution?** Real-document
-   benchmarks, and the diagnosis re-run on real pages. — *not started; gate G2*
-
-Everything else is supporting analysis. No fifth question.
-
----
-
-## The paper in four figures
-
-- **Fig 1 — The anatomy + the repair.** One diagram: encoder → concat(2×2) →
-  projector MLP → decoder, annotated with measured glyph accessibility at each
-  tap (.797 → .439 at native) and the residual path drawn in. This figure has
-  to carry the paper; reviewers read it before the text. Budget: two days of
-  actual design work, not a matplotlib afterthought.
-- **Fig 2 — Signal specificity.** Glyph vs layout-class accessibility across
-  S1/S2/S3 × budget. Establishes the loss is not general compression: layout
-  passes, text does not.
-- **Fig 3 — The reconstruction wall.** True-S1 vs reconstructed-S1 glyph
-  accuracy per budget (the +.350 native gap), with the inverse-capacity ladder.
-  This is what licenses "not recoverable", and it gives the method its target.
-- **Fig 4 — Repair vs control.** Benchmark deltas for R2 vs param-matched
-  decoder-LoRA vs no-train anchor, with the probe-space residual recovered on a
-  twin axis. The payoff panel.
-
-Supporting inset (from the old paper, demoted): end-to-end decode cost vs vision
-budget — starved vision inflates decoder output, so budget dials must be priced
-end-to-end.
-
----
-
-## Architecture: where the loss is, mechanically
-
-**Verified 2026-08-15:** Qwen3.5-4B has `deepstack_visual_indexes: []` — a
-single bridge — so this stack is architecturally complete for the experiment.
-Qwen3-VL uses DeepStack `[5, 11, 17]` and is excluded from the causal work (any
-VL result must tap all four paths).
-
-**V0 — architecture verification (BLOCKING, do first, one hour).** The merger is
-Qwen2-VL-style `PatchMerger`: `spatial_merge_size = 2`, patch states
-**concatenated** along the channel axis (4·D) and passed through
-`ln → MLP → out_hidden_size`. Confirm this against the *installed* transformers
-release and the actual `visual.merger` module — read the code, do not trust this
-paragraph. The entire method design turns on it:
-
-- **If concat (expected):** merging is information-preserving; the loss is the
-  learned projection 4·D → D_llm. A repair that adds capacity *to the map* while
-  leaving the input and output interfaces alone is well-posed, and R2 below is
-  the right instrument.
-- **If averaging/pooling:** the loss is upstream of the map and R2 cannot work;
-  the method pivots to a detail path carrying `patch − cell_mean`. Same
-  experimental scaffolding, different residual source.
-
-Record the outcome in `validation/v0_merger_arch.json` with the module repr and
-the shape trace. This is a stated architecture fact in the paper, so it needs a
-citation-grade check, not an assumption.
-
-**Why this framing is the interesting one.** "Pooling destroys detail" is
-obvious and uninteresting. "The concatenation preserves everything and the
-*learned projector* throws away 44% of the text signal" is a claim about
-training and capacity allocation, not about geometry — and it implies the fix is
-cheap. That contrast is the paper's intellectual hook.
-
----
-
-## The method (§5): design space and selection
-
-Target defined by the diagnosis: recover the measured functional residual
-(+.350 at native) without changing the bridge's output interface, without
-touching encoder or decoder, at LoRA-scale trainable parameters.
-
-| id | design | role |
+| nominal tokens | overall | long_tiny_text |
 |---|---|---|
-| **R2** | **Residual detail path**: low-rank map from the merger's *input* (the 4·D concat) added to its output; frozen merger, trained residual. Drop-in; output interface unchanged by construction. | **primary — the contribution** |
-| R1 | LoRA on the merger MLP itself (= B2 arm A as pre-registered) | "just train the bridge" control; also the honest baseline the method must beat |
-| R3 | Capacity-widened projector (intermediate width / output rank swept) | ablation: is the loss capacity or optimization? |
-| R0 | DeepStack-style multi-path injection | reference ceiling, **not** the contribution — it exists in Qwen3-VL and our own pilot shows VL ahead on glyphs. Cite it as prior art and as the expensive answer our cheap one approaches. |
+| 280 | 38.8 | 1.4 |
+| 560 | 56.8 | 23.1 |
+| ~1120 (harness default) | 71.0 | 77.4 |
+| 2240 (cap raised) | **74.0** | **90.5** |
 
-**R4 — diagnosis-supervised training (the tie-breaker if R2 underperforms on CE
-alone).** Train the residual with an auxiliary objective taken directly from the
-diagnosis: a glyph-probe / inverse-map loss on the repaired S2, added to
-next-token CE. This is the design that most tightly couples method to
-measurement and is the most defensible novelty if a reviewer says "you just
-LoRA'd a projector." Hold it in reserve; do not run it before R2-on-CE has a
-number.
+Doubling above the default buys **+3.0 overall and +12.7 on fine text** for
+inference cost alone. This is the probe-level survival curve (reading steeply
+budget-bound, structure flat) reproduced end-to-end on a public benchmark, and
+it is close to Silico's +7.126 TextVQA from the analogous intervention on a
+different stack. `absent` and `headers_footers` move *opposite* at every
+budget — both reward not emitting text — so the benchmark's per-file average
+understates real reading gains.
 
-**Ablations that must ship:** rank sweep; residual source (concat input vs
-pre-merge patches vs `patch − cell_mean`); training-data mix (glyph-weighted vs
-uniform); signal specificity (does layout-class accessibility move? it should
-*not*); random-init residual and shuffled-target controls.
+### 5. The result that outlives the failure (stands)
 
----
+**A probe improvement that is CI-separated, present on both linear and
+nonlinear heads, and passes its own specificity control is still not evidence
+that a change helps.** We had all three and were wrong by >20 benchmark
+points in the opposite direction. Corollaries adopted:
 
-## Evaluation contract (§6) — binding
-
-**Primary evaluation is on real documents.** Our synthetic corpus is training
-data and a diagnostic instrument. It is never the headline table. This is the
-single change most likely to decide accept/reject.
-
-- **Benchmarks (real):** OmniDocBench (layout + text), OCRBench, DocVQA,
-  ChartQA, InfographicVQA, TEDS on PubTabNet/FinTabNet. Pick 4–5, freeze the
-  list before training, report all of them including losses.
-- **Diagnostic (synthetic, held-out):** `frontier_score` on the 211 held-out
-  pilot docs, per-generator. Reported as a diagnostic panel, labeled as such.
-- **Controls:** trainable-parameter-matched decoder-LoRA (B2 arm B), no-train
-  anchor (arm C), random-init residual, shuffled-target residual.
-- **Peer methods (the comparison reviewers will demand):** projector/connector
-  designs — Honeybee's locality-enhanced projector (CVPR 2024; **verify
-  citation**), C-Abstractor/D-Abstractor, perceiver-resampler bridges
-  (Idefics2-style), pixel-shuffle projection (InternVL-style), DeepStack.
-  Token-*reduction* work (ToMe, FastV, LLaVA-PruMerge, VisionZip, SparseVLM,
-  Matryoshka Multimodal, LLaVA-Mini) is adjacent, cited in related work, and
-  **not** a head-to-head comparison — different problem. **Verify every venue
-  and result before citing; this list is from memory and is not reliable.**
-- **Reporting:** doc-bootstrap CIs on every delta. Trainable-parameter counts
-  for every arm, in the table, always.
+- The external benchmark is the **first** gate, not the last.
+- A null only adjudicates if the training objective is demonstrably **fit**
+  (aux loss well below its random floor) at that dose — an unfit objective's
+  null says nothing about the architecture. This is what made our 700-doc
+  "saturation" conclusion wrong.
+- Weight drift from the stock checkpoint is a cheap early-warning signal
+  available before any benchmark run.
+- Report probe and task numbers side by side, always.
 
 ---
 
-## Data and training corpus
+## Controls that make the above credible
 
-**The 20k scale-up is retargeted, not cancelled.** 20k synthetic pages is poor
-*probe* data — we are bias-limited, not variance-limited, and no finding died of
-sample size — but it is genuinely good *training* data for the repair, because
-our generators emit exact glyph-, cell-, and bbox-level ground truth that no
-real corpus provides. The B2 pilot currently trains on **789 documents**; that
-is the actually-undersized number in this project.
+Worth a methods section of its own, because each one changed a conclusion:
 
-Generation spec for the scale-up (owner: friend):
-
-- **Glyph-weighted mix**, not a uniform scale of the pilot recipe: bias toward
-  small `size_pt`, dense text, math, and label-heavy charts — the pages where
-  the measured residual lives. Target ≥60% glyph-heavy.
-- **Keep** scan-severity coverage (degradation twins are B1's instrument) and
-  the exact-GT sidecars.
-- **Drop** effort on the difficulty taxonomy — it tags ~100% hard on dense
-  pages ([experiments.md](experiments.md) §Closed) and nothing in this paper stratifies on it.
-- **Add** rendering variation (anti-aliasing, subpixel positioning, DPI jitter)
-  — this is the cheapest available insurance against "your effect is a renderer
-  artifact", which is now a first-order reviewer risk.
-
-Real data is eval-only and never probe substrate (no latent labels).
+- **Measured floors, not assumed ones.** The glyph floor is .091 (most common
+  character), not 1/80 — our first write-up used .04 and overstated every
+  margin by >2×.
+- **Shortcut baselines.** Coordinates alone reach .376 on cell_col and .235
+  mIoU on extent — the latter beats every tower, which refuted our
+  "SAM retains extent" finding outright.
+- **Capacity-matched heads.** Padding real features with pure noise to 4×
+  width inflates scores by +.029; the projection to a common 512 dims
+  collapses that to +.002.
+- **Blind control** (image withheld / blank page). Every arm falls to ~.061
+  without the image, so our task metric is genuinely vision-dependent — unlike
+  Silico's MMMU, where the image was worth 1.6 points. Note the trap we found:
+  "image withheld" is *degenerate* for bridge-only arms (no image tokens →
+  the merger never runs → byte-identical to base, verified 211/211), so the
+  blank-page variant is the load-bearing one.
+- **Font-held-out splits.** Glyph .466 → .412 out-of-font: reading, not font
+  memorization.
 
 ---
 
-## Gates and schedule
+## Related work
 
-~13 weeks to the deadline. The gates exist so that a failure is discovered in
-week 2, not week 11.
-
-**G1 — RESOLVED, then CORRECTED (2026-08-16 → 17). Read this before citing
-any G1 verdict.**
-
-G1 as pre-registered ran on 700 documents and returned **B > A** (decoder-LoRA
-.678 vs bridge .608), with the pre-registered probe-space readout flat
-(+.0007). Both fallback rows were invoked and the project was briefly
-re-framed as a TMLR negative. **That verdict is withdrawn.** §R5 held the
-objective fixed and raised only the training data (700 → 5,000 glyph-heavy
-docs): repaired-S2 glyph accessibility rises **+.083 linear with CI
-separation, and +.045 MLP** — both heads, i.e. information added rather than
-re-allocated (results.md §R5).
-
-What G1 actually tested, in hindsight, was *the bridge at 700 documents and
-~180 optimizer steps* — a dose, not the hypothesis. The design flaw was
-pre-registering a decision rule on an arm whose training budget was never
-itself validated. **Correction adopted:** any future repair gate must
-demonstrate the training objective is FIT (aux loss well below its random
-floor on held-out data) before its null is read as evidence about the
-architecture. A null from an unfit objective adjudicates nothing.
-
-Live decision state: the method framing is **alive again**, on probe-space
-evidence, pending the 5k task-space and H4 specificity readouts (running).
-Venue is re-opened, not re-decided; the fallback rows below stand only if
-the completed §R5 readouts fail.
-
-- **A > B beyond CI** → the bridge is the recoverable stage. Build R2. This paper.
-- **A ≈ B > C** → adaptation helps but is not stage-specific. The method framing
-  is dead; the paper becomes "retention ≠ utility, and adaptation is not
-  stage-specific" → TMLR/COLM. Do not spend the 20k.
-- **A ≈ C** → LoRA-scale capacity cannot move it. Report as such; TMLR.
-- **B > A** → hypothesis unsupported. TMLR, and the compute moves to decoder work.
-
-**G1′ (supersedes G1 for the method claim).** Repair counts iff, at a dose
-where the aux objective is demonstrably fit: (a) probe-space glyph lift is
-CI-separated from stock **on both heads**, (b) `pl1_class` stays
-approximately flat (H4 specificity — else it is generic capacity), and (c)
-task-space moves on glyph-dependent, format-normalized metrics.
-
-**G1′ RESOLVED (2026-08-17): (a) MET, (b) MET, (c) FAILED HARD.** External
-benchmarks on the same checkpoint: olmOCR 71.0→48.0, OmniDoc 81.2→59.7,
-PulseBench .719→.368 with coverage −23pp (results.md §External OCR
-benchmarks). The bridge-only repair at this recipe is **rejected**: it
-overfits the training renderer (projector weight moved 80% rel-Frobenius, LM
-loss ~0.002 on ~11 templates) and hands the frozen decoder an unreadable
-feature distribution off-distribution.
-
-**The rule this replaces both G1 and G1′ with, for any future repair claim:**
-the external-benchmark delta is the FIRST gate, not the last. Probe-space
-evidence — even CI-separated, both-heads, specificity-passing evidence —
-ranks as a mechanism hypothesis, never as a result. We now have a clean
-demonstration that the two can point in opposite directions by >20 benchmark
-points.
-
-**Venue state:** the method framing is dead at this recipe. What survives for
-publication is the diagnosis (§3), the causal localization (§4), and a
-methodologically strong negative (§5): the residual is real, causal, and NOT
-repairable by LoRA-scale bridge training on synthetic data — with the
-probe-vs-benchmark divergence as a cautionary result in its own right. That
-is a TMLR/COLM paper, and an honest one.
-
-**G2 — OOD transfer of the *diagnosis* (weeks 2–4).** Re-run the S1/S2 glyph gap
-and the reconstruction test on real annotated pages (OmniDocBench word-level
-text + layout). The claim under test is that the *bridge residual exists on real
-documents*, not that our absolute numbers transfer. If it does not reproduce,
-the diagnosis is a synthetic artifact and the method has no motivation — this is
-the highest-variance unknown in the project and it is cheap, so it runs early.
-
-**G3 — repair moves the diagnostic (week ~6).** R2 beats R1 and the
-param-matched control on held-out synthetic before any real-benchmark compute is
-spent.
-
-| weeks | work |
-|---|---|
-| 1–2 | V0 merger verification; B1 patching; B2 pilot → **G1** |
-| 2–4 | OmniDocBench diagnosis re-run → **G2**; freeze benchmark list |
-| 3–6 | 20k glyph-weighted generation (parallel, friend) |
-| 5–6 | R2 implementation + rank sweep on pilot data → **G3** |
-| 6–9 | Train R1/R2/R3/R0 + controls on 20k; peer-method baselines |
-| 9–12 | Real benchmark table, ablations, signal-specificity panel, Figs 1–4 |
-| 12–13 | Writing, appendix, repro bundle |
-
----
-
-## What leaves the paper
-
-Cut or demoted to appendix. This is a real reduction, not a filing change —
-each of these costs credibility per page it occupies.
-
-- **Six of eight probe families.** Keep `glyph_id` (survives the full validity
-  battery, 5.1× floor, no positional shortcut) and `pl1_class` (negligible
-  positional shortcut) as the specificity contrast. Gone: `point_value`
-  (negative R² everywhere — broken, never reported again), `pl2_extent`
-  (refuted; coordinate prior beats every tower), `pl3` (page gist, not
-  topology), `cell_row`/`cell_col` (largely coordinate readout).
-- **Five of seven towers.** Keep Qwen3.5-4B (the stack being repaired) and
-  DeepSeek-OCR (the compressed-bridge contrast). CLIP / SigLIP2 / NaFlex / SAM
-  and the random-init floors move to one appendix table.
-- **The budget sweep** → one motivation figure, not a results section.
-- **The difficulty taxonomy** ([experiments.md](experiments.md) §Closed) — degenerate and unused here.
-- **Transplantability**, the LR-sweep mechanics, knee localization — gone.
-- **Slogans.** "Nobody reads under ~200 tokens", "text dies first". Figures may
-  imply it; prose states the defensible version.
-- **The 8-tower "encoder anatomy" framing.** It was a group photo in which seven
-  subjects scored at floor. It is not a contribution and it invites the "you
-  probed a lot and found one thing" review.
-
-Nothing measured is deleted from the record — [results.md](results.md) keeps
-every number, including the refuted ones. Demotion is a paper-scope decision,
-not a retraction.
-
----
-
-## Related work positioning
-
-Three lines to distinguish ourselves from, in order of reviewer risk:
-
-1. **Projector/connector design** (Honeybee, abstractor families, perceiver
-   resamplers, pixel shuffle, DeepStack). *The* competitive shelf. Our
-   difference: we do not propose a projector on intuition and show it wins — we
-   *measure where the existing one fails, causally confirm the stage, and repair
-   exactly that*, with the residual-recovered number as the bridge between
-   diagnosis and method. Frame as diagnosis-driven design.
+1. **Projector / connector design** (Honeybee, abstractor families, perceiver
+   resamplers, pixel shuffle, DeepStack). The competitive shelf. Our
+   difference: we measure where the deployed one fails, localize it causally,
+   and report honestly that repairing it at LoRA scale did not work. **Verify
+   every venue and number before citing; our list is from memory.**
 2. **Token reduction / budget compression** (ToMe, FastV, PruMerge, VisionZip,
-   SparseVLM, Matryoshka Multimodal, LLaVA-Mini). Adjacent: they remove tokens,
-   we fix what survives the ones we keep. Cite, do not compete.
-3. **Controlled encoder comparisons** (Prismatic, Cambrian-1, MM1) — the old
-   paper's home. Now two sentences: they vary encoders under a fixed stack and
-   report end-task only; we localize *within* the stack and intervene.
-
-Goodfire/Silico's adapter ablation (TextVQA −5.9 under 4× pixel-shuffle at fixed
-coverage; bridge retraining recovers ~6/20 pts;
-x.com/GoodfireAI/status/2088298362730877139) is now more than motivation — it is
-the closest field precedent for the repair working, and it sets the expected
-effect size for B2. 3–4 sentences, cited honestly as a non-peer-reviewed
-result. The paper stands without it.
-
----
-
-## Hypotheses
-
-- **H1 (localization):** fine-grained text signal present at the merger's input
-  is not recoverable from its output by inverses of stated capacity, while
-  structural signal is.
-- **H2 (causality):** patching the clean representation at S2 restores end-task
-  transcription on degraded twins substantially more than at S3.
-- **H3 (repairability):** a LoRA-scale residual at the implicated stage recovers
-  a measurable share of the residual and of end-task quality that a
-  trainable-parameter-matched intervention elsewhere does not.
-- **H4 (specificity):** the repair moves glyph-dependent metrics and leaves
-  layout-class metrics flat — the effect is signal-specific, not general
-  capacity.
-
-No direction or threshold asserted pre-data. **H3 failing is G1 failing**, and
-the fallback venue is chosen, not improvised.
+   SparseVLM, Matryoshka Multimodal, LLaVA-Mini). Newly *central* rather than
+   adjacent, since the budget is our positive result: they remove tokens, we
+   measure what removing them costs per signal.
+3. **Controlled encoder comparisons** (Prismatic, Cambrian-1, MM1). Two
+   sentences: they vary encoders under a fixed stack and report end-task only;
+   we localize within the stack and intervene.
+4. **Goodfire/Silico's "Giving Qwen3-8B vision"**
+   (docs.goodfire.com/examples/qwen3-8b-vision-report). The closest external
+   work and genuine corroboration: their all-tile-tokens vs 4×-pixel-shuffle
+   arms differ by **+7.126 TextVQA at 11.07 standard errors** on the reading
+   benchmark and ≤ +0.74 elsewhere. Note their restraint, which we adopt —
+   their compressed arm changed token count *and* projector input width, so
+   they claim only "this compressor loses the gain", not that compression must.
+   Their setup differs from ours in a way that matters: their decoder had no
+   prior vision interface, so a retrained projector cannot break an
+   expectation that never existed — the exact failure mode that killed our
+   repair. Cite carefully: single runs, no seed replication, a *stipulated*
+   ±2 floor, and 28.8% POPE train/eval overlap, all of which they disclose.
 
 ---
 
 ## Non-goals
 
-No new encoders. No new probe families. No token-reduction method. No full
-retrain — LoRA scale is the claim and the constraint. No production-efficiency
-comparison against DeepSeek until its crop path is measured. No claim that the
-repair generalizes beyond document-domain stacks; the evaluation is documents,
-and the title says so.
+No new encoders. No new probe families. No from-scratch adapter (their recipe
+is ~1.3M samples on 8 GPUs and still lands 12.8 points short of the official
+model on the one benchmark that measures reading; we would spend heavily to
+ship something worse than what we serve). No full retrain — LoRA scale was the
+constraint and the claim. No production-efficiency comparison against DeepSeek
+until its crop path is measured. No claim beyond document-domain stacks.
 
 ---
 
-*Internal (remove before submission): G1 decides paper vs venue and runs first;
-[experiments.md](experiments.md) is now the paper's §4–§5 pre-registration,
-not a gated Part II; [experiments.md](experiments.md)
-is §3; [experiments.md](experiments.md) is the appendix
-validity section, re-scoped to the two surviving probes. Measurement record and
-demotion status: [results.md](results.md).*
+## Pivot history (kept deliberately)
 
----
+Three framings, each killed by our own controls. This is the record of how the
+current one was arrived at, and it is short on purpose.
 
-## Supersession note (2026-08-15)
+1. **Encoder anatomy / survival curves** (8 towers × 8 probe families). Died
+   when the shortcut audit refuted four families and the positive results
+   concentrated in one tower. Survives as: the survival curves, the validity
+   apparatus, and one motivation figure.
+2. **"The Bridge is the Bottleneck"** — diagnosis + repair, aimed at CVPR.
+   Diagnosis survived; the repair failed three times, decisively on external
+   benchmarks. Survives as: findings 1–3.
+3. **Current.** Diagnosis + causal localization + a documented repair failure
+   with mechanism + the token-budget positive + the probe-vs-benchmark
+   divergence as a methodological contribution.
 
-Replaces *"What Survives the Bottleneck? Document Signal Retention in Vision
-Encoders"* (survival curves + encoder anatomy + gated Part II).
-
-**Why.** That paper's contribution was a corrected measurement. Four of eight
-probe families did not survive our own validity battery, the positive results
-concentrated in a single tower, and the venue rewards methods. The measurement
-work was not wasted — it is what identifies the defect this paper repairs, and
-it is why we know the repair target is 44% rather than a guess.
-
-**Kept intact:** the terminology contract; the gate discipline (measurement
-validity before scale); pre-registration of decisions before data; the
-random-init and shuffled-label control philosophy; the honesty of recording
-refuted findings rather than quietly dropping them.
-
-**Reversal condition.** If G1 fails, this file is superseded in turn and the
-survival-curve framing returns as a TMLR submission with the corrected
-measurement as the stated contribution. That outcome is a publishable paper, not
-a failure — but it is not a CVPR paper, and we decide which one we are writing
-in week 2 rather than week 11.
+Nothing measured was deleted at any pivot — [results.md](results.md) keeps
+every number, including the refuted and withdrawn ones.

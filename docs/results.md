@@ -1,34 +1,23 @@
 # Measurement record
 
-> **Paper-scope banner (2026-08-15).** The project pivoted to the bridge-repair
-> paper ([ideas.md](ideas.md)). **Nothing in this file is deleted or amended by
-> that decision** — it is the measurement record, refuted findings included, and
-> it stays complete. What changed is which parts appear in the submission:
->
-> | section | paper role |
-> |---|---|
-> | Exp 2a bridge localization (bottom) | **§3 — the diagnosis. The paper's core.** |
-> | glyph_id + pl1_class rows, everywhere | **kept** — headline signal + specificity contrast |
-> | Measurement-validity addendum | **appendix** — validity section, re-scoped to those two |
-> | Survival curves / budget sweep | one motivation figure |
-> | Task frontier (eyes-vs-brain inversion) | intro framing sentence, not a results section |
-> | point_value, pl2_extent, pl3, cell_row/col | appendix table; not reported as findings |
-> | CLIP / SigLIP2 / NaFlex / SAM + rand floors | one appendix table |
->
-> Demotion is a scope decision, not a retraction. If gate G1
-> ([experiments.md](experiments.md) §B2) fails, the survival-curve framing
-> returns as a TMLR submission and most of this file is promoted back.
->
-> **Inline tags (added 2026-08-15).** Every item below is marked for the
-> bridge-repair paper:
->
-> - `[UNNECESSARY]` — not needed for this paper. Do not spend time on it, do not
->   re-run it, do not write it up. Kept here as record only.
-> - `[APPENDIX]` — not a finding, but reviewers will ask; it ships in the
->   supplementary.
-> - `[KEEP]` — load-bearing for the submission.
->
-> Untagged prose is scaffolding for whichever tagged item it sits under.
+Every number this project produced, in the order it was produced, including the
+findings we later refuted or withdrew. Nothing is deleted here when a framing
+changes: conclusions get marked, evidence stays.
+
+The project went through three framings (encoder anatomy → bridge repair → the
+current diagnosis + repair-negative + token-budget result; see
+[ideas.md](ideas.md) §Pivot history). Each section states whether its finding
+**stands** or is **withdrawn**, and by what.
+
+**Currently standing:** the bridge diagnosis (44% functional residual), the
+causal localization (decoder exonerated as a reader; reading consumed in its
+first half), the repair negative on external benchmarks, the token-budget
+curve, and the validity apparatus (measured floors, shortcut baselines,
+capacity-matched heads, blind control).
+
+**Withdrawn or refuted:** "SAM retains extent" (the coordinate prior beats
+every tower), `point_value` (broken probe), the "information-saturated
+projector" reading of R4, and the "repair works" reading of R5.
 
 ---
 
@@ -44,29 +33,29 @@ splits, bootstrap CIs. Per-pair JSONs: Modal volume `/vol/results/pilot_v1/`.
 
 ## Linear-head table (primary)
 
-Column scope: **Qwen-ViT `[KEEP]`** (the stack being repaired) and **DeepSeek
-`[KEEP]`** (compressed-bridge contrast) carry the paper. CLIP / CLIP-rnd /
-SigLIP2 / SigL-rnd / NaFlex / SAM are **`[APPENDIX]`** — one table, no findings.
+Column scope: **Qwen-ViT (stands)** (the stack being repaired) and **DeepSeek
+stands** (compressed-bridge contrast) carry the paper. CLIP / CLIP-rnd /
+SigLIP2 / SigL-rnd / NaFlex / SAM are **supporting detail** — one table, no findings.
 
 | probe (chance) | tag | CLIP  | CLIP-rnd | SigLIP2 | SigL-rnd | NaFlex | SAM   | Qwen-ViT | DeepSeek |
 |---|---|-------|----------|---------|----------|--------|-------|----------|----------|
-| glyph_id, 81-way (.04) | **`[KEEP]`** — headline signal; the repair target | .062  | .061     | .122    | .070     | .185   | .079  | **.466** | .065     |
-| pl1_class (.57) | **`[KEEP]`** — specificity contrast (H4: must stay flat under repair) | .683  | .577     | .777    | .600     | .794   | .763  | **.831** | .732     |
-| cell_row (.05) | `[UNNECESSARY]` — 1.9× floor, demoted | .094  | .070     | .163    | .087     | .167   | .144  | **.200** | .142     |
-| cell_col (.14) | `[UNNECESSARY]` — largely an x-coordinate readout (.376 shortcut) | .331  | .191     | .359    | .156     | .387   | .410  | **.493** | .282     |
-| series_id (.28) | `[UNNECESSARY]` — floor was wrong; real margin +.036, counterfactuals never run | .384  | .397     | .388    | .371     | .414   | .398  | **.533** | .342     |
-| point_value R² (floor −.61) | `[UNNECESSARY]` — **broken probe**, negative R² everywhere, both heads. Never report | −.68  | −1.16    | −.82    | −1.55    | −.82   | −.50  | −.93     | −.91     |
-| pl2_extent mIoU (.01) | `[UNNECESSARY]` — **refuted**; coord prior (.235) beats every tower | .042  | .013     | .070    | .013     | .079   | **.165** | .055  | .096     |
-| pl3_summary R² (floor −2.8) | `[UNNECESSARY]` — page gist, not topology; demoted before the pivot | −.41  | .01      | .06     | −.48     | .08    | .28   | .41      | **.43**  |
+| glyph_id, 81-way (.04) | **stands** — headline signal; the repair target | .062  | .061     | .122    | .070     | .185   | .079  | **.466** | .065     |
+| pl1_class (.57) | **stands** — specificity contrast (H4: must stay flat under repair) | .683  | .577     | .777    | .600     | .794   | .763  | **.831** | .732     |
+| cell_row (.05) | cut from the write-up — 1.9× floor, demoted | .094  | .070     | .163    | .087     | .167   | .144  | **.200** | .142     |
+| cell_col (.14) | cut from the write-up — largely an x-coordinate readout (.376 shortcut) | .331  | .191     | .359    | .156     | .387   | .410  | **.493** | .282     |
+| series_id (.28) | cut from the write-up — floor was wrong; real margin +.036, counterfactuals never run | .384  | .397     | .388    | .371     | .414   | .398  | **.533** | .342     |
+| point_value R² (floor −.61) | cut from the write-up — **broken probe**, negative R² everywhere, both heads. Never report | −.68  | −1.16    | −.82    | −1.55    | −.82   | −.50  | −.93     | −.91     |
+| pl2_extent mIoU (.01) | cut from the write-up — **refuted**; coord prior (.235) beats every tower | .042  | .013     | .070    | .013     | .079   | **.165** | .055  | .096     |
+| pl3_summary R² (floor −2.8) | cut from the write-up — page gist, not topology; demoted before the pivot | −.41  | .01      | .06     | −.48     | .08    | .28   | .41      | **.43**  |
 
 MLP heads track linear (same ranking) with two notable lifts: Qwen glyph
-.466→**.528** `[KEEP]`, and pl3 for everyone (.51–.64) `[UNNECESSARY]` —
+.466→**.528** (stands), and pl3 for everyone (.51–.64) (cut) —
 page-layout summary is present but stored *nonlinearly* in most towers.
 
 ## Findings
 
-1. **`[KEEP]` (glyph + pl1 clauses only; the cell/series clauses are
-   `[UNNECESSARY]`)** — **Qwen3.5's tower (production, A3) has the strongest
+1. **stands (glyph + pl1 clauses only; the cell/series clauses are
+   (cut))** — **Qwen3.5's tower (production, A3) has the strongest
    probe-recoverable
    fine-grained symbolic content among the evaluated towers** — glyphs (.466,
    2.5× the best public tower), cell indexing, chart series binding, layout
@@ -74,7 +63,7 @@ page-layout summary is present but stored *nonlinearly* in most towers.
    *(Validity addendum below: cell_col and series margins shrink
    substantially against the measured shortcut floors; glyph and pl1
    survive.)*
-2. `[UNNECESSARY]` — **refuted by our own refit; do not write this up.**
+2. cut from the write-up — **refuted by our own refit; do not write this up.**
    **…while SAM retains substantially better spatial-extent readout** (.165
    vs Qwen .055; DeepSeek .096). *(REFUTED by the [features ⊕ coords] refit,
    2026-08-15: no tower's features add anything over the coordinate prior —
@@ -82,7 +71,7 @@ page-layout summary is present but stored *nonlinearly* in most towers.
    how linearly each tower encodes position, not extent retention; the
    SAM-vs-Qwen "double dissociation" does not survive. Extent claims await a
    redesigned probe — see experiments.md §Exp 1b.)*
-3. `[APPENDIX]` — a probe-validity signal, not a finding about CLIP; CLIP is
+3. supporting detail — a probe-validity signal, not a finding about CLIP; CLIP is
    not in the paper. **CLIP ≈ random-init CLIP on two families** — glyphs (.062 vs .061) and
    series-ID (.384 vs .397): under these probes, at 336px, on this corpus,
    learned CLIP features do not outperform the random-init control for fine
@@ -93,19 +82,19 @@ page-layout summary is present but stored *nonlinearly* in most towers.
    does not exist in this corpus, so what remains after the multi-series
    refit is candidate binding signal — counterfactual (color-permutation)
    evidence is still required before any binding claim.
-4. `[UNNECESSARY]` — SigLIP2 lineage is out of scope; the causal contrast in
+4. cut from the write-up — SigLIP2 lineage is out of scope; the causal contrast in
    this paper is site-wise (S1/S2/S3), not cross-tower.
    **Resolution handling is the cleanest causal contrast**: same-lineage A1→A2
    (SigLIP2 fixed → NaFlex) lifts glyphs .122→.185 and cell_col .359→.387.
-5. `[APPENDIX]` — the glyph-at-floor half supports the compressed-bridge
-   contrast; the pl3 half is `[UNNECESSARY]`.
+5. supporting detail — the glyph-at-floor half supports the compressed-bridge
+   contrast; the pl3 half is (cut).
    **DeepSeek's 256-token global view: gist survives, detail doesn't.** At
    the majority floor on glyphs (.065 vs .091 floor) but **best-in-table pl3
    layout-category-presence summary** (R² .43; "pl3 layout summary" is
    renamed — it measures page gist, per-class presence + counts, not layout
    topology) — its 16× compression keeps page-level structure while
    character identity rides on its (unprobed) crop path.
-6. `[APPENDIX]` — degradation robustness is B1's *instrument*, not a result of
+6. supporting detail — degradation robustness is B1's *instrument*, not a result of
    this paper. **Layout localization is robust to scan degradation**: pl1 accuracy is FLAT
    across severities for every tower (Qwen .819–.874 over sev 0→3b). Noise
    destroys high-frequency content (glyphs) long before low-frequency layout —
@@ -113,24 +102,24 @@ page-layout summary is present but stored *nonlinearly* in most towers.
 
 ## Caveats
 
-- `[UNNECESSARY]` **point_value R² < 0 for all towers, both heads** — probe design review
+- (cut) **point_value R² < 0 for all towers, both heads** — probe design review
   needed (per-axis target normalization) before reading it as "values absent".
   *(Probe is cut. No review, no normalization fix, no mention.)*
-- `[KEEP]` **glyph probes are clean-pages-only** (no degraded text-layer GT in pilot) —
+- (stands) **glyph probes are clean-pages-only** (no degraded text-layer GT in pilot) —
   the glyph-vs-severity curve, likely the most damage-sensitive one, is not
   yet measured. *(Still true and still a real limitation — B1's degraded twins
   are transcription-scored, not glyph-probed.)*
-- `[KEEP]` **DeepSeek measured on its global 1024px view only** (production adds tiled
-  crops). `[APPENDIX]` **sam_vit_b__rand excluded** (exact-zero features at random init).
-- `[UNNECESSARY]` Severity slices partially confound with doc mix (only era-font docs were
+- (stands) **DeepSeek measured on its global 1024px view only** (production adds tiled
+  crops). supporting detail — **sam_vit_b__rand excluded** (exact-zero features at random init).
+- (cut) Severity slices partially confound with doc mix (only era-font docs were
   degraded); scale-up should degrade a stratified sample instead. *(No severity
   slice is reported in this paper.)*
-- `[KEEP]` pl1's chance floor is high (.57, background-heavy); read margins over floor.
-- `[APPENDIX]` Corpus skews: bar-family chart types; no degraded replicator pages; bbox
+- (stands) pl1's chance floor is high (.57, background-heavy); read margins over floor.
+- supporting detail — Corpus skews: bar-family chart types; no degraded replicator pages; bbox
   difficulty tags saturate (taxonomy dropped — experiments.md §Closed). *(The bbox-tag half is
-  `[UNNECESSARY]` — tagging is dropped entirely.)*
+  cut from the write-up — tagging is dropped entirely.)*
 
-## Ops notes `[KEEP]` — retitle "for the 20k bridge-training run"
+## Ops notes (stands) — retitle "for the 20k bridge-training run"
 
 - Extraction: fp32 compute mandatory (bf16 per-token divergence), `--detach`
   mandatory, features fp16 on volume (~45 GB for this pilot).
@@ -141,9 +130,9 @@ page-layout summary is present but stored *nonlinearly* in most towers.
 
 ---
 
-# Survival curves — budget sweep (448/448 pairs, 2026-08-14) `[UNNECESSARY]`
+# Survival curves — budget sweep (448/448 pairs, 2026-08-14) (cut)
 
-> **Whole section `[UNNECESSARY]` except one panel.** The budget sweep survives
+> **Whole section (cut) except one panel.** The budget sweep survives
 > as a single motivation figure (glyph is steeply budget-bound; structure is
 > not — Fig 2's premise), and only for the two towers in scope. The 448-pair
 > grid, the mechanism decomposition, the knee analysis, and all five findings
@@ -201,15 +190,15 @@ doc-level splits, CIs from 1000 doc bootstraps. Mechanisms: resolution
 
 ---
 
-# Task frontier — full corpus (7 configs × 1,420 pages, 2026-08-15) `[APPENDIX]`
+# Task frontier — full corpus (7 configs × 1,420 pages, 2026-08-15) (supporting detail)
 
-> **Section `[APPENDIX]`, two items excepted.** Finding 2 (the eyes-vs-brain
+> **Section (supporting detail), two items excepted.** Finding 2 (the eyes-vs-brain
 > inversion) becomes **one framing sentence in the intro** — it is why the
 > paper is about the bridge rather than the encoder — and finding 4 (starved
 > vision inflates decode cost) is the **supporting inset**. The frontier table
 > itself is synthetic-scored and does not appear in the results section; the
 > headline table is real benchmarks (B5). Findings 1 and 3 are
-> `[UNNECESSARY]`.
+> (cut).
 
 Full stacks generating markdown, scored against gold (TEDS via pipe→HTML /
 edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](../figures/frontier_pilot1k.png).
@@ -259,12 +248,12 @@ edit-sim / chart-rule recall). Figure: [figures/frontier_pilot1k.png](../figures
 
 ---
 
-## Retroactive caveat (2026-08-15): qwen3_vl_vit numbers describe ONE of four bridges `[APPENDIX]`
+## Retroactive caveat (2026-08-15): qwen3_vl_vit numbers describe ONE of four bridges (supporting detail)
 
 > Not a finding, but **load-bearing as the stated reason Qwen3-VL is excluded**
 > from the causal work — a single-bridge stack is what makes exp2a
 > architecturally complete. Two sentences in the scope paragraph. All
-> qwen3_vl_vit *numbers* elsewhere in this file are `[UNNECESSARY]`.
+> qwen3_vl_vit *numbers* elsewhere in this file are (cut).
 
 Qwen3-VL-4B-Instruct uses DeepStack (`deepstack_visual_indexes: [5, 11, 17]`):
 ViT features from three intermediate layers are injected at multiple decoder
@@ -277,13 +266,13 @@ bridge-localization experiment, are architecturally complete for that model.
 
 ---
 
-# Measurement-validity addendum (2026-08-15) — shortcut baselines, measured `[APPENDIX]`
+# Measurement-validity addendum (2026-08-15) — shortcut baselines, measured (supporting detail)
 
-> **Section `[APPENDIX]` — this is what makes §3 credible.** The glyph_id and
-> pl1_class rows are `[KEEP]`: no positional shortcut, 5.1× floor, survives
+> **Section supporting detail — this is what makes §3 credible.** The glyph_id and
+> pl1_class rows are (stands): no positional shortcut, 5.1× floor, survives
 > font-held-out. That is the appendix a reviewer needs before believing the
 > repair target. The cell_col / pl2_extent / series_id corrections are
-> `[UNNECESSARY]` as write-up — those families are cut — but they stay in this
+> (cut) as write-up — those families are cut — but they stay in this
 > file as the record of why.
 
 External review (accepted) demanded shortcut baselines before trusting any
@@ -320,7 +309,7 @@ verdicts, and the remaining battery: [experiments.md](experiments.md).
 
 ---
 
-# Exp 2a — bridge localization on the production tower (2026-08-15, exp2a_v1) `[KEEP]`
+# Exp 2a — bridge localization on the production tower (2026-08-15, exp2a_v1) (stands)
 
 > **THIS SECTION IS THE PAPER (§3).** Everything above it is motivation,
 > appendix, or cut. The reconstruction table below produces the number the
@@ -370,11 +359,11 @@ the merger itself reorganize it.
   non-goal boundary): S3 measures what remains linearly present at a decoder
   mid-layer, not what the decoder consumed — a decoder that has already read
   the glyphs need not keep them linearly decodable.
-- `[KEEP]` pl1_class: small S1-advantage gaps count at compressed budgets (~+.02).
+- (stands) pl1_class: small S1-advantage gaps count at compressed budgets (~+.02).
   *(The specificity contrast — layout barely moves where glyph does. H4 predicts
   the repair leaves this flat.)*
-- `[UNNECESSARY]` cell_row / cell_col: no counting gaps anywhere.
-- `[APPENDIX]` (as a null, one line) — **pl2_extent: all 16 Δ-over-coords cells are ≈0 or negative** (−.022 to
+- (cut) cell_row / cell_col: no counting gaps anywhere.
+- supporting detail — (as a null, one line) — **pl2_extent: all 16 Δ-over-coords cells are ≈0 or negative** (−.022 to
   +.012, |Δ| ≤ .022) — extent-beyond-position exists at NO site and NO
   budget in the production stack. The nominally "counting" pl2 gaps are
   differences between two ≈0 deltas and are dismissed as such.
@@ -618,7 +607,16 @@ relaunched. The lift below is therefore a LOWER bound on the spec run.)
 | A (bridge CE-only, 700) | .608 | .880 | .993 |
 | R5j_700 (joint, 700) | .651 | .955 | .999 |
 | B (decoder-LoRA, 700) | .678 | .989 | .961 |
-| R5b_5k / R5j_5k | *pending* | | |
+| R5b_5k_ep1 (repaired) | **.4975** | .744 | .877 |
+
+R5b_5k_ep1's task-space row (filled 2026-08-18 from the blind-control run):
+**.4975 overall — below arm A (.6082) and far below arm B (.6777)**, though
+above the untrained anchor (.287). Format-stripped content_edit_sim is worse
+still: **.4307 vs A's .7960**. So the +.083 probe gain is accompanied by a
+task-space *regression* on held-out pilot documents, i.e. the damage is
+already visible on our own corpus once the eval documents come from a
+different generator mix than the r5 training set — before any external
+benchmark is consulted.
 
 R5j_700 vs its frozen twin R4a_1: **+.065 [+.039,+.093]** — but paired with
 its *lower* probe-space delta, so the joint arm's task gain is decoder-side
@@ -836,7 +834,7 @@ language — the full slice set is in the bundle:
 - OmniDoc `overall` is ((1 − text_block edit) + table TEDS + formula CDM)/3 × 100, the
   leaderboard's own composite, computed from the scorer's own result file.
 
-# Item-level forensics — stock vs repaired projector (2026-08-18) `[KEEP]`
+# Item-level forensics — stock vs repaired projector (2026-08-18) (stands)
 
 Raw bundle: `validation/extbench_item_level.json`. Runner:
 `uv run modal run modal_extbench_bridge.py --items` (pure parts unit-tested in
@@ -1098,3 +1096,184 @@ the flips in both directions track the fuzzy fidelity of the forbidden string
   looping page contributes `repetition` for every test on it rather than splitting
   across the scorer's reasons. The per-reason view without that precedence is
   recoverable from `samples[].scorer_reason` and the bundle's raw counts.
+
+---
+
+# Blind control — how much of the task score comes from the image? (2026-08-18)
+
+Raw bundle: `validation/blind_control.json`. Runner: `pipelines/modal_phaseb_train.py
+--eval --no-image ...` / `--score --no-image ...`.
+
+## Method
+
+The §B2 task eval, re-run with the visual input removed. Two variants:
+
+| variant | what changes | image tokens |
+|---|---|---|
+| `withheld` | the chat message carries the text prompt ONLY — no image part | none |
+| `blank` | a plain white page of the same pixel dimensions as the document | unchanged span |
+
+Everything else is held identical to the sighted eval: the same 211-doc held-out pilot
+manifest (`phaseb_eval.jsonl`), the same fixed prompt string, greedy
+decoding (`do_sample=False`), `max_new_tokens=4096`, the
+same fence-stripping, and the same scorer (`encoder_experiments.frontier_score.score_pred_dir`) — TEDS
+tables / edit-sim text+math / chart rule recall, plus the format-stripped
+`content_edit_sim`. Blind generations land in `/vol/phaseb/eval_blind/<label>__<variant>/`,
+disjoint from the sighted `/vol/phaseb/eval/<label>/` outputs the B2/R4/R5 records were
+scored from; the sighted arm is re-scored from those existing outputs, not regenerated.
+
+`gain` is the doc-paired mean difference sighted − blind over the 201 docs scored in
+both arms (211 held out, 10 dropped by the
+scorer for unresolvable gold), with a percentile bootstrap CI over documents
+(2000 resamples, seed 0, unit =
+document).
+
+Arms: A, B, C, R5b_5k_ep1. A and B are their best-val-loss LRs (both 3e-4), the same
+checkpoints the §B2 record evaluated; C is the untrained anchor; R5b_5k_ep1 is the frozen
+1-epoch §R5 bridge (the `repaired_ep1` checkpoint of the external-benchmark section), whose
+sighted task-space eval was outstanding until now.
+
+## Primary metric (frontier_score `score`)
+
+| arm | slice | sighted | withheld | gain vs withheld [95% CI] | blank | gain vs blank [95% CI] |
+|---|---|---|---|---|---|---|
+| A | overall | 0.6082 | 0.0611 | +0.5471 [+0.4954, +0.6002] (n=201) | 0.0220 | +0.5861 [+0.5333, +0.6404] (n=201) |
+| A | tables | 0.8122 | 0.0582 | +0.7540 [+0.6726, +0.8230] (n=44) | 0.0522 | +0.7599 [+0.6841, +0.8281] (n=44) |
+| A | replicator | 0.2601 | 0.0927 | +0.1674 [+0.0780, +0.2589] (n=19) | 0.0290 | +0.2312 [+0.1534, +0.3111] (n=19) |
+| A | text | 0.8797 | 0.1261 | +0.7536 [+0.6418, +0.8534] (n=22) | 0.0310 | +0.8487 [+0.7462, +0.9331] (n=22) |
+| A | math | 0.9931 | 0.0998 | +0.8934 [+0.8848, +0.9013] (n=52) | 0.0173 | +0.9758 [+0.9731, +0.9787] (n=52) |
+| A | charts | 0.1651 | 0.0000 | +0.1651 [+0.1076, +0.2292] (n=64) | 0.0000 | +0.1651 [+0.1076, +0.2292] (n=64) |
+| B | overall | 0.6777 | 0.0623 | +0.6154 [+0.5644, +0.6660] (n=201) | 0.0530 | +0.6247 [+0.5733, +0.6765] (n=201) |
+| B | tables | 0.8909 | 0.1637 | +0.7272 [+0.6536, +0.7885] (n=44) | 0.1598 | +0.7311 [+0.6566, +0.7921] (n=44) |
+| B | replicator | 0.4397 | 0.0872 | +0.3525 [+0.2481, +0.4581] (n=19) | 0.0837 | +0.3560 [+0.2477, +0.4642] (n=19) |
+| B | text | 0.9889 | 0.0214 | +0.9675 [+0.9571, +0.9758] (n=22) | 0.0181 | +0.9708 [+0.9596, +0.9799] (n=22) |
+| B | math | 0.9609 | 0.0613 | +0.8995 [+0.8579, +0.9317] (n=52) | 0.0312 | +0.9297 [+0.8891, +0.9605] (n=52) |
+| B | charts | 0.2646 | 0.0000 | +0.2646 [+0.1866, +0.3489] (n=64) | 0.0000 | +0.2646 [+0.1866, +0.3489] (n=64) |
+| C | overall | 0.2869 | 0.0611 | +0.2258 [+0.1864, +0.2677] (n=201) | 0.1092 | +0.1777 [+0.1389, +0.2178] (n=201) |
+| C | tables | 0.6103 | 0.0582 | +0.5522 [+0.4383, +0.6646] (n=44) | 0.1433 | +0.4670 [+0.3536, +0.5785] (n=44) |
+| C | replicator | 0.3212 | 0.0927 | +0.2284 [+0.0982, +0.3636] (n=19) | 0.1102 | +0.2110 [+0.0947, +0.3303] (n=19) |
+| C | text | 0.3373 | 0.1261 | +0.2112 [+0.1606, +0.2615] (n=22) | 0.1148 | +0.2226 [+0.1589, +0.2884] (n=22) |
+| C | math | 0.2356 | 0.0998 | +0.1358 [+0.1191, +0.1525] (n=52) | 0.2121 | +0.0235 [+0.0010, +0.0479] (n=52) |
+| C | charts | 0.0787 | 0.0000 | +0.0787 [+0.0303, +0.1358] (n=64) | 0.0000 | +0.0787 [+0.0303, +0.1358] (n=64) |
+| R5b_5k_ep1 | overall | 0.4975 | 0.0612 | +0.4363 [+0.3831, +0.4904] (n=201) | 0.0653 | +0.4322 [+0.3794, +0.4862] (n=201) |
+| R5b_5k_ep1 | tables | 0.6989 | 0.0581 | +0.6408 [+0.5618, +0.7168] (n=44) | 0.0779 | +0.6210 [+0.5451, +0.6948] (n=44) |
+| R5b_5k_ep1 | replicator | 0.2377 | 0.0931 | +0.1446 [+0.0557, +0.2358] (n=19) | 0.1082 | +0.1296 [+0.0436, +0.2288] (n=19) |
+| R5b_5k_ep1 | text | 0.7435 | 0.1264 | +0.6171 [+0.4735, +0.7477] (n=22) | 0.1080 | +0.6355 [+0.4873, +0.7711] (n=22) |
+| R5b_5k_ep1 | math | 0.8773 | 0.0997 | +0.7776 [+0.7118, +0.8344] (n=52) | 0.1011 | +0.7762 [+0.7105, +0.8333] (n=52) |
+| R5b_5k_ep1 | charts | 0.0429 | 0.0000 | +0.0429 [+0.0161, +0.0790] (n=64) | 0.0000 | +0.0429 [+0.0161, +0.0790] (n=64) |
+
+## Content-normalized readout (`content_edit_sim`, markdown/LaTeX stripped)
+
+| arm | slice | sighted | withheld | gain vs withheld [95% CI] | blank | gain vs blank [95% CI] |
+|---|---|---|---|---|---|---|
+| A | overall | 0.7960 | 0.0519 | +0.7441 [+0.7080, +0.7792] (n=201) | 0.0320 | +0.7640 [+0.7272, +0.7993] (n=201) |
+| A | tables | 0.8981 | 0.0265 | +0.8717 [+0.7988, +0.9290] (n=44) | 0.0548 | +0.8433 [+0.7733, +0.9005] (n=44) |
+| A | replicator | 0.5597 | 0.0471 | +0.5127 [+0.3929, +0.6356] (n=19) | 0.0362 | +0.5235 [+0.4115, +0.6385] (n=19) |
+| A | text | 0.8855 | 0.1317 | +0.7538 [+0.6413, +0.8553] (n=22) | 0.0250 | +0.8605 [+0.7550, +0.9464] (n=22) |
+| A | math | 0.9995 | 0.0968 | +0.9027 [+0.8937, +0.9112] (n=52) | 0.0146 | +0.9849 [+0.9830, +0.9866] (n=52) |
+| A | charts | 0.5997 | 0.0069 | +0.5928 [+0.5334, +0.6501] (n=64) | 0.0315 | +0.5682 [+0.5097, +0.6247] (n=64) |
+| B | overall | 0.8297 | 0.0796 | +0.7500 [+0.7154, +0.7854] (n=201) | 0.0582 | +0.7715 [+0.7361, +0.8064] (n=201) |
+| B | tables | 0.9278 | 0.0858 | +0.8420 [+0.7709, +0.8952] (n=44) | 0.0529 | +0.8749 [+0.8032, +0.9291] (n=44) |
+| B | replicator | 0.5810 | 0.0319 | +0.5492 [+0.4308, +0.6624] (n=19) | 0.0197 | +0.5613 [+0.4424, +0.6770] (n=19) |
+| B | text | 0.9909 | 0.0077 | +0.9832 [+0.9735, +0.9908] (n=22) | 0.0055 | +0.9854 [+0.9755, +0.9934] (n=22) |
+| B | math | 0.9710 | 0.0347 | +0.9362 [+0.8973, +0.9658] (n=52) | 0.0196 | +0.9514 [+0.9125, +0.9807] (n=52) |
+| B | charts | 0.6659 | 0.1508 | +0.5150 [+0.4638, +0.5642] (n=64) | 0.1227 | +0.5431 [+0.4899, +0.5953] (n=64) |
+| C | overall | 0.1381 | 0.0519 | +0.0862 [+0.0740, +0.0996] (n=201) | 0.1291 | +0.0090 [-0.0081, +0.0274] (n=201) |
+| C | tables | 0.0698 | 0.0265 | +0.0433 [+0.0340, +0.0537] (n=44) | 0.1292 | -0.0594 [-0.0781, -0.0395] (n=44) |
+| C | replicator | 0.1706 | 0.0471 | +0.1235 [+0.0870, +0.1647] (n=19) | 0.1143 | +0.0563 [-0.0051, +0.1194] (n=19) |
+| C | text | 0.3543 | 0.1317 | +0.2226 [+0.1733, +0.2713] (n=22) | 0.1066 | +0.2477 [+0.1863, +0.3111] (n=22) |
+| C | math | 0.2341 | 0.0968 | +0.1373 [+0.1209, +0.1555] (n=52) | 0.2273 | +0.0068 [-0.0150, +0.0309] (n=52) |
+| C | charts | 0.0231 | 0.0069 | +0.0163 [+0.0139, +0.0190] (n=64) | 0.0613 | -0.0382 [-0.0484, -0.0282] (n=64) |
+| R5b_5k_ep1 | overall | 0.4307 | 0.0519 | +0.3788 [+0.3293, +0.4328] (n=201) | 0.0612 | +0.3696 [+0.3187, +0.4249] (n=201) |
+| R5b_5k_ep1 | tables | 0.2249 | 0.0265 | +0.1983 [+0.1639, +0.2375] (n=44) | 0.0521 | +0.1727 [+0.1346, +0.2135] (n=44) |
+| R5b_5k_ep1 | replicator | 0.5030 | 0.0471 | +0.4560 [+0.3230, +0.5868] (n=19) | 0.0798 | +0.4233 [+0.2932, +0.5561] (n=19) |
+| R5b_5k_ep1 | text | 0.7560 | 0.1320 | +0.6240 [+0.4769, +0.7569] (n=22) | 0.1094 | +0.6466 [+0.4966, +0.7803] (n=22) |
+| R5b_5k_ep1 | math | 0.9041 | 0.0967 | +0.8073 [+0.7396, +0.8669] (n=52) | 0.0958 | +0.8083 [+0.7405, +0.8679] (n=52) |
+| R5b_5k_ep1 | charts | 0.0544 | 0.0069 | +0.0475 [+0.0390, +0.0575] (n=64) | 0.0172 | +0.0372 [+0.0272, +0.0491] (n=64) |
+
+## Caveats
+
+- **`withheld` collapses the bridge-only arms onto the anchor by construction.** With no
+  image part there are no image tokens, so the vision tower and merger never run: a
+  merger-only arm (A, R5b_5k_ep1) is the SAME computation as the untrained anchor C on
+  this input. Measured, not assumed: `A__withheld` and `C__withheld` are **byte-identical
+  on all 211/211 predictions**, while `A__blank` vs `C__blank` differ on **211/211** (the
+  merger does run on a white page). Only arm B (decoder LoRA) can genuinely differ from C
+  under `withheld`. So the `blank` variant, not `withheld`, is what separates "no visual
+  input" from "no information in the visual input" for bridge-trained arms — and a
+  bridge-only arm's `withheld` row carries no information about that arm.
+- **Decoding-noise floor, measured.** `R5b_5k_ep1__withheld` is the same computation as
+  `A__withheld` but was generated in a later launch on the mixed `A100-80GB,L40S` pool:
+  **35 of 211 predictions differ byte-wise** (greedy tie-breaking is not hardware-stable),
+  yet the aggregate moves only .0611 → .0612 overall. That bounds run-to-run generation
+  noise on this eval at ~1e-4 on the overall mean, well inside every CI reported here.
+- **The task has no forced answer format.** Goodfire's MMMU control kept multiple-choice
+  formatting, so a blind model still emitted a parseable letter. Transcription has no such
+  floor: with the image withheld the models mostly emit meta-commentary about the missing
+  page (arm C runs to the 4096-token cap on most docs), which the scorer reads as a near-
+  zero transcription. The blind numbers are therefore a floor on "language prior", not a
+  calibrated guess rate.
+- **Chart family scores exactly 0.0000 under both variants for every arm** on the primary
+  metric — chart scoring is rule recall over `chart_data_point` rules, and a blind model
+  emits no matching data points. Its `content_edit_sim` is non-zero because that metric
+  compares de-formatted text.
+- Greedy, one sample per doc, no repeats. The bootstrap CI covers document sampling only —
+  not the (small, bounded above) hardware-dependent decoding variance, and not
+  checkpoint-selection variance.
+- Sighted columns reproduce `validation/b2_pilot.json` exactly (A .6082, B .6777,
+  C .2869 overall), so the two bundles are mutually consistent.
+- `n` differs per family (tables 44, replicator 19, text 22, math 52, charts 64); the
+  per-family CIs are correspondingly wider than the overall one.
+
+---
+
+# Vision token budget vs olmOCR-bench — stock model, no training (2026-08-18)
+
+Pre-registration: experiments.md §S2. Motivated by Goodfire/Silico's
+all-tile-tokens vs 4x-pixel-shuffle ablation (+7.126 TextVQA). Stock
+Qwen3.5-4B (`/models/hf_exports/qwen35_4b_stock`), official olmOCR scorer,
+8,413 tests over 1,403 pages, identical prompt and greedy decoding at every
+point; **only the vision token budget varies**. Raw:
+validation/token_budget_extbench.json, knob verification
+validation/token_budget_knob_probe.json.
+
+**Knob provenance (read before quoting).** `bench_olmocr.py` builds its engine
+as `LLM(model, trust_remote_code=True, max_model_len=16384,
+limit_mm_per_prompt={"image": 1})` — **no size/pixel knob**, so the default is
+the HF processor's own sizing (~1,120 merged tokens on these renders).
+Setting the knob explicitly to 1120 reproduces the default within 0.1 points
+(71.1 vs 71.0), which simultaneously pins the default and proves the knob is
+honored. Verified separately: a bare `max_pixels` is **silently ignored** by
+this path; only the `size` dict with area bounds takes effect.
+
+| nominal tokens | overall ±1.1 | long_tiny_text | arxiv_math | multi_column | table | old_scans | absent | headers_footers | baseline |
+|---|---|---|---|---|---|---|---|---|---|
+| 280 | 38.8 | **1.4** | 14.3 | 13.7 | 41.8 | 27.6 | 73.8 | 72.0 | 96.1 |
+| 560 | 56.8 | 23.1 | 48.2 | 51.9 | 70.3 | 33.7 | 63.1 | 61.2 | 96.4 |
+| ~1120 (default) | 71.0 | 77.4 | 79.3 | 76.5 | 80.3 | 40.1 | 48.4 | 46.4 | 96.7 |
+| 1120 (explicit) | 71.1 | 77.8 | 79.0 | 76.5 | 80.0 | 39.9 | 48.7 | 46.8 | 97.1 |
+| 2240 (cap raised) | **74.0** | **90.5** | 83.9 | 81.2 | 82.0 | 42.4 | 43.6 | 40.8 | 97.1 |
+| 2240 (forced upscale) | 72.5 | 85.1 | 84.3 | 81.2 | 83.2 | 42.2 | 41.9 | 38.9 | 97.1 |
+
+Observations, raw:
+
+- Fine-text reading is steeply budget-bound across the whole range
+  (`long_tiny_text` 1.4 → 90.5 over 8x tokens) while trivial tests are nearly
+  flat (`baseline` 96.1 → 97.1). This is the probe-level survival-curve result
+  (glyph steeply budget-bound, structure flat) reproduced end-to-end on a
+  public benchmark with an official scorer.
+- Above the default, doubling the budget yields **+3.0 overall and +12.7 on
+  long_tiny_text**, with no training and no weight change.
+- Raising the cap (74.0) beats forcing upscaling to the same nominal budget
+  (72.5); the gap is concentrated in `long_tiny_text` (90.5 vs 85.1).
+- `absent` and `headers_footers` move OPPOSITE to every reading slice at every
+  budget (73.8/72.0 at 280 tokens → 43.6/40.8 at 2240). Both reward *not*
+  emitting text, so olmOCR's per-file average understates reading gains.
+  Same scorer dynamic identified in the item-level forensics section.
+- Cost side not yet assembled here: per-page generation time by budget is in
+  the raw bundle; the 2240 arms carry ~2x the image-span inference cost of the
+  default.
+
+Scope: one benchmark, one model, single runs per budget, no seed replication.
+The 2240 points are the highest measured, not a ceiling — the curve had not
+flattened on `long_tiny_text`.
