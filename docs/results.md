@@ -1277,3 +1277,120 @@ Observations, raw:
 Scope: one benchmark, one model, single runs per budget, no seed replication.
 The 2240 points are the highest measured, not a ceiling — the curve had not
 flattened on `long_tiny_text`.
+
+---
+
+# Vision token budget vs ParseBench — the DEPLOYED checkpoint (2026-08-18)
+
+Pre-registration: experiments.md §S4. S2's twin on the benchmark the product is
+judged by, with our post-trained soup checkpoint
+(`/models/hf_exports/parsebench__soupx3070p0490`) instead of a stock model.
+Inference and scoring are the training pipeline's own ParseBench harness
+(`eval_recipe.sh`, merge-free `--export-name` mode, genuine `parse_bench`
+scorers) — one physical export, one prompt, one postprocess, greedy, 1,581
+pages over the 4 parse dims. Only the vision token budget varies. Raw:
+validation/token_budget_parsebench.json; knob verification + full-benchmark
+token census: validation/token_budget_parsebench_knob_probe.json.
+
+**Knob provenance (read before quoting).** The ParseBench serve runs vLLM
+**0.17.1** (nvcr 26.03), an older build than S2's 0.27.1, so the knob was
+re-verified on the serve image itself before any eval was paid for: the same
+pages measured 4290 / 2080 / 2145 realized image tokens with no knob and
+494 / 475 / 494 under an engine-level `size` cap of 512. Note this image's
+transformers cannot load model_type `qwen3_5` at all, so the probe reads
+nothing through AutoConfig/AutoProcessor — it counts `<|image_pad|>` ids in
+`prompt_token_ids` on the serve path itself.
+
+**Realized budget, measured over all 1,581 pages** (not nominal). Native at the
+harness's 150 DPI is mean 2,194 / median 2,080 merged tokens — about 2x
+olmOCR's 1288px convention and about 2.6x the ~790 tokens the training parquet
+bakes in at `max_image_dim=1024`.
+
+| rung | mean | median | min | p90 | max |
+|---|---|---|---|---|---|
+| b512 | 484 | 480 | 468 | 494 | 504 |
+| b1024 | 995 | 988 | 550 | 1008 | 1024 |
+| b2048 | 1,966 | 1,989 | 550 | 2,028 | 2,040 |
+| native | 2,194 | 2,080 | 550 | 2,145 | **16,241** |
+| b4096up | 4,154 | 4,158 | 3,995 | 4,161 | 4,218 |
+| b4096px | 4,106 | 4,144 | 3,975 | 4,161 | 4,218 |
+
+The two 4,096 arms are a MATCHED pair, both forced to one budget: 4,096 tokens
+is exactly a Letter page at 212 DPI, so `px` renders that budget natively while
+`up` interpolates the 150-DPI render onto the same grid. Same tokens, same
+geometry, different amount of real information — the Silico pixel-shuffle
+contrast with token count held fixed rather than matched on average.
+
+| rung | b512 | b1024 | b2048 | native | b4096up | b4096px | nativeB |
+|---|---|---|---|---|---|---|---|
+| realized tokens (mean) | 484 | 995 | 1,966 | 2,194 | 4,154 | 4,106 | 2,194 |
+| render DPI | 150 | 150 | 150 | 150 | 150 | **212** | 150 |
+| **overall** | 0.6693 | 0.7695 | 0.8123 | 0.8168 | 0.8265 | **0.8320** | 0.8167 |
+| chart | 0.4904 | 0.6596 | 0.7327 | 0.7371 | 0.7436 | **0.7575** | 0.7361 |
+| table | 0.6840 | 0.7903 | 0.8284 | 0.8354 | **0.8532** | 0.8477 | 0.8351 |
+| text_content | 0.7941 | 0.8634 | 0.8867 | 0.8911 | 0.8960 | **0.8996** | 0.8905 |
+| text_formatting | 0.7086 | 0.7648 | 0.8015 | 0.8036 | 0.8130 | **0.8232** | 0.8052 |
+| table GriTS-con | 0.7740 | 0.8529 | 0.8759 | 0.8799 | **0.8918** | 0.8838 | 0.8806 |
+| table record-match | 0.5714 | 0.7079 | 0.7593 | 0.7696 | **0.7941** | 0.7920 | 0.7683 |
+| tables emitted (1.778 expected) | 1.557 | 1.610 | 1.651 | 1.671 | 1.673 | 1.661 | 1.673 |
+| reading order | 0.7047 | 0.8181 | 0.8554 | 0.8622 | 0.8716 | **0.8762** | 0.8616 |
+
+`nativeB` is a same-config REPEAT of `native`, not a ladder point.
+
+Observations, raw:
+
+1. **Same-config variance is ~0.003 overall** (native 0.81678 vs nativeB
+   0.81674; worst dim 0.16 points). Every gap discussed below is one to two
+   orders of magnitude larger than that band. Greedy decoding is not
+   *reproducible* here — 0 of 36 sampled pages matched byte-for-byte across
+   two runs of one earlier config — but it is evidently **unbiased**: the
+   divergence does not move aggregate scores.
+2. **Steeply budget-bound below native, and skill-ordered.** From native down
+   to a quarter of the budget: chart −24.7, table −15.1, text_content −9.7,
+   text_formatting −9.5. Charts fall hardest, which reads as a naming
+   coincidence rather than a counterexample to S2 — ParseBench chart scoring is
+   data-point extraction, i.e. reading small axis ticks and value labels, so it
+   is fine-text reading under a different dimension name.
+3. **Reading order is budget-bound** (0.7047 → 0.8762), against the probe-side
+   expectation that structure is flat and only glyph identity is
+   budget-sensitive. At 484 tokens the model does not merely misread a page, it
+   mis-orders it.
+4. **The curve has essentially flattened at native.** `b2048` is within 0.45
+   points of `native` overall while spending 10% fewer mean tokens AND bounding
+   the tail (one page is 16,241 tokens native, half the serve's 32k context).
+   Capping at 2,048 is close to free.
+5. **But it has not stopped.** Doubling above native buys +1.0 (up) / +1.5 (px)
+   overall for inference cost alone, no weight change — the same shape S2 found
+   above the olmOCR default, smaller because ParseBench already serves at ~2x
+   olmOCR's budget.
+6. **Real pixels beat interpolated ones at matched tokens**: `b4096px` −
+   `b4096up` = +0.55 overall, concentrated in chart (+1.4) and text_formatting
+   (+1.0) — and REVERSED on table (−0.55). So raising the render DPI, not just
+   the token budget, is the better half of the gain everywhere except tables.
+7. **Budget buys table QUALITY, not table DETECTION.** Emitted tables barely
+   move above 2,048 (1.651 → 1.673 against 1.778 expected) while GriTS-con and
+   record-match keep climbing. The ~6% of tables this checkpoint silently fails
+   to emit — the de-tabling also seen on OmniDocBench — is not a resolution
+   problem and will not be fixed with pixels.
+8. **The training budget is not the best serving budget.** ~995 tokens is
+   roughly what the RL parquet baked in (~790); the checkpoint scores 0.7695
+   there versus 0.8168 at the served budget and 0.8320 at 4,096. Whatever the
+   train/serve resolution gap costs, it does not prevent the model from using
+   tokens it never trained on.
+
+**A reproducibility finding, incidental but load-bearing.** The published
+ParseBench number for this checkpoint is **0.8385**; the current default eval
+path reproduces **0.8168 twice**. Same weights (`model.safetensors` mtime
+2026-08-12 07:10, nine minutes before that run's own predictions), same dataset
+(rule counts identical to the digit: chart 4,864 / text_content 141,322 /
+text_formatting 5,997), same scorers, same 503 table docs — but predictions
+differ pervasively, and the repeat rules out decode noise. That run's
+`report.json` is dated 08-14 while its predictions are dated 08-12, i.e. the
+published figure is a re-score of two-day-old predictions whose generation
+config the run directory does not record. **The eval writes no config stamp**,
+so a 2.2-point difference cannot currently be attributed. Recommend stamping
+prompt file, params version and the PB_* env into each run dir.
+
+Scope: one checkpoint, one benchmark, single runs per rung (plus one repeat at
+native), no seed replication. 4,096 is the highest measured, not a ceiling.
+Everything here is a SERVING change — no training was run.

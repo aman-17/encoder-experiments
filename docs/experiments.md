@@ -82,6 +82,7 @@ prose is not evidence and stays out of results bundles.
 | **S1** | Is our task metric image-driven or priors? | run. **Image-driven** (all arms fall to ~.061 blind) |
 | **S2** | Does the vision token budget move real benchmarks? | run. **Yes: +3.0 overall, +12.7 fine-text, no training. Stands.** |
 | **S3** | What exactly broke in the collapse? | run. Rambling not silence; `long_tiny_text` 0/442 fixed |
+| **S4** | Same question on the DEPLOYED checkpoint + ParseBench | run. **Yes: −14.8 at quarter budget, +1.5 above native; px beats upscale at matched tokens** |
 | **G2** | Does the *diagnosis* reproduce on real documents? | **never run.** Still the largest open question |
 
 ---
@@ -759,3 +760,50 @@ they attribute to training-data scale. Document OCR needs more data than
 TextVQA, not less. We would spend heavily to produce a model worse than the
 one we already serve, and trade a measurement contribution for a second-tier
 VLM. Explicitly out of scope.
+
+---
+
+# S4 — Vision token budget vs ParseBench, on the DEPLOYED checkpoint (pre-registered 2026-08-18)
+
+S2 answered the budget question for a stock model on a public benchmark. The
+deployable version of that question is the one we cannot answer from it: our
+post-trained soup checkpoint (`parsebench__soupx3070p0490`), on the benchmark
+the product is judged by, at the resolution it is actually served at.
+
+Three things make it a different experiment rather than a re-run:
+
+1. **The model was trained at one budget and is served at another.** The
+   training parquet bakes pages at `max_image_dim=1024` (~790 merged tokens);
+   the eval and the product rasterize at 150 DPI (~2,050 tokens on Letter).
+   RL at a budget the model is never served at is a train/serve mismatch we
+   have never measured the cost of.
+2. **ParseBench is skill-resolved.** olmOCR reports reading slices; ParseBench
+   reports charts / tables / text-content / text-formatting separately, so the
+   sweep says which *capability* is budget-bound rather than which page type.
+   The probe-side prediction is specific: glyph-like work (text content, dense
+   tables) should be steeply budget-bound and structural work (formatting,
+   reading order) nearly flat.
+3. **S2's headline gain came from raising the budget above the default.** Here
+   the default is already ~2x olmOCR's, so the interesting half of the curve
+   is whether the gain has flattened — i.e. whether we are paying for tokens
+   the trained model can no longer use.
+
+**Design.** One physical export, six serving arms, everything else held: the
+harness's own inference and the genuine `parse_bench` scorers, one prompt, one
+postprocess, greedy. Rungs: 512 / 1024 / 2048 / native / 4096-by-upscale /
+4096-by-DPI merged vision tokens. The last pair is the S2 contrast repeated
+here — same nominal budget, one arm buying tokens by upscaling the same 150-DPI
+render and the other by rasterizing at 212 DPI — which separates "more tokens"
+from "more pixels".
+
+**Verification first, as in S2.** The serve runs an older vLLM than the S2
+sweep did, so the `size` knob is verified on the serve image itself (realized
+image-token counts on real ParseBench pages) BEFORE any eval is paid for, and
+the realized budget of every page in the benchmark is censused separately so
+the cost axis is measured rather than nominal.
+
+**What it can overturn.** If scores are flat from 1024 upward, the deployed
+configuration is over-provisioned and the serving cost per page can be cut with
+no capability loss — a directly actionable result. If instead they still climb
+above native, the product is leaving accuracy on the table at its current
+render setting. Either way the answer is a serving change, not a training one.
